@@ -1,0 +1,15 @@
+temporary screenshots/
+next-app/
+framesfrom2025.mov
+*.code-workspace
+.DS_Store
+node_modules/
+.playwright-mcp/
+CLAUDE.md
+screenshot.mjs
+serve.mjs
+cinematic-landing-hero.tsx
+components/
+www.dongwon.com_en (1).png
+hero-section.png
+featuredwork.png

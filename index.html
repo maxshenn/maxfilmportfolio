@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Max Shen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=IBM+Plex+Mono:wght@300;400&family=Barlow+Condensed:wght@700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+
+    /* ─────────────────────────────────────────────
+       TOKENS
+    ───────────────────────────────────────────── */
+    :root {
+      --bg:     #090807;
+      --text:   #f0ece2;
+      --muted:  rgba(240, 236, 226, 0.36);
+      --dim:    rgba(240, 236, 226, 0.08);
+      --gap:    1px;
+      --nav-h:  58px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 300;
+      line-height: 1;
+      overflow-x: hidden;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       FILM GRAIN
+    ───────────────────────────────────────────── */
+    #grain {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      pointer-events: none;
+      opacity: 0.042;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px;
+      mix-blend-mode: screen;
+      animation: grain 0.12s steps(1) infinite;
+    }
+    @keyframes grain {
+      0%  { transform: translate(0,0); }
+      25% { transform: translate(-5px, 3px); }
+      50% { transform: translate(4px, -4px); }
+      75% { transform: translate(-3px, 5px); }
+    }
+
+
+
+
+    /* ─────────────────────────────────────────────
+       NAV
+    ───────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      height: var(--nav-h);
+      padding: 0 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-style: normal;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: #fff;
+      text-decoration: none;
+      text-shadow: 0 1px 14px rgba(0,0,0,0.55);
+    }
+    .nav-name .ext { color: rgba(255,255,255,0.52); }
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #fff;
+      text-decoration: none;
+      opacity: 0.72;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+      transition: opacity 0.2s;
+    }
+    .nav-links a:hover { opacity: 1; }
+    .nav-links .about-btn a {
+      opacity: 1;
+      font-size: 11px;
+      font-weight: 400;
+      border: 1px solid rgba(255,255,255,0.65);
+      padding: 7px 18px;
+      text-shadow: none;
+      transition: background 0.22s, color 0.22s, opacity 0.22s, border-color 0.22s;
+    }
+    .nav-links .about-btn a:hover {
+      background: #fff;
+      color: #000;
+      opacity: 1;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       HERO — full-viewport video, text bottom-left
+    ───────────────────────────────────────────── */
+    .hero-section {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 180px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .hero-section::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 220px;
+      background: linear-gradient(to bottom, transparent, var(--bg));
+      pointer-events: none;
+      z-index: 1;
+    }
+    .hero-media {
+      position: absolute;
+      inset: 0;
+    }
+    .hero-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.82);
+    }
+    .hero-text {
+      position: absolute;
+      bottom: 72px;
+      left: 56px;
+      z-index: 2;
+    }
+    .hero-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: clamp(72px, 10.5vw, 150px);
+      letter-spacing: -0.02em;
+      line-height: 0.88;
+      color: var(--text);
+      text-transform: uppercase;
+    }
+    .hero-tagline {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      color: rgba(240, 236, 226, 0.82);
+      margin-top: 20px;
+      text-shadow: 0 1px 12px rgba(0,0,0,0.6);
+    }
+
+
+    /* ─────────────────────────────────────────────
+       SECTION LABELS (shared utility)
+    ───────────────────────────────────────────── */
+    .section-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text);
+      display: block;
+      text-align: center;
+    }
+    .section-label::before {
+      display: none;
+      width: 0;
+      height: 0;
+      background: none;
+      flex-shrink: 0;
+    }
+    .section-header {
+      padding: 0 80px;
+      margin-bottom: 40px;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       FEATURED WORK — 3-column grid
+    ───────────────────────────────────────────── */
+    .featured-section {
+      padding-top: 56px;
+      padding-bottom: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Centered decorative section header */
+    .work-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      margin-bottom: 44px;
+      padding: 0 80px;
+    }
+    .work-header-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 400;
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .work-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 3px;
+      padding: 0 80px;
+    }
+
+    .work-item {
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .work-item.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .work-media {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: #0d0c0b;
+    }
+
+    .work-thumb {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.70) saturate(0.60);
+      opacity: 0;
+      transition: opacity 0.5s ease,
+                  filter 0.55s ease,
+                  transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .work-thumb.thumb-ready { opacity: 1; }
+    .work-item:hover .work-thumb {
+      filter: brightness(0.90) saturate(0.80);
+      transform: scale(1.04);
+    }
+
+    /* Bottom vignette on each card */
+    .work-media::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to top, rgba(9,8,7,0.55), transparent);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .work-caption {
+      padding: 12px 0 18px;
+      border-top: 1px solid var(--dim);
+    }
+    .work-title {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+    .work-category {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+
+    /* ─────────────────────────────────────────────
+       FRAMES — 3-column contact-sheet grid
+    ───────────────────────────────────────────── */
+    .frames-section {
+      padding-top: 64px;
+    }
+
+    .frames-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap);
+    }
+
+    .frame-item {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      aspect-ratio: 1 / 1;
+      background: #111;
+      opacity: 0;
+      transform: translateY(36px);
+      transition: opacity 1.0s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 1.0s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  box-shadow 0.5s ease,
+                  outline-color 0.4s ease;
+      will-change: transform, opacity;
+      outline: 1px solid rgba(240,236,226,0.12);
+    }
+    .frame-item.revealed {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .frame-item:hover {
+      transform: scale(1.09) !important;
+      z-index: 10;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 4px 18px rgba(0,0,0,0.45);
+      outline-color: rgba(240,236,226,0.38) !important;
+      transition-duration: 0.45s !important;
+      transition-delay: 0s !important;
+    }
+    /* Scale from correct edge so content stays on-screen */
+    .frame-item:nth-child(3n+1) { transform-origin: left center; }
+    .frame-item:nth-child(3n+2) { transform-origin: center center; }
+    .frame-item:nth-child(3n)   { transform-origin: right center; }
+
+    .frame-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.82) saturate(0.72) contrast(1.06);
+      opacity: 0;
+      transition: filter 0.55s ease,
+                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.5s ease;
+    }
+    .frame-item.thumb-ready .frame-video { opacity: 1; }
+    .frame-item:hover .frame-video {
+      filter: brightness(0.96) saturate(0.92) contrast(1.08);
+      transform: scale(1.03);
+      opacity: 1;
+    }
+
+    .frame-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        to top,
+        rgba(9, 8, 7, 0.82) 0%,
+        rgba(9, 8, 7, 0.1) 45%,
+        transparent 100%
+      );
+      opacity: 0;
+      transition: opacity 0.42s ease;
+      pointer-events: none;
+    }
+    .frame-item:hover::after { opacity: 1; }
+
+    .frame-label {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 2;
+      padding: 18px 16px;
+      transform: translateY(5px);
+      opacity: 0;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .frame-item:hover .frame-label {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .frame-cover {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.82) saturate(0.72) contrast(1.06);
+      z-index: 3;
+      pointer-events: none;
+      transition: opacity 0.45s ease;
+    }
+    .frame-item:hover .frame-cover { opacity: 0; }
+
+    .frame-label-text {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(240, 236, 226, 0.88);
+    }
+
+
+    /* ─────────────────────────────────────────────
+       DANIEL CAESAR — concert grid
+       Same grid structure, song titles always visible
+    ───────────────────────────────────────────── */
+    .dc-section {
+      padding-top: 120px;
+    }
+
+    .dc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap);
+    }
+
+    .dc-item {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      aspect-ratio: 1 / 1;
+      background: #111;
+      opacity: 0;
+      transform: translateY(36px);
+      transition: opacity 1.0s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 1.0s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .dc-item.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .dc-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.58) saturate(0.55);
+      transition: filter 0.65s ease,
+                  transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dc-item:hover .dc-video {
+      filter: brightness(0.8) saturate(0.75);
+      transform: scale(1.04);
+    }
+
+    /* always-on bottom gradient for song label */
+    .dc-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        to top,
+        rgba(9, 8, 7, 0.88) 0%,
+        rgba(9, 8, 7, 0.22) 36%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+
+    .dc-label {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 2;
+      padding: 18px 16px;
+    }
+    .dc-song {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 17px;
+      font-weight: 300;
+      color: rgba(240, 236, 226, 0.78);
+      display: block;
+      line-height: 1.2;
+    }
+    .dc-artist {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(240, 236, 226, 0.36);
+      margin-top: 5px;
+      display: block;
+    }
+
+
+
+
+    /* ─────────────────────────────────────────────
+       CONTACT
+    ───────────────────────────────────────────── */
+    .contact-section {
+      border-top: 1px solid var(--dim);
+      padding: 72px 40px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .contact-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: clamp(36px, 4.2vw, 60px);
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .contact-heading em {
+      font-style: italic;
+      color: var(--muted);
+    }
+    .contact-icons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      margin-top: 24px;
+    }
+    .contact-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(240, 236, 226, 0.6);
+      text-decoration: none;
+      transition: color 0.22s, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .contact-icon:hover {
+      color: var(--text);
+      transform: scale(1.16);
+    }
+    .contact-icon:active { transform: scale(0.94); }
+    .contact-icon svg {
+      width: 44px;
+      height: 44px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       CONTACT FORM
+    ───────────────────────────────────────────── */
+    .contact-form {
+      margin-top: 44px;
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .contact-form textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(240, 236, 226, 0.18);
+      padding: 0 0 8px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      resize: none;
+      outline: none;
+      line-height: 1.6;
+      min-height: 28px;
+      transition: border-color 0.25s;
+    }
+    .contact-form textarea::placeholder {
+      color: rgba(240, 236, 226, 0.24);
+      letter-spacing: 0.1em;
+    }
+    .contact-form textarea:focus {
+      border-bottom-color: rgba(240, 236, 226, 0.55);
+    }
+    .contact-form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .contact-form-hint {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(240, 236, 226, 0.2);
+    }
+    .contact-send {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(240, 236, 226, 0.5);
+      background: none;
+      border: 1px solid rgba(240, 236, 226, 0.22);
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: color 0.22s, border-color 0.22s, background 0.22s;
+    }
+    .contact-send:hover {
+      color: #000;
+      background: var(--text);
+      border-color: var(--text);
+    }
+    .contact-send:active { transform: scale(0.97); }
+    .contact-confirm {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(240, 236, 226, 0.38);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      text-align: center;
+      margin-top: 4px;
+    }
+    .contact-confirm.visible { opacity: 1; }
+
+
+    /* ─────────────────────────────────────────────
+       FOOTER
+    ───────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--dim);
+      padding: 20px 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-copy,
+    .footer-handle {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-handle:hover { color: var(--text); }
+
+
+    /* ─────────────────────────────────────────────
+       LIGHTBOX
+    ───────────────────────────────────────────── */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      background: rgba(0, 0, 0, 0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #lightbox.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .lightbox-inner {
+      position: relative;
+      width: 94vw;
+      display: flex;
+      flex-direction: column;
+    }
+    #lightboxVideo {
+      display: block;
+      width: 94vw;
+      height: 86vh;
+      object-fit: contain;
+      background: #000;
+    }
+    .lightbox-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding: 0 1px;
+    }
+    #lightboxTitle {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    #lightboxClose {
+      position: fixed;
+      top: 28px;
+      left: 36px;
+      z-index: 5100;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: rgba(255,255,255,0.55);
+      transition: color 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #lightboxClose:hover {
+      color: #fff;
+      transform: scale(1.12);
+    }
+    #lightboxClose:active { transform: scale(0.94); }
+    #lightboxClose svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       SCROLL REVEAL — cinematic upward lift
+    ───────────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(48px);
+      transition: opacity 1.15s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 1.15s cubic-bezier(0.22, 0.61, 0.36, 1);
+      will-change: transform, opacity;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: 0.14s; }
+    .reveal-d2 { transition-delay: 0.28s; }
+    .reveal-d3 { transition-delay: 0.44s; }
+    .reveal-d4 { transition-delay: 0.62s; }
+
+    /* Work grid reveal handled inline via .work-item.revealed */
+
+    /* Hero text entrance (triggered via .loaded class from JS) */
+    .hero-name, .hero-tagline {
+      opacity: 0;
+      transform: translateY(32px);
+    }
+    .hero-text.loaded .hero-name {
+      opacity: 1; transform: translateY(0);
+      transition: opacity 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.2s,
+                  transform 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.2s;
+    }
+    .hero-text.loaded .hero-tagline {
+      opacity: 1; transform: translateY(0);
+      transition: opacity 1.15s cubic-bezier(0.22, 0.61, 0.36, 1) 0.52s,
+                  transform 1.15s cubic-bezier(0.22, 0.61, 0.36, 1) 0.52s;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       RESPONSIVE
+    ───────────────────────────────────────────── */
+    @media (max-width: 960px) {
+      nav { padding: 0 24px; }
+      .nav-links { display: none; }
+      .section-header { padding: 0 32px; }
+
+      .hero-section { grid-template-columns: 1fr; height: auto; }
+      .hero-text { padding: 48px 32px; }
+      .hero-media { aspect-ratio: 16/9; position: relative; height: auto; }
+      .hero-media video { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+      .work-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); padding: 0 32px; }
+      .work-header { padding: 0 32px; }
+
+      .frames-grid,
+      .dc-grid { grid-template-columns: repeat(2, 1fr); }
+
+      .contact-section { padding: 56px 24px 64px; }
+      footer { padding: 20px 32px; }
+    }
+    @media (max-width: 560px) {
+      .work-grid { grid-template-columns: 1fr; }
+      .frames-grid,
+      .dc-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─────────────────────────────────────────────
+       LOADING SCREEN
+    ───────────────────────────────────────────── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: #090807;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #loader.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #loader-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 26px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 1s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 1s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    #loader-inner.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #loader-title {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: #f0ece2;
+    }
+    #loader-bar-track {
+      width: 220px;
+      height: 1px;
+      background: rgba(240, 236, 226, 0.10);
+      position: relative;
+      overflow: hidden;
+    }
+    #loader-bar-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: #f0ece2;
+    }
+    #loader-pct {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.24em;
+      color: rgba(240, 236, 226, 0.32);
+      min-width: 3ch;
+      text-align: center;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Loading screen -->
+  <div id="loader" aria-label="Loading" aria-live="polite">
+    <div id="loader-inner">
+      <p id="loader-title">maxshen.mp4</p>
+      <div id="loader-bar-track">
+        <div id="loader-bar-fill"></div>
+      </div>
+      <span id="loader-pct">0%</span>
+    </div>
+  </div>
+
+  <!-- Film grain -->
+  <div id="grain" aria-hidden="true"></div>
+
+
+  <!-- ── Nav ───────────────────────────────── -->
+  <nav id="nav">
+    <a href="#" class="nav-name">maxshen<span class="ext">.mp4</span></a>
+    <ul class="nav-links">
+      <li><a href="#work">Portfolio</a></li>
+      <li><a href="#frames">Frames</a></li>
+      <li class="about-btn"><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ──────────────────────────────── -->
+  <section class="hero-section">
+    <div class="hero-text">
+      <h1 class="hero-name">MAX<br>SHEN</h1>
+      <p class="hero-tagline">my digital portfolio</p>
+    </div>
+    <div class="hero-media">
+      <video class="hero-video" muted playsinline loop preload="none">
+        <source src="complete-projects/frames2025.mov" type="video/mp4">
+      </video>
+    </div>
+  </section>
+
+  <!-- ── Featured Work ─────────────────────── -->
+  <section class="featured-section" id="work">
+
+    <div class="work-header">
+      <span class="work-header-title">Featured Work</span>
+    </div>
+
+    <div class="work-grid">
+
+      <div class="work-item" data-src="complete-projects/take%20your%20time.mov" data-title="Take Your Time">
+        <div class="work-media">
+          <video class="work-thumb" muted playsinline preload="metadata" loop>
+            <source src="complete-projects/take%20your%20time.mov" type="video/mp4">
+          </video>
+        </div>
+        <div class="work-caption">
+          <p class="work-title">Take Your Time</p>
+          <p class="work-category">Grad Trip</p>
+        </div>
+      </div>
+
+      <div class="work-item" data-src="complete-projects/toronto2026.mov" data-title="Toronto 2026">
+        <div class="work-media">
+          <video class="work-thumb" muted playsinline preload="metadata" loop>
+            <source src="complete-projects/toronto2026.mov" type="video/mp4">
+          </video>
+        </div>
+        <div class="work-caption">
+          <p class="work-title">Toronto 2026</p>
+          <p class="work-category">Spring Break</p>
+        </div>
+      </div>
+
+      <div class="work-item" data-src="complete-projects/lake%20cowichan.mov" data-title="Lake Cowichan">
+        <div class="work-media">
+          <video class="work-thumb" muted playsinline preload="metadata" loop>
+            <source src="complete-projects/lake%20cowichan.mov" type="video/mp4">
+          </video>
+        </div>
+        <div class="work-caption">
+          <p class="work-title">Lake Cowichan</p>
+          <p class="work-category">Summer Break</p>
+        </div>
+      </div>
+
+      <div class="work-item" data-src="complete-projects/ski%20trip%202026.mov" data-title="Ski Trip 2026">
+        <div class="work-media">
+          <video class="work-thumb" muted playsinline preload="metadata" loop>
+            <source src="complete-projects/ski%20trip%202026.mov" type="video/mp4">
+          </video>
+        </div>
+        <div class="work-caption">
+          <p class="work-title">Ski Trip 2026</p>
+          <p class="work-category">Winter Break</p>
+        </div>
+      </div>
+
+      <div class="work-item" data-src="complete-projects/central%20park.mov" data-title="Central Park">
+        <div class="work-media">
+          <video class="work-thumb" muted playsinline preload="metadata" loop>
+            <source src="complete-projects/central%20park.mov" type="video/mp4">
+          </video>
+        </div>
+        <div class="work-caption">
+          <p class="work-title">Central Park</p>
+          <p class="work-category">Exploring New York</p>
+        </div>
+      </div>
+
+      <div class="work-item" data-src="complete-projects/pursuit%20of%20authenticity.mp4" data-title="Pursuit of Authenticity">
+        <div class="work-media">
+          <video class="work-thumb" muted playsinline preload="metadata" loop>
+            <source src="complete-projects/pursuit%20of%20authenticity.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="work-caption">
+          <p class="work-title">Pursuit of Authenticity</p>
+          <p class="work-category">Capstone Project</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ── Frames ─────────────────────────────── -->
+  <section class="frames-section" id="frames">
+    <div class="section-header">
+      <p class="section-label reveal">Frames</p>
+    </div>
+    <div class="frames-grid">
+
+      <div class="frame-item" data-src="frames/waterfall.mov" data-title="Waterfall">
+        <video class="frame-video" playsinline preload="none" loop>
+          <source src="frames/waterfall.mov" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Dolomites, Italy</span></div>
+      </div>
+
+      <div class="frame-item" data-src="frames/brent frame.mov" data-title="Brent Frame">
+        <video class="frame-video" muted playsinline preload="none" loop>
+          <source src="frames/brent frame.mov" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Whistler, BC</span></div>
+      </div>
+
+      <div class="frame-item" data-src="frames/fantastic.mov" data-title="Fantastic">
+        <video class="frame-video" muted playsinline preload="none" loop>
+          <source src="frames/fantastic.mov" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Pier 45, New York</span></div>
+      </div>
+
+      <div class="frame-item" data-src="frames/horse.MOV" data-title="Horse">
+        <video class="frame-video" muted playsinline preload="none" loop>
+          <source src="frames/horse.MOV" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Dolomites, Italy</span></div>
+      </div>
+
+      <div class="frame-item" data-src="frames/pier 35 bob.mov" data-title="Pier 35">
+        <video class="frame-video" muted playsinline preload="none" loop>
+          <source src="frames/pier 35 bob.mov" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Pier 35, New York</span></div>
+      </div>
+
+      <div class="frame-item" data-src="frames/spikeball.mov" data-title="Spikeball">
+        <video class="frame-video" muted playsinline preload="none" loop>
+          <source src="frames/spikeball.mov" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Lake Cowichan, BC</span></div>
+      </div>
+
+      <div class="frame-item" data-src="frames/stanley car.mov" data-title="Stanley Car">
+        <video class="frame-video" muted playsinline preload="none" loop style="object-position: 75% center;">
+          <source src="frames/stanley car.mov" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Dolomites, Italy</span></div>
+      </div>
+
+      <div class="frame-item" data-src="frames/vancouver drive.mov" data-title="Vancouver Drive">
+        <video class="frame-video" muted playsinline preload="none" loop>
+          <source src="frames/vancouver drive.mov" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Vancouver, BC</span></div>
+      </div>
+
+      <div class="frame-item" data-src="frames/boom.mov" data-title="Boom">
+        <video class="frame-video" muted playsinline preload="none" loop>
+          <source src="frames/boom.mov" type="video/mp4">
+        </video>
+        <div class="frame-label"><span class="frame-label-text">Unknown Beach</span></div>
+      </div>
+
+    </div>
+  </section>
+
+
+
+
+  <!-- ── Contact ────────────────────────────── -->
+  <section id="contact">
+    <div class="contact-section">
+      <h2 class="contact-heading reveal">Let's create <em>something.</em></h2>
+      <div class="contact-icons reveal reveal-d1">
+        <!-- Email -->
+        <a href="mailto:maxshenfilm@gmail.com" class="contact-icon" aria-label="Email">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        </a>
+        <!-- Instagram -->
+        <a href="https://instagram.com/maxshen.mp4" target="_blank" rel="noopener" class="contact-icon" aria-label="Instagram">
+          <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+
+      <form class="contact-form reveal reveal-d2" id="contactForm" novalidate>
+        <textarea id="contactMsg" rows="1" placeholder="write a message…" maxlength="1000"></textarea>
+        <div class="contact-form-row">
+          <span class="contact-form-hint">maxshenfilm@gmail.com</span>
+          <button type="submit" class="contact-send">Send</button>
+        </div>
+        <p class="contact-confirm" id="contactConfirm">message sent —</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────── -->
+
+  <!-- ── Lightbox ───────────────────────────── -->
+  <div id="lightbox">
+    <button id="lightboxClose" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></svg>
+    </button>
+    <div class="lightbox-inner">
+      <video id="lightboxVideo" controls></video>
+      <div class="lightbox-bar">
+        <span id="lightboxTitle"></span>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // ── Loading screen ────────────────────────────────────────
+    (function () {
+      const loader      = document.getElementById('loader');
+      const loaderInner = document.getElementById('loader-inner');
+      const barFill     = document.getElementById('loader-bar-fill');
+      const pctLabel    = document.getElementById('loader-pct');
+      const heroVideo   = document.querySelector('.hero-video');
+
+      // Lock scroll while loading
+      document.body.style.overflow = 'hidden';
+
+      // Kick off hero video buffering immediately so it's ready by the time
+      // the bar finishes — without this, preload="none" means zero data loads.
+      if (heroVideo) {
+        heroVideo.preload = 'auto';
+        heroVideo.load();
+      }
+
+      // Fade in loader content on next frame
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        loaderInner.classList.add('visible');
+      }));
+
+      let barDone   = false;
+      let videoDone = false;
+
+      // Called whenever either gate flips — only proceeds when both are true
+      function tryRelease() {
+        if (!barDone || !videoDone) return;
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          loader.style.display = 'none';
+          document.body.style.overflow = '';
+          document.querySelector('.hero-text')?.classList.add('loaded');
+          heroVideo?.play().catch(() => {});
+        }, 780);
+      }
+
+      // Gate 1 — hero video readiness
+      if (!heroVideo) {
+        videoDone = true; // no video, don't block
+      } else if (heroVideo.readyState >= 3) {
+        videoDone = true; // already buffered (e.g. cached)
+      } else {
+        heroVideo.addEventListener('canplay', () => {
+          videoDone = true;
+          tryRelease();
+        }, { once: true });
+      }
+
+      // Gate 2 — progress bar animation
+      function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+      const DURATION = 2800;
+      const start    = performance.now();
+
+      function tick(now) {
+        const t     = Math.min((now - start) / DURATION, 1);
+        const eased = easeOutQuart(t);
+        const pct   = Math.round(eased * 100);
+
+        barFill.style.width  = pct + '%';
+        pctLabel.textContent = pct + '%';
+
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          // Hold at 100% until video is also ready
+          setTimeout(() => {
+            barDone = true;
+            tryRelease();
+          }, 220);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    })();
+
+    // ── Video: seek to thumbnail frame ───────────────────────
+    document.querySelectorAll('.work-thumb, .dc-video').forEach(video => {
+      video.addEventListener('loadedmetadata', () => {
+        if (video.duration > 4) video.currentTime = video.duration * 0.18;
+      });
+    });
+    // Frame thumbnails always show first frame
+    document.querySelectorAll('.frame-video').forEach(video => {
+      video.addEventListener('loadedmetadata', () => {
+        video.currentTime = 0;
+      });
+    });
+
+    // ── Frame thumbnails: fade in once the seeked frame is decoded ──
+    document.querySelectorAll('.frame-video').forEach(video => {
+      video.addEventListener('seeked', () => {
+        video.closest('.frame-item')?.classList.add('thumb-ready');
+      });
+      // also handle videos that start at currentTime 0 (duration ≤ 4s)
+      video.addEventListener('loadeddata', () => {
+        if (video.duration <= 4) {
+          video.closest('.frame-item')?.classList.add('thumb-ready');
+        }
+      });
+    });
+
+    // ── Work thumbnails: fade in once the seeked frame is decoded ──
+    document.querySelectorAll('.work-thumb').forEach(video => {
+      video.addEventListener('seeked', () => {
+        video.classList.add('thumb-ready');
+      });
+      video.addEventListener('loadeddata', () => {
+        if (video.duration <= 4) video.classList.add('thumb-ready');
+      });
+      if (video.readyState >= 2) video.classList.add('thumb-ready');
+    });
+
+    // ── Proactive thumbnail preloader ────────────────────────
+    // Triggers video metadata load 300px before the frames grid enters view,
+    // so thumbnails are decoded and visible the moment the section appears.
+    const frameThumbPreloader = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.querySelectorAll('.frame-video').forEach(video => {
+          if (video.preload === 'none') {
+            video.preload = 'metadata';
+            video.load();
+          }
+        });
+        frameThumbPreloader.unobserve(entry.target);
+      });
+    }, { rootMargin: '300px 0px' });
+
+    document.querySelectorAll('.frames-grid').forEach(g => frameThumbPreloader.observe(g));
+
+
+    // ── Frames: hover play + staggered reveal on scroll ─────
+    function setupHoverPlay(selector, playFromStart = false) {
+      document.querySelectorAll(selector).forEach(item => {
+        const video = item.querySelector('video');
+        if (!video) return;
+        let resetTimer = null;
+
+        item.addEventListener('mouseenter', () => {
+          clearTimeout(resetTimer);
+          if (playFromStart) video.currentTime = 0;
+          video.play().catch(() => {});
+        });
+        item.addEventListener('mouseleave', () => {
+          video.pause();
+          resetTimer = setTimeout(() => {
+            if (video.duration > 4) video.currentTime = video.duration * 0.18;
+          }, 300);
+        });
+        item.addEventListener('click', () => {
+          if (item.dataset.src) openLightbox(item.dataset.src, item.dataset.title);
+        });
+      });
+    }
+
+    setupHoverPlay('.frame-item', true);
+    setupHoverPlay('.dc-item');
+
+
+    // ── Featured work grid: hover plays, click opens lightbox ──
+    setupHoverPlay('.work-item');
+
+
+    // ── Staggered scroll reveal for frame/dc grids ──────────
+    const gridRevealObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const grid = entry.target;
+        const items = Array.from(grid.children);
+        items.forEach((item, i) => {
+          const row = Math.floor(i / 3);
+          const col = i % 3;
+          // Slower, more cinematic stagger: row drives the primary delay
+          const delay = row * 0.12 + col * 0.06;
+          item.style.transitionDelay = delay + 's';
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            item.classList.add('revealed');
+          }));
+        });
+        gridRevealObs.unobserve(grid);
+      });
+    }, { threshold: 0.04, rootMargin: '0px 0px -4% 0px' });
+
+    document.querySelectorAll('.frames-grid, .dc-grid, .work-grid').forEach(grid => {
+      gridRevealObs.observe(grid);
+    });
+
+
+    // ── Lightbox ─────────────────────────────────────────────
+    const lightbox      = document.getElementById('lightbox');
+    const lightboxVideo = document.getElementById('lightboxVideo');
+    const lightboxTitle = document.getElementById('lightboxTitle');
+    const lightboxClose = document.getElementById('lightboxClose');
+
+    function openLightbox(src, title) {
+      lightboxVideo.src = decodeURIComponent(src);
+      lightboxTitle.textContent = title || '';
+      lightbox.classList.add('open');
+      lightboxVideo.load();
+      lightboxVideo.addEventListener('canplay', () => {
+        lightboxVideo.play().catch(() => {});
+      }, { once: true });
+
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightboxVideo.pause();
+      lightboxVideo.src = '';
+    }
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+
+
+
+    // ── Generic scroll reveal (contact) ─────────────────────
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
+      });
+    }, { threshold: 0.01, rootMargin: '0px 0px -5% 0px' });
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+    // ── Contact form ─────────────────────────────────────────
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const msg = document.getElementById('contactMsg').value.trim();
+      if (!msg) return;
+      const mailto = 'mailto:maxshenfilm@gmail.com'
+        + '?subject=' + encodeURIComponent('Message from maxshen.mp4')
+        + '&body=' + encodeURIComponent(msg);
+      window.location.href = mailto;
+      document.getElementById('contactMsg').value = '';
+      const confirm = document.getElementById('contactConfirm');
+      confirm.classList.add('visible');
+      setTimeout(() => confirm.classList.remove('visible'), 3500);
+    });
+
+    // ── Page transition to About ─────────────────────────────
+    document.querySelectorAll('a[href="about.html"]').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        document.body.style.transition = 'opacity 0.55s cubic-bezier(0.4,0,0.2,1)';
+        document.body.style.opacity = '0';
+        setTimeout(() => { window.location.href = 'about.html'; }, 560);
+      });
+    });
+  </script>
+
+</body>
+</html>
