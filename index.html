@@ -1183,7 +1183,20 @@
       } else if (heroVideo.readyState >= 3) {
         videoDone = true; // already buffered (e.g. cached)
       } else {
+        // Fallback: if video doesn't load within 5s (e.g. missing file), release anyway
+        const videoTimeout = setTimeout(() => {
+          videoDone = true;
+          tryRelease();
+        }, 5000);
+
         heroVideo.addEventListener('canplay', () => {
+          clearTimeout(videoTimeout);
+          videoDone = true;
+          tryRelease();
+        }, { once: true });
+
+        heroVideo.addEventListener('error', () => {
+          clearTimeout(videoTimeout);
           videoDone = true;
           tryRelease();
         }, { once: true });
