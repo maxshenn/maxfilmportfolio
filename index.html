@@ -1063,7 +1063,7 @@
 
       <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/take%20your%20time.mp4" data-title="Take Your Time">
         <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="metadata" loop>
+          <video class="work-thumb" muted playsinline preload="none" loop>
             <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/take%20your%20time.mp4" type="video/mp4">
           </video>
         </div>
@@ -1075,7 +1075,7 @@
 
       <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/toronto2026.mp4" data-title="Toronto 2026">
         <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="metadata" loop>
+          <video class="work-thumb" muted playsinline preload="none" loop>
             <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/toronto2026.mp4" type="video/mp4">
           </video>
         </div>
@@ -1087,7 +1087,7 @@
 
       <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/lake%20cowichan.mp4" data-title="Lake Cowichan">
         <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="metadata" loop>
+          <video class="work-thumb" muted playsinline preload="none" loop>
             <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/lake%20cowichan.mp4" type="video/mp4">
           </video>
         </div>
@@ -1099,7 +1099,7 @@
 
       <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/ski%20trip%202026.mp4" data-title="Ski Trip 2026">
         <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="metadata" loop>
+          <video class="work-thumb" muted playsinline preload="none" loop>
             <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/ski%20trip%202026.mp4" type="video/mp4">
           </video>
         </div>
@@ -1111,7 +1111,7 @@
 
       <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/central%20park.mp4" data-title="Central Park">
         <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="metadata" loop>
+          <video class="work-thumb" muted playsinline preload="none" loop>
             <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/central%20park.mp4" type="video/mp4">
           </video>
         </div>
@@ -1123,7 +1123,7 @@
 
       <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/pursuit%20of%20authenticity.mp4" data-title="Pursuit of Authenticity">
         <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="metadata" loop>
+          <video class="work-thumb" muted playsinline preload="none" loop>
             <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/pursuit%20of%20authenticity.mp4" type="video/mp4">
           </video>
         </div>
@@ -1281,11 +1281,10 @@
 
       let barDone   = false;
       let videoDone = false;
-      let pageDone  = false;
 
-      // Called whenever any gate flips — only proceeds when all three are true
+      // Called whenever either gate flips — only proceeds when both are true
       function tryRelease() {
-        if (!barDone || !videoDone || !pageDone) return;
+        if (!barDone || !videoDone) return;
         loader.classList.add('fade-out');
         setTimeout(() => {
           loader.style.display = 'none';
@@ -1320,20 +1319,7 @@
         }, { once: true });
       }
 
-      // Gate 2 — full page load: window.load + fonts ready
-      const fontReady = (document.fonts && document.fonts.ready) || Promise.resolve();
-      const pageLoad  = new Promise(resolve => {
-        if (document.readyState === 'complete') resolve();
-        else window.addEventListener('load', resolve, { once: true });
-      });
-      Promise.all([fontReady, pageLoad]).then(() => {
-        pageDone = true;
-        tryRelease();
-      });
-      // Safety: never block forever on slow connections
-      setTimeout(() => { pageDone = true; tryRelease(); }, 15000);
-
-      // Gate 3 — progress bar animation
+      // Gate 2 — progress bar animation
       function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
       const DURATION = 2800;
       const start    = performance.now();
@@ -1397,23 +1383,24 @@
       if (video.readyState >= 2) video.classList.add('thumb-ready');
     });
 
-    // ── Proactive thumbnail preloader ────────────────────────
-    // Triggers video metadata load 300px before the frames grid enters view,
-    // so thumbnails are decoded and visible the moment the section appears.
-    const frameThumbPreloader = new IntersectionObserver((entries) => {
+    // ── Lazy thumbnail preloader (frames + work grids) ───────
+    // Triggers metadata load 300px before the section enters view so
+    // thumbnails are ready the moment the user scrolls to them,
+    // without blocking initial page load.
+    const thumbPreloader = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
-        entry.target.querySelectorAll('.frame-video').forEach(video => {
+        entry.target.querySelectorAll('video').forEach(video => {
           if (video.preload === 'none') {
             video.preload = 'metadata';
             video.load();
           }
         });
-        frameThumbPreloader.unobserve(entry.target);
+        thumbPreloader.unobserve(entry.target);
       });
     }, { rootMargin: '300px 0px' });
 
-    document.querySelectorAll('.frames-grid').forEach(g => frameThumbPreloader.observe(g));
+    document.querySelectorAll('.frames-grid, .work-grid').forEach(g => thumbPreloader.observe(g));
 
 
     // ── Frames: hover play + staggered reveal on scroll ─────
