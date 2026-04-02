@@ -1055,7 +1055,7 @@
 
       <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/take%20your%20time.mp4" data-title="Take Your Time">
         <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="none" loop>
+          <video class="work-thumb" muted playsinline preload="none" loop poster="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/posters/take%20your%20time%20ss.png">
             <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/take%20your%20time.mp4" type="video/mp4">
           </video>
         </div>
@@ -1115,7 +1115,7 @@
 
       <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/pursuit%20of%20authenticity.mp4" data-title="Pursuit of Authenticity">
         <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="none" loop>
+          <video class="work-thumb" muted playsinline preload="none" loop poster="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/posters/pursuit%20of%20authenticity%20ss.png">
             <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/pursuit%20of%20authenticity.mp4" type="video/mp4">
           </video>
         </div>
@@ -1393,6 +1393,8 @@
       video.addEventListener('seeked',     () => video.classList.add('thumb-ready'));
       video.addEventListener('loadeddata', () => video.classList.add('thumb-ready'));
       if (video.readyState >= 2) video.classList.add('thumb-ready');
+      // Poster image present — show immediately without waiting for video data
+      if (video.poster) video.classList.add('thumb-ready');
     });
 
     // ── Lazy thumbnail preloader (frames + work grids) ───────
