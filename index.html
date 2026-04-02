@@ -122,6 +122,7 @@
     .hero-section {
       position: relative;
       height: 100vh;
+      height: 100svh;
       overflow: hidden;
     }
     .hero-section::before {
@@ -803,31 +804,137 @@
 
 
     /* ─────────────────────────────────────────────
+       HAMBURGER + MOBILE MENU
+    ───────────────────────────────────────────── */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      z-index: 600;
+      position: relative;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 1px;
+      background: rgba(255,255,255,0.88);
+      transition: transform 0.32s cubic-bezier(0.16,1,0.3,1),
+                  opacity 0.22s ease;
+      transform-origin: center;
+    }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    #mobileMenu {
+      position: fixed;
+      inset: 0;
+      z-index: 490;
+      background: rgba(9,8,7,0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.38s cubic-bezier(0.22,0.61,0.36,1);
+    }
+    #mobileMenu.open { opacity: 1; pointer-events: all; }
+    #mobileMenu ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+    }
+    #mobileMenu a {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 300;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: rgba(240,236,226,0.6);
+      text-decoration: none;
+      transition: color 0.22s;
+    }
+    #mobileMenu a:active { color: var(--text); }
+    #mobileMenu .mobile-about a {
+      color: rgba(240,236,226,0.88);
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 10px 28px;
+    }
+
+    /* ─────────────────────────────────────────────
        RESPONSIVE
     ───────────────────────────────────────────── */
     @media (max-width: 960px) {
       nav { padding: 0 24px; }
       .nav-links { display: none; }
-      .section-header { padding: 0 32px; }
+      .nav-hamburger { display: flex; }
 
-      .hero-section { grid-template-columns: 1fr; height: auto; }
-      .hero-text { padding: 48px 32px; }
-      .hero-media { aspect-ratio: 16/9; position: relative; height: auto; }
-      .hero-media video { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .section-header { padding: 0 24px; }
+      .work-header { padding: 0 24px; }
 
-      .work-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); padding: 0 32px; }
-      .work-header { padding: 0 32px; }
+      .hero-text { bottom: 56px; left: 32px; }
+
+      .work-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto;
+        padding: 0 24px;
+        gap: 8px;
+      }
+      .work-media { aspect-ratio: 4 / 3; flex: none; }
 
       .frames-grid,
       .dc-grid { grid-template-columns: repeat(2, 1fr); }
 
+      .dc-section { padding-top: 72px; }
       .contact-section { padding: 56px 24px 64px; }
-      footer { padding: 20px 32px; }
+      footer { padding: 20px 24px; }
+
+      #lightboxVideo { height: auto; aspect-ratio: 16/9; }
     }
+
     @media (max-width: 560px) {
-      .work-grid { grid-template-columns: 1fr; }
+      nav { padding: 0 20px; }
+      .hero-text { bottom: 44px; left: 20px; }
+
+      .work-grid {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+        gap: 12px;
+      }
+      .work-media { aspect-ratio: 16 / 10; }
+
       .frames-grid,
-      .dc-grid { grid-template-columns: 1fr; }
+      .dc-grid { grid-template-columns: repeat(2, 1fr); }
+
+      .dc-section { padding-top: 56px; }
+      .frames-section { padding-top: 48px; }
+
+      .contact-section { padding: 48px 20px 56px; }
+      footer { padding: 20px; flex-direction: column; gap: 8px; text-align: center; }
+    }
+
+    /* Touch devices — no hover capability */
+    @media (hover: none) {
+      /* Always show frame labels */
+      .frame-item::after { opacity: 1; }
+      .frame-label { opacity: 1; transform: translateY(0); }
+      /* Disable scale-on-hover for frames (causes layout jumps on tap) */
+      .frame-item:hover {
+        transform: none !important;
+        transition-duration: 0.2s !important;
+      }
+      .frame-item:active { transform: scale(0.97) !important; }
+      /* Work items: show thumbnail at normal brightness */
+      .work-thumb { filter: brightness(0.82) saturate(0.72); }
     }
 
     /* ─────────────────────────────────────────────
@@ -920,7 +1027,18 @@
       <li><a href="#frames">Frames</a></li>
       <li class="about-btn"><a href="about.html">About</a></li>
     </ul>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <div id="mobileMenu" aria-hidden="true">
+    <ul>
+      <li><a href="#work">Portfolio</a></li>
+      <li><a href="#frames">Frames</a></li>
+      <li class="mobile-about"><a href="about.html">About</a></li>
+    </ul>
+  </div>
 
   <!-- ── Hero ──────────────────────────────── -->
   <section class="hero-section">
@@ -1403,6 +1521,35 @@
         document.body.style.opacity = '0';
         setTimeout(() => { window.location.href = 'about.html'; }, 560);
       });
+    });
+
+    // ── Mobile hamburger menu ─────────────────────────────────
+    const hamburger  = document.getElementById('navHamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    function toggleMenu(force) {
+      const open = typeof force === 'boolean' ? force : !hamburger.classList.contains('open');
+      hamburger.classList.toggle('open', open);
+      mobileMenu.classList.toggle('open', open);
+      mobileMenu.setAttribute('aria-hidden', String(!open));
+      document.body.style.overflow = open ? 'hidden' : '';
+    }
+
+    hamburger.addEventListener('click', () => toggleMenu());
+
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => toggleMenu(false));
+    });
+
+    // ── Touch: tap frame/work items to play then open lightbox ─
+    const isTouchDevice = () => window.matchMedia('(hover: none)').matches;
+
+    document.querySelectorAll('.frame-item, .work-item').forEach(item => {
+      if (!item.dataset.src) return;
+      item.addEventListener('touchstart', () => {
+        const video = item.querySelector('video');
+        if (video) video.play().catch(() => {});
+      }, { passive: true });
     });
   </script>
 
