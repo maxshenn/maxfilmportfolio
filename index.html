@@ -1281,10 +1281,11 @@
 
       let barDone   = false;
       let videoDone = false;
+      let pageDone  = false;
 
-      // Called whenever either gate flips — only proceeds when both are true
+      // Called whenever any gate flips — only proceeds when all three are true
       function tryRelease() {
-        if (!barDone || !videoDone) return;
+        if (!barDone || !videoDone || !pageDone) return;
         loader.classList.add('fade-out');
         setTimeout(() => {
           loader.style.display = 'none';
@@ -1319,7 +1320,20 @@
         }, { once: true });
       }
 
-      // Gate 2 — progress bar animation
+      // Gate 2 — full page load: window.load + fonts ready
+      const fontReady = (document.fonts && document.fonts.ready) || Promise.resolve();
+      const pageLoad  = new Promise(resolve => {
+        if (document.readyState === 'complete') resolve();
+        else window.addEventListener('load', resolve, { once: true });
+      });
+      Promise.all([fontReady, pageLoad]).then(() => {
+        pageDone = true;
+        tryRelease();
+      });
+      // Safety: never block forever on slow connections
+      setTimeout(() => { pageDone = true; tryRelease(); }, 15000);
+
+      // Gate 3 — progress bar animation
       function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
       const DURATION = 2800;
       const start    = performance.now();
