@@ -1289,12 +1289,19 @@
             if (heroVideo.readyState >= 3) {
               heroVideo.play().catch(() => {});
             } else {
-              // Video still buffering — play the moment it's ready
               heroVideo.addEventListener('canplay', () => {
                 heroVideo.play().catch(() => {});
               }, { once: true });
             }
           }
+          // Work thumbnails are right below the hero — start loading their
+          // metadata immediately so they're ready when the user scrolls down.
+          document.querySelectorAll('.work-thumb').forEach(video => {
+            if (video.preload === 'none') {
+              video.preload = 'metadata';
+              video.load();
+            }
+          });
         }, 780);
       }
 
