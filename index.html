@@ -1422,7 +1422,11 @@
           }, 300);
         });
         item.addEventListener('click', () => {
-          if (item.dataset.src) openLightbox(item.dataset.src, item.dataset.title);
+          if (item.dataset.src) {
+            const labelEl = item.querySelector('.frame-label-text');
+            const title = (labelEl && labelEl.textContent) || item.dataset.title;
+            openLightbox(item.dataset.src, title);
+          }
         });
       });
     }
