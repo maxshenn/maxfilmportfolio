@@ -285,7 +285,8 @@
                   transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .work-thumb.thumb-ready { opacity: 1; }
-    .work-item:hover .work-thumb {
+    .work-item:hover .work-thumb,
+    .work-item.touch-playing .work-thumb {
       filter: brightness(0.90) saturate(0.80);
       transform: scale(1.04);
     }
@@ -1582,16 +1583,32 @@
       link.addEventListener('click', () => toggleMenu(false));
     });
 
-    // ── Touch: tap frame/work items to play then open lightbox ─
-    const isTouchDevice = () => window.matchMedia('(hover: none)').matches;
-
-    document.querySelectorAll('.frame-item, .work-item').forEach(item => {
-      if (!item.dataset.src) return;
-      item.addEventListener('touchstart', () => {
+    // ── Touch: tap to play video in thumbnail ────────────────
+    if (isMobileDevice) {
+      document.querySelectorAll('.work-item, .frame-item').forEach(item => {
         const video = item.querySelector('video');
-        if (video) video.play().catch(() => {});
-      }, { passive: true });
-    });
+        if (!video) return;
+
+        item.addEventListener('touchstart', () => {
+          video.play().catch(() => {});
+          item.classList.add('touch-playing');
+        }, { passive: true });
+
+        item.addEventListener('touchend', () => {
+          setTimeout(() => item.classList.remove('touch-playing'), 600);
+        }, { passive: true });
+      });
+
+      // Fallback: large files without faststart encoding (e.g. 119MB, 164MB)
+      // can take 5+ seconds to load metadata on mobile. After 3s, force
+      // thumb-ready so the card shows the video element rather than staying
+      // invisible. Re-encoding with HandBrake "Web Optimized" is the real fix.
+      setTimeout(() => {
+        document.querySelectorAll('.work-thumb').forEach(v => {
+          v.classList.add('thumb-ready');
+        });
+      }, 3000);
+    }
   </script>
 
 </body>
