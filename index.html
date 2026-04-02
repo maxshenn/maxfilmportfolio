@@ -1269,6 +1269,13 @@
         heroVideo.load();
       }
 
+      // Start loading work thumbnail metadata during the loading screen
+      // so thumbnails are ready the moment the loader releases.
+      document.querySelectorAll('.work-thumb').forEach(video => {
+        video.preload = 'metadata';
+        video.load();
+      });
+
       // Fade in loader content on next frame
       requestAnimationFrame(() => requestAnimationFrame(() => {
         loaderInner.classList.add('visible');
@@ -1294,14 +1301,6 @@
               }, { once: true });
             }
           }
-          // Work thumbnails are right below the hero — start loading their
-          // metadata immediately so they're ready when the user scrolls down.
-          document.querySelectorAll('.work-thumb').forEach(video => {
-            if (video.preload === 'none') {
-              video.preload = 'metadata';
-              video.load();
-            }
-          });
         }, 780);
       }
 
@@ -1358,9 +1357,14 @@
     })();
 
     // ── Video: seek to thumbnail frame ───────────────────────
+    const isMobileDevice = window.matchMedia('(hover: none), (max-width: 960px)').matches;
     document.querySelectorAll('.work-thumb, .dc-video').forEach(video => {
       video.addEventListener('loadedmetadata', () => {
-        if (video.duration > 4) video.currentTime = video.duration * 0.18;
+        // Mobile: stay at frame 0 — decodes immediately with minimal data downloaded.
+        // Desktop: seek to 18% for a more representative thumbnail frame.
+        if (!isMobileDevice && video.duration > 4) {
+          video.currentTime = video.duration * 0.18;
+        }
       });
     });
     // Frame thumbnails always show first frame
