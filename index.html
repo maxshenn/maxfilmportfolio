@@ -1379,22 +1379,18 @@
       video.addEventListener('seeked', () => {
         video.closest('.frame-item')?.classList.add('thumb-ready');
       });
-      // also handle videos that start at currentTime 0 (duration ≤ 4s)
       video.addEventListener('loadeddata', () => {
-        if (video.duration <= 4) {
-          video.closest('.frame-item')?.classList.add('thumb-ready');
-        }
+        video.closest('.frame-item')?.classList.add('thumb-ready');
       });
     });
 
-    // ── Work thumbnails: fade in once the seeked frame is decoded ──
+    // ── Work thumbnails: fade in once a frame is decoded ────────
+    // loadeddata fires when currentTime=0 frame is ready (mobile, no seek).
+    // seeked fires after seeking to 18% on desktop.
+    // Both paths add thumb-ready — whichever fires first wins.
     document.querySelectorAll('.work-thumb').forEach(video => {
-      video.addEventListener('seeked', () => {
-        video.classList.add('thumb-ready');
-      });
-      video.addEventListener('loadeddata', () => {
-        if (video.duration <= 4) video.classList.add('thumb-ready');
-      });
+      video.addEventListener('seeked',     () => video.classList.add('thumb-ready'));
+      video.addEventListener('loadeddata', () => video.classList.add('thumb-ready'));
       if (video.readyState >= 2) video.classList.add('thumb-ready');
     });
 
