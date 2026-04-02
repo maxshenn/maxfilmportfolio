@@ -385,7 +385,6 @@
     .frame-item:hover .frame-video {
       filter: brightness(0.96) saturate(0.92) contrast(1.08);
       transform: scale(1.03);
-      opacity: 1;
     }
 
     .frame-item::after {
@@ -395,11 +394,11 @@
       z-index: 1;
       background: linear-gradient(
         to top,
-        rgba(9, 8, 7, 0.82) 0%,
-        rgba(9, 8, 7, 0.1) 45%,
+        rgba(9, 8, 7, 0.72) 0%,
+        rgba(9, 8, 7, 0.08) 45%,
         transparent 100%
       );
-      opacity: 0;
+      opacity: 0.55;
       transition: opacity 0.42s ease;
       pointer-events: none;
     }
@@ -410,11 +409,6 @@
       bottom: 0; left: 0; right: 0;
       z-index: 2;
       padding: 18px 16px;
-      transform: translateY(5px);
-      opacity: 0;
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-    .frame-item:hover .frame-label {
       opacity: 1;
       transform: translateY(0);
     }
@@ -923,9 +917,6 @@
 
     /* Touch devices — no hover capability */
     @media (hover: none) {
-      /* Always show frame labels */
-      .frame-item::after { opacity: 1; }
-      .frame-label { opacity: 1; transform: translateY(0); }
       /* Disable scale-on-hover for frames (causes layout jumps on tap) */
       .frame-item:hover {
         transform: none !important;
@@ -1397,23 +1388,32 @@
     });
 
     // ── Lazy thumbnail preloader (frames + work grids) ───────
-    // Triggers metadata load 300px before the section enters view so
-    // thumbnails are ready the moment the user scrolls to them,
-    // without blocking initial page load.
-    const thumbPreloader = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        entry.target.querySelectorAll('video').forEach(video => {
-          if (video.preload === 'none') {
-            video.preload = 'metadata';
-            video.load();
-          }
+    // Work grid: trigger 300px early — just below hero, loads fast.
+    // Frames grid: trigger 600px early — further down the page,
+    // needs more lead time so thumbnails are decoded when user arrives.
+    function makeLazyLoader(rootMargin) {
+      return new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          entry.target.querySelectorAll('video').forEach(video => {
+            if (video.preload === 'none') {
+              video.preload = 'metadata';
+              video.load();
+            }
+          });
+          entry.target._lazyLoader.unobserve(entry.target);
         });
-        thumbPreloader.unobserve(entry.target);
-      });
-    }, { rootMargin: '300px 0px' });
+      }, { rootMargin });
+    }
 
-    document.querySelectorAll('.frames-grid, .work-grid').forEach(g => thumbPreloader.observe(g));
+    ['.work-grid', '.frames-grid'].forEach((sel, i) => {
+      const margin = i === 0 ? '300px 0px' : '600px 0px';
+      const obs = makeLazyLoader(margin);
+      document.querySelectorAll(sel).forEach(g => {
+        g._lazyLoader = obs;
+        obs.observe(g);
+      });
+    });
 
 
     // ── Frames: hover play + staggered reveal on scroll ─────
