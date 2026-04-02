@@ -1269,10 +1269,11 @@
 
       const isMobile = window.matchMedia('(hover: none), (max-width: 960px)').matches;
 
-      // On desktop: preload the hero video so it's ready when the loader releases.
-      // On mobile: skip preload — 53MB over a mobile connection blocks for too long.
-      //            The video loads in the background and plays when ready instead.
-      if (heroVideo && !isMobile) {
+      // Always start buffering the hero video immediately so it has the full
+      // loading screen duration (1.8s mobile / 2.8s desktop) to download.
+      // On mobile we don't block the loader on it, but starting early means
+      // it's likely ready (or close) by the time the loader releases.
+      if (heroVideo) {
         heroVideo.preload = 'auto';
         heroVideo.load();
       }
@@ -1293,7 +1294,16 @@
           loader.style.display = 'none';
           document.body.style.overflow = '';
           document.querySelector('.hero-text')?.classList.add('loaded');
-          heroVideo?.play().catch(() => {});
+          if (heroVideo) {
+            if (heroVideo.readyState >= 3) {
+              heroVideo.play().catch(() => {});
+            } else {
+              // Video still buffering — play the moment it's ready
+              heroVideo.addEventListener('canplay', () => {
+                heroVideo.play().catch(() => {});
+              }, { once: true });
+            }
+          }
         }, 780);
       }
 
