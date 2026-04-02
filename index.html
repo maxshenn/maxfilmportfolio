@@ -891,8 +891,8 @@
       }
       .work-media { aspect-ratio: 4 / 3; flex: none; }
 
-      .frames-grid,
       .dc-grid { grid-template-columns: repeat(2, 1fr); }
+      .frames-grid { grid-template-columns: 1fr; }
 
       .dc-section { padding-top: 72px; }
       .contact-section { padding: 56px 24px 64px; }
@@ -912,7 +912,6 @@
       }
       .work-media { aspect-ratio: 16 / 10; }
 
-      .frames-grid,
       .dc-grid { grid-template-columns: repeat(2, 1fr); }
 
       .dc-section { padding-top: 56px; }
@@ -1435,7 +1434,7 @@
     setupHoverPlay('.work-item');
 
 
-    // ── Staggered scroll reveal for frame/dc grids ──────────
+    // ── Staggered scroll reveal for dc/work grids (grid-level) ─
     const gridRevealObs = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
@@ -1444,7 +1443,6 @@
         items.forEach((item, i) => {
           const row = Math.floor(i / 3);
           const col = i % 3;
-          // Slower, more cinematic stagger: row drives the primary delay
           const delay = row * 0.12 + col * 0.06;
           item.style.transitionDelay = delay + 's';
           requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1455,8 +1453,26 @@
       });
     }, { threshold: 0.04, rootMargin: '0px 0px -4% 0px' });
 
-    document.querySelectorAll('.frames-grid, .dc-grid, .work-grid').forEach(grid => {
+    document.querySelectorAll('.dc-grid, .work-grid').forEach(grid => {
       gridRevealObs.observe(grid);
+    });
+
+    // ── Frames: per-item scroll reveal so each frame animates on scroll ──
+    // Each item gets its own observer so the animation fires individually
+    // as the user scrolls — works correctly for both 1-col mobile and 3-col desktop.
+    const frameItemRevealObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.style.transitionDelay = '0s';
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          entry.target.classList.add('revealed');
+        }));
+        frameItemRevealObs.unobserve(entry.target);
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
+
+    document.querySelectorAll('.frames-grid .frame-item').forEach(item => {
+      frameItemRevealObs.observe(item);
     });
 
 
