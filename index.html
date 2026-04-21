@@ -25,7 +25,7 @@
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       background: var(--bg);
       color: var(--text);
       font-weight: 300;
@@ -72,7 +72,7 @@
       justify-content: space-between;
     }
     .nav-name {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-style: normal;
       font-size: 13px;
       font-weight: 400;
@@ -88,7 +88,7 @@
       list-style: none;
     }
     .nav-links a {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 10px;
       font-weight: 300;
       letter-spacing: 0.2em;
@@ -173,7 +173,7 @@
       text-transform: uppercase;
     }
     .hero-tagline {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 13px;
       font-weight: 400;
       letter-spacing: 0.2em;
@@ -187,7 +187,7 @@
        SECTION LABELS (shared utility)
     ───────────────────────────────────────────── */
     .section-label {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 12px;
       font-weight: 400;
       letter-spacing: 0.3em;
@@ -230,7 +230,7 @@
       padding: 0 80px;
     }
     .work-header-title {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-weight: 400;
       font-size: 12px;
       letter-spacing: 0.3em;
@@ -304,10 +304,9 @@
 
     .work-caption {
       padding: 12px 0 18px;
-      border-top: 1px solid var(--dim);
     }
     .work-title {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.13em;
@@ -316,7 +315,7 @@
       margin-bottom: 5px;
     }
     .work-category {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 9px;
       font-weight: 300;
       letter-spacing: 0.22em;
@@ -326,114 +325,92 @@
 
 
     /* ─────────────────────────────────────────────
-       FRAMES — 3-column contact-sheet grid
+       FRAMES — Chaos video strip
     ───────────────────────────────────────────── */
     .frames-section {
-      padding-top: 64px;
-    }
-
-    .frames-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--gap);
-    }
-
-    .frame-item {
       position: relative;
+      height: 100vh;
       overflow: hidden;
-      cursor: pointer;
-      aspect-ratio: 1 / 1;
-      background: #111;
-      opacity: 0;
-      transform: translateY(36px);
-      transition: opacity 1.0s cubic-bezier(0.22, 0.61, 0.36, 1),
-                  transform 1.0s cubic-bezier(0.22, 0.61, 0.36, 1),
-                  box-shadow 0.5s ease,
-                  outline-color 0.4s ease;
-      will-change: transform, opacity;
-      outline: 1px solid rgba(240,236,226,0.12);
+      isolation: isolate;
     }
-    .frame-item.revealed {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-    .frame-item:hover {
-      transform: scale(1.09) !important;
-      z-index: 10;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 4px 18px rgba(0,0,0,0.45);
-      outline-color: rgba(240,236,226,0.38) !important;
-      transition-duration: 0.45s !important;
-      transition-delay: 0s !important;
-    }
-    /* Scale from correct edge so content stays on-screen */
-    .frame-item:nth-child(3n+1) { transform-origin: left center; }
-    .frame-item:nth-child(3n+2) { transform-origin: center center; }
-    .frame-item:nth-child(3n)   { transform-origin: right center; }
 
-    .frame-video {
+    .fs-grid-svg {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      filter: brightness(0.82) saturate(0.72) contrast(1.06);
-      opacity: 0;
-      transition: filter 0.55s ease,
-                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-                  opacity 0.5s ease;
-    }
-    .frame-item.thumb-ready .frame-video { opacity: 1; }
-    .frame-item:hover .frame-video {
-      filter: brightness(0.96) saturate(0.92) contrast(1.08);
-      transform: scale(1.03);
-    }
-
-    .frame-item::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      background: linear-gradient(
-        to top,
-        rgba(9, 8, 7, 0.72) 0%,
-        rgba(9, 8, 7, 0.08) 45%,
-        transparent 100%
-      );
-      opacity: 0.55;
-      transition: opacity 0.42s ease;
       pointer-events: none;
+      z-index: 0;
+      color: var(--text);
     }
-    .frame-item:hover::after { opacity: 1; }
 
-    .frame-label {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      z-index: 2;
-      padding: 18px 16px;
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .frame-cover {
+    .fs-vignette {
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: brightness(0.82) saturate(0.72) contrast(1.06);
       z-index: 3;
       pointer-events: none;
-      transition: opacity 0.45s ease;
+      background: radial-gradient(ellipse 76% 80% at center, transparent 8%, var(--bg) 84%);
     }
-    .frame-item:hover .frame-cover { opacity: 0; }
 
-    .frame-label-text {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 9px;
+    .fs-strip-mask {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%);
+      overflow: hidden;
+    }
+
+    #fsStrip {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .fs-cell {
+      pointer-events: auto;
+      position: absolute;
+      top: 0; left: 0;
+    }
+
+    .fs-copy {
+      position: absolute;
+      bottom: 56px;
+      left: 56px;
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .fs-eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 10px;
       font-weight: 300;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(240, 236, 226, 0.88);
+      color: var(--muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
+    .fs-eyebrow::before {
+      content: '';
+      display: block;
+      width: 28px;
+      height: 1px;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .fs-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.6rem, 4.2vw, 4rem);
+      font-weight: 300;
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .fs-title em { font-style: italic; }
 
 
     /* ─────────────────────────────────────────────
@@ -512,7 +489,7 @@
       line-height: 1.2;
     }
     .dc-artist {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 8px;
       font-weight: 300;
       letter-spacing: 0.22em;
@@ -529,7 +506,6 @@
        CONTACT
     ───────────────────────────────────────────── */
     .contact-section {
-      border-top: 1px solid var(--dim);
       padding: 72px 40px 80px;
       display: flex;
       flex-direction: column;
@@ -596,7 +572,7 @@
       border: none;
       border-bottom: 1px solid rgba(240, 236, 226, 0.18);
       padding: 0 0 8px;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 11px;
       font-weight: 300;
       letter-spacing: 0.06em;
@@ -620,7 +596,7 @@
       justify-content: space-between;
     }
     .contact-form-hint {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 9px;
       font-weight: 300;
       letter-spacing: 0.18em;
@@ -628,7 +604,7 @@
       color: rgba(240, 236, 226, 0.2);
     }
     .contact-send {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 9px;
       font-weight: 400;
       letter-spacing: 0.22em;
@@ -647,7 +623,7 @@
     }
     .contact-send:active { transform: scale(0.97); }
     .contact-confirm {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 9px;
       font-weight: 300;
       letter-spacing: 0.22em;
@@ -673,7 +649,7 @@
     }
     .footer-copy,
     .footer-handle {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 10px;
       font-weight: 300;
       letter-spacing: 0.12em;
@@ -725,7 +701,7 @@
       padding: 0 1px;
     }
     #lightboxTitle {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 10px;
       font-weight: 300;
       letter-spacing: 0.22em;
@@ -849,7 +825,7 @@
       gap: 36px;
     }
     #mobileMenu a {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 12px;
       font-weight: 300;
       letter-spacing: 0.32em;
@@ -910,7 +886,9 @@
       .dc-grid { grid-template-columns: repeat(2, 1fr); }
 
       .dc-section { padding-top: 56px; }
-      .frames-section { padding-top: 48px; }
+
+      .fs-copy { bottom: 28px; left: 20px; right: 20px; }
+      .fs-title { font-size: 2.1rem; }
 
       .contact-section { padding: 48px 20px 56px; }
       footer { padding: 20px; flex-direction: column; gap: 8px; text-align: center; }
@@ -918,12 +896,6 @@
 
     /* Touch devices — no hover capability */
     @media (hover: none) {
-      /* Disable scale-on-hover for frames (causes layout jumps on tap) */
-      .frame-item:hover {
-        transform: none !important;
-        transition-duration: 0.2s !important;
-      }
-      .frame-item:active { transform: scale(0.97) !important; }
       /* Work items: show thumbnail at normal brightness */
       .work-thumb { filter: brightness(0.82) saturate(0.72); }
     }
@@ -960,7 +932,7 @@
       transform: translateY(0);
     }
     #loader-title {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 20px;
       font-weight: 500;
       letter-spacing: 0.03em;
@@ -982,7 +954,7 @@
       background: #f0ece2;
     }
     #loader-pct {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'Cormorant Garamond', serif;
       font-size: 10px;
       font-weight: 300;
       letter-spacing: 0.24em;
@@ -1014,8 +986,8 @@
   <nav id="nav">
     <a href="#" class="nav-name">maxshen<span class="ext">.mp4</span></a>
     <ul class="nav-links">
-      <li><a href="#work">Portfolio</a></li>
       <li><a href="#frames">Frames</a></li>
+      <li><a href="#work">Portfolio</a></li>
       <li class="about-btn"><a href="about.html">About</a></li>
     </ul>
     <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
@@ -1025,8 +997,8 @@
 
   <div id="mobileMenu" aria-hidden="true">
     <ul>
-      <li><a href="#work">Portfolio</a></li>
       <li><a href="#frames">Frames</a></li>
+      <li><a href="#work">Portfolio</a></li>
       <li class="mobile-about"><a href="about.html">About</a></li>
     </ul>
   </div>
@@ -1043,6 +1015,19 @@
       </video>
     </div>
   </section>
+
+  <!-- ── Frames ─────────────────────────────── -->
+  <section class="frames-section" id="frames">
+    <svg class="fs-grid-svg" id="fsGridSvg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
+    <div class="fs-vignette"></div>
+    <div class="fs-strip-mask">
+      <div id="fsStrip"></div>
+    </div>
+    <div class="fs-copy">
+      <h2 class="fs-title">Years in Frames</h2>
+    </div>
+  </section>
+
 
   <!-- ── Featured Work ─────────────────────── -->
   <section class="featured-section" id="work">
@@ -1101,15 +1086,15 @@
         </div>
       </div>
 
-      <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/central%20park.mp4" data-title="Central Park">
+      <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/notgoinghome2.mp4" data-title="Morocco 2026">
         <div class="work-media">
           <video class="work-thumb" muted playsinline preload="none" loop>
-            <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/central%20park.mp4" type="video/mp4">
+            <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/notgoinghome2.mp4" type="video/mp4">
           </video>
         </div>
         <div class="work-caption">
-          <p class="work-title">Central Park</p>
-          <p class="work-category">Exploring New York</p>
+          <p class="work-title">Morocco 2026</p>
+          <p class="work-category">Spring Break</p>
         </div>
       </div>
 
@@ -1123,80 +1108,6 @@
           <p class="work-title">Pursuit of Authenticity</p>
           <p class="work-category">Capstone Project</p>
         </div>
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ── Frames ─────────────────────────────── -->
-  <section class="frames-section" id="frames">
-    <div class="section-header">
-      <p class="section-label reveal">Frames</p>
-    </div>
-    <div class="frames-grid">
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/waterfall.mp4" data-title="Waterfall">
-        <video class="frame-video" muted playsinline preload="none" loop>
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/waterfall.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Dolomites, Italy</span></div>
-      </div>
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/brent%20frame.mp4" data-title="Brent Frame">
-        <video class="frame-video" muted playsinline preload="none" loop>
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/brent%20frame.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Whistler, BC</span></div>
-      </div>
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/fantastic.mp4" data-title="Fantastic">
-        <video class="frame-video" muted playsinline preload="none" loop>
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/fantastic.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Pier 45, New York</span></div>
-      </div>
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/horse.mp4" data-title="Horse">
-        <video class="frame-video" muted playsinline preload="none" loop>
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/horse.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Dolomites, Italy</span></div>
-      </div>
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/fish.mp4" data-title="Fish">
-        <video class="frame-video" muted playsinline preload="none" loop>
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/fish.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Central Park, New York</span></div>
-      </div>
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/spikeball.mp4" data-title="Spikeball">
-        <video class="frame-video" muted playsinline preload="none" loop>
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/spikeball.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Lake Cowichan, BC</span></div>
-      </div>
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/stanley%20car.mp4" data-title="Stanley Car">
-        <video class="frame-video" muted playsinline preload="none" loop style="object-position: 75% center;">
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/stanley%20car.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Dolomites, Italy</span></div>
-      </div>
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/vancouver%20drive.mp4" data-title="Vancouver Drive">
-        <video class="frame-video" muted playsinline preload="none" loop>
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/vancouver%20drive.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Vancouver, BC</span></div>
-      </div>
-
-      <div class="frame-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/boom.mp4" data-title="Boom">
-        <video class="frame-video" muted playsinline preload="none" loop>
-          <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/boom.mp4" type="video/mp4">
-        </video>
-        <div class="frame-label"><span class="frame-label-text">Unknown Beach</span></div>
       </div>
 
     </div>
@@ -1368,23 +1279,6 @@
         }
       });
     });
-    // Frame thumbnails always show first frame
-    document.querySelectorAll('.frame-video').forEach(video => {
-      video.addEventListener('loadedmetadata', () => {
-        video.currentTime = 0;
-      });
-    });
-
-    // ── Frame thumbnails: fade in once the seeked frame is decoded ──
-    document.querySelectorAll('.frame-video').forEach(video => {
-      video.addEventListener('seeked', () => {
-        video.closest('.frame-item')?.classList.add('thumb-ready');
-      });
-      video.addEventListener('loadeddata', () => {
-        video.closest('.frame-item')?.classList.add('thumb-ready');
-      });
-    });
-
     // ── Work thumbnails: fade in once a frame is decoded ────────
     // loadeddata fires when currentTime=0 frame is ready (mobile, no seek).
     // seeked fires after seeking to 18% on desktop.
@@ -1416,13 +1310,10 @@
       }, { rootMargin });
     }
 
-    ['.work-grid', '.frames-grid'].forEach((sel, i) => {
-      const margin = i === 0 ? '300px 0px' : '600px 0px';
-      const obs = makeLazyLoader(margin);
-      document.querySelectorAll(sel).forEach(g => {
-        g._lazyLoader = obs;
-        obs.observe(g);
-      });
+    const workLazyObs = makeLazyLoader('300px 0px');
+    document.querySelectorAll('.work-grid').forEach(g => {
+      g._lazyLoader = workLazyObs;
+      workLazyObs.observe(g);
     });
 
 
@@ -1454,7 +1345,6 @@
       });
     }
 
-    setupHoverPlay('.frame-item', true);
     setupHoverPlay('.dc-item');
 
 
@@ -1484,25 +1374,6 @@
     document.querySelectorAll('.dc-grid, .work-grid').forEach(grid => {
       gridRevealObs.observe(grid);
     });
-
-    // ── Frames: per-item scroll reveal so each frame animates on scroll ──
-    // Each item gets its own observer so the animation fires individually
-    // as the user scrolls — works correctly for both 1-col mobile and 3-col desktop.
-    const frameItemRevealObs = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        entry.target.style.transitionDelay = '0s';
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          entry.target.classList.add('revealed');
-        }));
-        frameItemRevealObs.unobserve(entry.target);
-      });
-    }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
-
-    document.querySelectorAll('.frames-grid .frame-item').forEach(item => {
-      frameItemRevealObs.observe(item);
-    });
-
 
     // ── Lightbox ─────────────────────────────────────────────
     const lightbox      = document.getElementById('lightbox');
@@ -1587,7 +1458,7 @@
 
     // ── Touch: tap to play video in thumbnail ────────────────
     if (isMobileDevice) {
-      document.querySelectorAll('.work-item, .frame-item').forEach(item => {
+      document.querySelectorAll('.work-item').forEach(item => {
         const video = item.querySelector('video');
         if (!video) return;
 
@@ -1611,6 +1482,388 @@
         });
       }, 3000);
     }
+    // ── CHAOS VIDEO STRIP ─────────────────────────────────────────────────
+    (function initChaosStrip() {
+      const R2 = 'https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/';
+
+      const CATALOGUE = [
+        { src: 'boom.mp4',                            label: 'Unknown Beach' },
+        { src: 'brent%20frame.mp4',                   label: 'Whistler, BC' },
+        { src: 'couple.mp4',                          label: 'Morocco' },
+        { src: 'fantastic.mp4',                       label: 'Pier 45, New York' },
+        { src: 'fish.mp4',                            label: 'Central Park, New York' },
+        { src: 'horse.mp4',                           label: 'Dolomites, Italy' },
+        { src: 'morocco%20frames00100956.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'morocco%20frames00102024.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'morocco%20frames00125996.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'morocco%20frames00151768.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'morocco%20frames00157705.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'morocco%20frames00158757.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'morocco%20frames00160627.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'morocco%20frames00164404.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'morocco%20frames00164896.mp4',         label: 'Marrakech, Morocco' },
+        { src: 'pier%2035%20bob.mp4',                 label: 'Pier 35, New York' },
+        { src: 'spikeball.mp4',                       label: 'Lake Cowichan, BC' },
+        { src: 'stanley%20car.mp4',                   label: 'Stanley Park, BC' },
+        { src: 'vancouver%20drive.mp4',               label: 'Vancouver, BC' },
+        { src: 'waterfall.mp4',                       label: 'Dolomites, Italy' },
+      ];
+
+      const N_UNIQUE   = CATALOGUE.length;   // 20
+      const REPEATS    = 4;
+      const N          = N_UNIQUE * REPEATS; // 80
+      const BASE_W     = 46;
+      const BASE_H     = 61;
+      const GAP        = 6;
+      const STEP       = BASE_W + GAP;       // 52
+      const TOTAL      = N * STEP;           // 4160
+      const QUALITY    = 5;
+      const RENDER_W   = BASE_W * QUALITY;   // 230
+      const RENDER_H   = BASE_H * QUALITY;   // 305
+      const REST_SCALE = 1 / QUALITY;        // 0.2
+      const FRICTION   = 0.94;
+      const WHEEL_GAIN = 0.6;
+      const AUTO_DRIFT = -0.32;
+      const STAGE_START = 0.3;
+      const STAGE_END   = 0.8;
+      const CURVE_END   = 0.55;
+      const CURVE_LIFT  = 220;
+
+      function hash(n) {
+        const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
+        return x - Math.floor(x);
+      }
+      function halton(idx, base) {
+        let f = 1, r = 0, n = idx + 1;
+        while (n > 0) { f /= base; r += f * (n % base); n = Math.floor(n / base); }
+        return r;
+      }
+      function smoothstep(t) { return t * t * (3 - 2 * t); }
+      function easeOut3(t)   { return 1 - Math.pow(1 - t, 3); }
+      function easeInOut2(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+
+      const CHAOS = Array.from({ length: N }, (_, i) => ({
+        cx:    halton(i, 2) * 2 - 1,
+        cy:    halton(i, 3) * 2 - 1,
+        rot:   (hash(i * 3 + 3) - 0.5) * 26,
+        scale: 2.4 + hash(i * 5 + 4) * 1.9,
+        yBias: (hash(i * 7 + 9) - 0.5) * 18,
+      }));
+
+      const section = document.getElementById('frames');
+      const stripEl = document.getElementById('fsStrip');
+      const gridSvg = document.getElementById('fsGridSvg');
+
+      let vw    = section.offsetWidth;
+      let vh    = section.offsetHeight;
+      let isMob = vw < 768;
+
+      // Build video cells
+      const cells = [];
+      for (let i = 0; i < N; i++) {
+        const item  = CATALOGUE[i % N_UNIQUE];
+        const outer = document.createElement('div');
+        outer.className = 'fs-cell';
+        outer.style.cssText = [
+          'width:' + RENDER_W + 'px', 'height:' + RENDER_H + 'px',
+          'border-radius:10px', 'overflow:hidden',
+          '-webkit-backface-visibility:hidden', 'backface-visibility:hidden',
+          'transform-origin:center center', 'will-change:transform',
+        ].join(';');
+
+        const inner = document.createElement('div');
+        inner.style.cssText = 'position:absolute;inset:0;transform-style:preserve-3d;will-change:transform;';
+
+        const video = document.createElement('video');
+        video.muted = true; video.playsInline = true; video.loop = true; video.preload = 'none';
+        video.style.cssText = 'width:100%;height:100%;object-fit:cover;transform:scale(1.05);display:block;';
+        const vsrc = document.createElement('source');
+        vsrc.src = R2 + item.src; vsrc.type = 'video/mp4';
+        video.appendChild(vsrc);
+
+        const sheen = document.createElement('div');
+        sheen.style.cssText = 'position:absolute;inset:0;opacity:0;mix-blend-mode:overlay;pointer-events:none;transition:opacity 0.4s ease-out;';
+
+        inner.appendChild(video);
+        inner.appendChild(sheen);
+        outer.appendChild(inner);
+        stripEl.appendChild(outer);
+
+        cells.push({ el: outer, inner, video, sheen, src: R2 + item.src, label: item.label, loaded: false, playing: false });
+      }
+
+      // Hover tilt (desktop)
+      cells.forEach(function(cell) {
+        if (isMob) return;
+        var el = cell.el, inn = cell.inner, sh = cell.sheen;
+        el.addEventListener('pointerenter', function() {
+          inn.style.transition = 'transform 0.5s cubic-bezier(0.16,1,0.3,1)';
+        });
+        el.addEventListener('pointermove', function(e) {
+          if (e.buttons !== 0) return;
+          var r = el.getBoundingClientRect();
+          var u = (e.clientX - r.left) / r.width  - 0.5;
+          var v = (e.clientY - r.top)  / r.height - 0.5;
+          inn.style.transition = 'transform 0.08s linear';
+          inn.style.transform  = 'perspective(520px) rotateY(' + (u*32) + 'deg) rotateX(' + (-v*32) + 'deg) scale(1.12)';
+          sh.style.opacity     = '1';
+          sh.style.background  = 'radial-gradient(circle at ' + ((u+0.5)*100) + '% ' + ((v+0.5)*100) + '%,rgba(255,255,255,0.55),rgba(255,255,255,0) 55%)';
+        });
+        el.addEventListener('pointerleave', function() {
+          inn.style.transition = 'transform 0.7s cubic-bezier(0.16,1,0.3,1)';
+          inn.style.transform  = '';
+          sh.style.opacity     = '0';
+        });
+      });
+
+      // Drag + click discrimination (axis-locked)
+      var scroll        = 0;
+      var vel           = 0;
+      var dragging      = false;
+      var dragAxis      = null; // 'h' or 'v'
+      var dragStartX    = 0;
+      var dragStartY    = 0;
+      var dragLastX     = 0;
+      var dragTotalDist = 0;
+      var dragTarget    = null;
+
+      section.addEventListener('pointerdown', function(e) {
+        dragging = true;
+        dragAxis = null;
+        dragStartX = dragLastX = e.clientX;
+        dragStartY = e.clientY;
+        dragTotalDist = 0;
+        dragTarget = e.target.closest('.fs-cell');
+        vel = 0;
+      });
+      section.addEventListener('pointermove', function(e) {
+        if (!dragging) return;
+        var totalDx = Math.abs(e.clientX - dragStartX);
+        var totalDy = Math.abs(e.clientY - dragStartY);
+        // Lock axis on first 5px of movement
+        if (dragAxis === null && (totalDx > 5 || totalDy > 5)) {
+          if (totalDx >= totalDy) {
+            dragAxis = 'h';
+            section.setPointerCapture(e.pointerId);
+          } else {
+            dragAxis = 'v';
+            dragging = false;
+            return;
+          }
+        }
+        if (dragAxis !== 'h') return;
+        var dx = e.clientX - dragLastX;
+        var gain = isMob ? 0.3 : 1.45;
+        vel = dx * gain;
+        scroll -= dx;
+        dragLastX = e.clientX;
+        dragTotalDist += Math.abs(dx);
+      });
+      section.addEventListener('pointerup', function() {
+        dragging = false;
+        if (dragTotalDist < 5 && dragTarget) {
+          var cell = cells.find(function(c) { return c.el === dragTarget; });
+          if (cell) openLightbox(cell.src, cell.label);
+        }
+      });
+      section.addEventListener('pointercancel', function() { dragging = false; });
+
+      // Horizontal wheel / trackpad swipe — only intercept when deltaX dominates
+      section.addEventListener('wheel', function(e) {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY) * 0.6) {
+          e.preventDefault();
+          vel += e.deltaX * WHEEL_GAIN;
+        }
+      }, { passive: false });
+
+      // Arrow keys while frames panel is in view
+      document.addEventListener('keydown', function(e) {
+        if (e.repeat) return;
+        var rect = section.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          if (e.key === 'ArrowLeft')  { vel = -10; e.preventDefault(); }
+          if (e.key === 'ArrowRight') { vel =  10; e.preventDefault(); }
+        }
+      });
+
+      // Wireframe grid
+      var lensM = 1;
+      var lastGridBuild = 0;
+      var NS = 'http://www.w3.org/2000/svg';
+
+      function buildGrid(M) {
+        while (gridSvg.firstChild) gridSvg.removeChild(gridSvg.firstChild);
+        var lensCx = vw / 2;
+        var lensCy = isMob ? vh * 0.4 : vh / 2;
+        var lensR  = isMob ? 204 : 336;
+        function mag(d) {
+          if (d >= lensR) return 1;
+          var k = 1 - d / lensR;
+          return 1 + (M - 1) * k * k;
+        }
+        function distort(x, y) {
+          var dx = x - lensCx, dy = y - lensCy;
+          var m  = mag(Math.hypot(dx, dy));
+          return [lensCx + dx * m, lensCy + dy * m];
+        }
+        function addLine(pts) {
+          var pl = document.createElementNS(NS, 'polyline');
+          pl.setAttribute('points', pts.join(' '));
+          pl.setAttribute('fill', 'none');
+          pl.setAttribute('stroke', 'currentColor');
+          pl.setAttribute('stroke-opacity', '0.09');
+          pl.setAttribute('stroke-width', '1');
+          gridSvg.appendChild(pl);
+        }
+        for (var x = 0; x <= vw + BASE_W; x += BASE_W) {
+          var vpts = [];
+          for (var y = 0; y <= vh; y += 6) {
+            var vd = distort(x, y); vpts.push(vd[0].toFixed(1) + ',' + vd[1].toFixed(1));
+          }
+          addLine(vpts);
+        }
+        for (var hy = 0; hy <= vh + BASE_H; hy += BASE_H) {
+          var hpts = [];
+          for (var hx = 0; hx <= vw; hx += 6) {
+            var hd = distort(hx, hy); hpts.push(hd[0].toFixed(1) + ',' + hd[1].toFixed(1));
+          }
+          addLine(hpts);
+        }
+      }
+
+      gridSvg.setAttribute('width', vw);
+      gridSvg.setAttribute('height', vh);
+      buildGrid(1);
+
+      var resizeT;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeT);
+        resizeT = setTimeout(function() {
+          vw = section.offsetWidth; vh = section.offsetHeight; isMob = vw < 768;
+          gridSvg.setAttribute('width', vw); gridSvg.setAttribute('height', vh);
+          buildGrid(lensM);
+        }, 150);
+      });
+
+      // Entrance timeline
+      var t0         = performance.now();
+      var revealDelay = 400,  revealDur = 1800;
+      var chaosDelay  = 1900, chaosDur  = 1600;
+      var lensDelay   = 1900, lensDur   = 1600;
+      var revealing   = true;
+      var reveal      = 0;
+      var chaosEnable = 0;
+
+      gridSvg.style.webkitMaskImage = 'linear-gradient(to right,black 0%,black 0%,transparent 32%,transparent 100%)';
+      gridSvg.style.maskImage       = 'linear-gradient(to right,black 0%,black 0%,transparent 32%,transparent 100%)';
+
+      function loop(now) {
+        requestAnimationFrame(loop);
+        var elapsed = now - t0;
+
+        // Reveal
+        if (revealing) {
+          var rp = Math.max(0, (elapsed - revealDelay) / revealDur);
+          reveal = easeOut3(Math.min(1, rp));
+          if (rp >= 1) { revealing = false; reveal = 1; }
+        }
+
+        // Chaos enable
+        var cp = Math.max(0, (elapsed - chaosDelay) / chaosDur);
+        chaosEnable = smoothstep(Math.min(1, cp));
+
+        // Lens distortion
+        var lp      = Math.max(0, (elapsed - lensDelay) / lensDur);
+        var newLens = 1 + easeInOut2(Math.min(1, lp)) * 1.4;
+        if (now - lastGridBuild > 50 && Math.abs(newLens - lensM) > 0.02) {
+          lensM = newLens; lastGridBuild = now; buildGrid(lensM);
+        }
+
+        // Grid mask sweep
+        if (elapsed < revealDelay + revealDur + 600) {
+          var sp   = Math.max(0, Math.min(1, (elapsed - (revealDelay - 400)) / revealDur));
+          var edge = easeOut3(sp) * 100;
+          var soft = Math.min(edge + 32, 100);
+          var mask = 'linear-gradient(to right,black 0%,black ' + edge.toFixed(1) + '%,transparent ' + soft.toFixed(1) + '%,transparent 100%)';
+          gridSvg.style.webkitMaskImage = mask;
+          gridSvg.style.maskImage       = mask;
+        } else {
+          gridSvg.style.webkitMaskImage = '';
+          gridSvg.style.maskImage       = '';
+        }
+
+        // Physics
+        if (!dragging) {
+          if (isMob) { vel = Math.max(-7, Math.min(7, vel)); vel *= 0.82; }
+          else { vel *= FRICTION; }
+          scroll += vel + AUTO_DRIFT;
+        }
+        scroll = ((scroll % TOTAL) + TOTAL) % TOTAL;
+
+        var cy = isMob ? vh * 0.4 : vh / 2;
+        var playCount = 0;
+
+        cells.forEach(function(cell, i) {
+          var c = CHAOS[i];
+
+          var x = i * STEP - scroll;
+          x = ((x % TOTAL) + TOTAL) % TOTAL;
+          if (x > vw + STEP) x -= TOTAL;
+
+          var cxNorm = (x + BASE_W / 2) / vw;
+
+          var t = 0;
+          if (chaosEnable > 0 && cxNorm > STAGE_START && cxNorm < STAGE_END) {
+            var p  = (cxNorm - STAGE_START) / (STAGE_END - STAGE_START);
+            var ts = Math.sin(p * Math.PI);
+            t = smoothstep(ts) * chaosEnable;
+          }
+
+          var SX = vw * (isMob ? 0.24 : 0.22);
+          var SY = vh * (isMob ? 0.22 : 0.3);
+          var dx = c.cx * SX * t;
+          var dy = isMob ? (c.cy * 0.6 - 0.45) * SY * t : c.cy * SY * t;
+          var rot   = c.rot * t;
+          var scale = REST_SCALE * (1 + (c.scale - 1) * t);
+
+          var lift = 0;
+          if (cxNorm < CURVE_END) {
+            var k = 1 - cxNorm / CURVE_END;
+            lift = -CURVE_LIFT * smoothstep(k);
+          }
+
+          var tx = x + BASE_W / 2 - RENDER_W / 2 + dx;
+          var ty = cy - RENDER_H / 2 + c.yBias + dy + lift;
+
+          cell.el.style.transform = 'translate3d(' + tx + 'px,' + ty + 'px,0) rotate(' + rot + 'deg) scale(' + scale + ')';
+          cell.el.style.zIndex    = String(1 + Math.round(t * 30));
+
+          if (revealing && elapsed > revealDelay) {
+            var local = (reveal - cxNorm) * 7;
+            cell.el.style.opacity = String(Math.max(0, Math.min(1, local)));
+          } else if (!revealing) {
+            cell.el.style.opacity = '1';
+          }
+
+          var onScreen = cxNorm > -0.1 && cxNorm < 1.1;
+          if (onScreen && !cell.loaded) {
+            cell.video.preload = 'metadata';
+            cell.video.load();
+            cell.loaded = true;
+          }
+
+          if (t > 0.15 && playCount < 6) {
+            if (!cell.playing) { cell.video.play().catch(function(){}); cell.playing = true; }
+            playCount++;
+          } else if (t < 0.05 && cell.playing) {
+            cell.video.pause(); cell.playing = false;
+          }
+        });
+      }
+
+      requestAnimationFrame(loop);
+    })();
+
   </script>
 
 </body>
