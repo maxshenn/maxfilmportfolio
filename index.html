@@ -896,8 +896,9 @@
 
       .dc-section { padding-top: 56px; }
 
-      .fs-copy { bottom: 28px; left: 20px; right: 20px; }
-      .fs-title { font-size: 2.1rem; }
+      .fs-copy { bottom: 24px; left: 20px; right: 20px; }
+      .fs-title { font-size: 1.8rem; letter-spacing: -0.01em; }
+      .fs-subtitle { font-size: 9px; letter-spacing: 0.22em; margin-top: 8px; }
 
       .contact-section { padding: 48px 20px 56px; }
       footer { padding: 20px; flex-direction: column; gap: 8px; text-align: center; }
@@ -907,6 +908,9 @@
     @media (hover: none) {
       /* Work items: show thumbnail at normal brightness */
       .work-thumb { filter: brightness(0.82) saturate(0.72); }
+      /* Swap "click" for "tap" on touch screens */
+      .fs-subtitle { visibility: hidden; }
+      .fs-subtitle::after { content: 'tap to explore'; visibility: visible; }
     }
 
     /* ─────────────────────────────────────────────
@@ -1537,7 +1541,6 @@
       const STAGE_START = 0.3;
       const STAGE_END   = 0.8;
       const CURVE_END   = 0.55;
-      const CURVE_LIFT  = 220;
 
       function hash(n) {
         const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
@@ -1836,10 +1839,11 @@
           var rot   = c.rot * t;
           var scale = REST_SCALE * (1 + (c.scale - 1) * t);
 
+          var curveLift = isMob ? vh * 0.27 : 220;
           var lift = 0;
           if (cxNorm < CURVE_END) {
             var k = 1 - cxNorm / CURVE_END;
-            lift = -CURVE_LIFT * smoothstep(k);
+            lift = -curveLift * smoothstep(k);
           }
 
           var tx = x + BASE_W / 2 - RENDER_W / 2 + dx;
