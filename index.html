@@ -443,7 +443,7 @@
     .work-item {
       cursor: pointer;
       opacity: 0;
-      transform: translateY(28px);
+      transform: translateY(-28px); /* enters from above — settles downward, the way you scroll */
       transition: opacity 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
                   transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
       display: flex;
@@ -516,7 +516,7 @@
       overflow: hidden;
       background: #0d0c0b;
       opacity: 0;
-      transform: translateY(24px);
+      transform: translateY(-24px); /* enters from above — settles downward, the way you scroll */
       transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
                   transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
@@ -591,19 +591,15 @@
       aspect-ratio: 16 / 9;
       overflow: hidden;
       background: #0d0c0b;
+      /* same scroll reveal as the Projects tiles and the About copy: fade + settle down */
       opacity: 0;
-      transform: translateY(26px);
-      /* the mask IS the reveal: the tile opens from a letterboxed slit
-         while its photo settles from a slight push-in */
-      clip-path: inset(14% 0 14% 0);
-      transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
-                  clip-path 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(-28px); /* enters from above — settles downward, the way you scroll */
+      transition: opacity 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
     .dest-item.revealed {
       opacity: 1;
       transform: translateY(0);
-      clip-path: inset(0 0 0 0);
     }
 
     .dest-thumb {
@@ -613,11 +609,9 @@
       height: 100%;
       object-fit: cover;
       filter: brightness(1.04) saturate(1.18);
-      transform: scale(1.14);
-      transition: filter 0.6s ease, transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: scale(1);
+      transition: filter 0.6s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); /* hover zoom only */
     }
-    .dest-item.revealed .dest-thumb { transform: scale(1); }
-    /* after .revealed so hover wins at equal specificity */
     .dest-item:hover .dest-thumb,
     .dest-item.touch-active .dest-thumb {
       filter: brightness(0.5) saturate(0.85);
@@ -690,7 +684,7 @@
       aspect-ratio: 1 / 1;
       background: #111;
       opacity: 0;
-      transform: translateY(36px);
+      transform: translateY(-36px); /* enters from above — settles downward, the way you scroll */
       transition: opacity 1.0s cubic-bezier(0.22, 0.61, 0.36, 1),
                   transform 1.0s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
@@ -1048,13 +1042,22 @@
     }
     /* four frames + three 12px gaps sit centred in one row; widths sum
        to 93.5% so the wall keeps clear air from the viewport edges */
+    .ig-row { display: contents; }
     .if-b { flex: 0 0 25%; aspect-ratio: 4 / 3; }
     .if-c { flex: 0 0 18.5%; aspect-ratio: 3 / 4; margin-top: 52px; }
     .if-d { flex: 0 0 25%; aspect-ratio: 4 / 3; margin-top: 18px; }
     .if-e { flex: 0 0 25%; aspect-ratio: 3 / 2; margin-top: 60px; }
     @media (max-width: 640px) {
-      .intro-gallery { flex-wrap: wrap; gap: 14px; margin: 48px 0 0; }
-      .if-b, .if-c, .if-d, .if-e { flex: 0 0 46%; margin-top: 0; }
+      /* Phone: two justified rows. Inside a row each frame's flex-grow is its own aspect
+         ratio, so widths come out proportional to it and both photos land on exactly the
+         same height — full uncropped photos, flush edges, one tight 8px gutter, no holes. */
+      .intro-gallery { flex-direction: column; align-items: stretch; gap: 8px; margin: 40px 0 0; }
+      .ig-row { display: flex; gap: 8px; }
+      .if-b, .if-c, .if-d, .if-e { margin-top: 0; min-width: 0; }
+      .if-b, .if-d { flex: 1.3333 1 0; }   /* 4:3 */
+      .if-c { flex: 0.75 1 0; }            /* 3:4 */
+      .if-e { flex: 1.5 1 0; }             /* 3:2 */
+      .intro-frame { box-shadow: 0 10px 22px -14px rgba(26, 25, 23, 0.28); }
     }
     @media (max-width: 560px) {
       .intro-section { padding: clamp(32px, 5vh, 56px) 24px clamp(48px, 8vh, 80px); }
@@ -1063,7 +1066,7 @@
 
     .reveal {
       opacity: 0;
-      transform: translateY(48px);
+      transform: translateY(-48px); /* enters from above — settles downward, the way you scroll */
       transition: opacity 1.15s cubic-bezier(0.22, 0.61, 0.36, 1),
                   transform 1.15s cubic-bezier(0.22, 0.61, 0.36, 1);
       will-change: transform, opacity;
@@ -1529,10 +1532,16 @@
       <p class="reveal reveal-d3">In my free time, you can find me playing basketball, DJing, or working on my next video idea.</p>
     </div>
     <div class="intro-gallery">
-      <div class="intro-frame if-b reveal reveal-d1"><img src="maxshen1.JPG" alt="Max Shen at dusk by the ocean"></div>
-      <div class="intro-frame if-c reveal reveal-d2"><img src="maxshen5.jpeg" alt="Max Shen photographing a sunset over the water"></div>
-      <div class="intro-frame if-d reveal reveal-d3"><img src="maxshen2.JPG" alt="Max Shen photographing by a canal"></div>
-      <div class="intro-frame if-e reveal reveal-d4"><img src="lapa.JPG" alt="Max Shen with two friends at dinner"></div>
+      <!-- .ig-row is invisible on desktop (display: contents — the four frames stay one row);
+           on phones each pair becomes a justified row -->
+      <div class="ig-row">
+        <div class="intro-frame if-b reveal reveal-d1"><img src="maxshen1.JPG" alt="Max Shen at dusk by the ocean"></div>
+        <div class="intro-frame if-c reveal reveal-d2"><img src="maxshen5.jpeg" alt="Max Shen photographing a sunset over the water"></div>
+      </div>
+      <div class="ig-row">
+        <div class="intro-frame if-d reveal reveal-d3"><img src="maxshen2.JPG" alt="Max Shen photographing by a canal"></div>
+        <div class="intro-frame if-e reveal reveal-d4"><img src="lapa.JPG" alt="Max Shen with two friends at dinner"></div>
+      </div>
     </div>
   </section>
 
@@ -1722,7 +1731,7 @@
         items.forEach((item, i) => {
           const row = Math.floor(i / cols);
           const col = i % cols;
-          const delay = mosaic ? i * 0.11 : row * 0.1 + col * 0.05;
+          const delay = mosaic ? i * 0.05 : row * 0.1 + col * 0.05; // same cadence as the Projects grid
           item.style.transitionDelay = delay + 's';
           requestAnimationFrame(() => requestAnimationFrame(() => {
             item.classList.add('revealed');

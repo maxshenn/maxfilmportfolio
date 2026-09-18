@@ -312,17 +312,18 @@
     }
     .proj-page-caption a:hover { opacity: 0.55; }
     .proj-page-caption a:focus-visible { outline: 2px solid #000; outline-offset: 3px; border-radius: 2px; }
+    /* The film/still is laid out at its final size from the first paint and simply
+       fades and rises in with the rest of the page — nothing crops open or grows. */
     .proj-media {
       max-width: 972px;
       margin: 0 auto;
-      clip-path: inset(7% 5% 7% 5%);
-      transform: scale(1.045);
-      transition: clip-path 1.15s cubic-bezier(0.16, 1, 0.3, 1) 0.1s,
-                  transform 1.15s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s,
+                  transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
     }
-    body.media-ready .proj-media { clip-path: inset(0% 0% 0% 0%); transform: scale(1); }
+    body.media-ready .proj-media { opacity: 1; transform: none; }
     /* borderless: the element takes the video's own aspect ratio */
-    .proj-media video,
     .proj-media img {
       display: block;
       width: auto;
@@ -331,9 +332,22 @@
       max-height: 78vh;
       margin: 0 auto;
     }
+    /* A <video> has no intrinsic size until its metadata arrives, so without this it
+       paints as a small default box and then jumps to full size. --ar (set from the
+       project's ratio) reserves the exact final box: as wide as the column allows,
+       never taller than 78vh. */
+    .proj-media video {
+      display: block;
+      width: min(100%, calc(78vh * var(--ar, 1.7778)));
+      height: auto;
+      aspect-ratio: var(--ar, 1.7778);
+      margin: 0 auto;
+      background: #0d0c0b;
+      object-fit: cover;
+    }
     @media (max-width: 560px) {
       .proj-page { padding: calc(var(--nav-h) + 20px) 20px 24px; }
-      .proj-media video { max-height: 64vh; }
+      .proj-media video { width: min(100%, calc(64vh * var(--ar, 1.7778))); }
       .proj-page-caption { font-size: 14px; margin-bottom: 32px; }
     }
 
@@ -341,10 +355,13 @@
     /* frames rise in as you scroll — one-shot, staggered per row */
     .proj-page .m-item {
       opacity: 0;
-      transform: translateY(28px);
+      transform: translateY(-28px); /* scrolling down: frames settle downward into place */
       transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
                   transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    /* re-armed after leaving through the top → it will re-enter while scrolling UP,
+       so it settles upward: motion always follows the scroll direction */
+    .proj-page .m-item.from-top { transform: translateY(28px); }
     .proj-page .m-item.in { opacity: 1; transform: none; }
     /* ── Frame rows — matched pairs share a row (walk1+walk2, …);
        flex-grow = each frame's aspect ratio, so everything in a row
@@ -381,11 +398,14 @@
       .pf-row--break { margin-top: 52px; }
     }
     @media (max-width: 560px) {
-      .pf-row { flex-direction: column; gap: 10px; margin-top: 10px; }
-      /* verticals stay side by side — three portraits stack too tall */
-      .pf-row--trio { flex-direction: row; gap: 8px; }
+      /* Phone keeps the desktop arrangement — pairs and trios stay side by side at equal
+         heights, just with a tighter gutter */
+      .pf-row { gap: 8px; margin-top: 8px; }
       .pf-row--break { margin-top: 40px; }
       .pf-row--solo .m-item { width: 100%; }
+      .pf-cap { font-size: 12px; margin-top: 8px; }
+      /* live embeds get a tall frame so the sites' own mobile layouts show in full */
+      .pf-frame--embed { aspect-ratio: var(--ar-phone, 9 / 16) !important; }
     }
     .m-item {
       overflow: hidden;
@@ -738,12 +758,14 @@
 
     const PROJECTS = {
       california: { title: 'Youtube Project', video: 'public/videos/california.mp4',
+        poster: 'public/posters/california-poster.jpg', ratio: [1920, 1080],
         caption: [
           'A personal video project I made while visiting a friend in California. I shot and edited everything myself, documenting the trip as it happened. No plan, a camera, and some friends trying to have a good time.',
           // a paragraph can be a list of segments; a segment with an href becomes a link
           [ 'Watch the full video on ', { text: 'YouTube', href: CALIFORNIA_YOUTUBE_URL }, '.' ],
         ] },
       wip:        { title: 'WIP Marketplace', video: 'public/videos/wip.mp4',
+        poster: 'public/posters/wip-poster.jpg', ratio: [1080, 1920],
         caption: [
           'WIP Marketplace is a campus-focused, student-only mobile app designed for college students to buy, sell, sublease, and find services within their school community.',
         ],
@@ -819,10 +841,19 @@
     let mediaReady = Promise.resolve();
     const cap = (p) => Promise.race([p, new Promise(r => setTimeout(r, 1600))]);
     if (proj.video) {
+      if (proj.ratio) videoEl.style.setProperty('--ar', (proj.ratio[0] / proj.ratio[1]).toFixed(4));
+      if (proj.poster) {
+        // the poster is the film's own first frame, so play starts with no visual jump
+        videoEl.poster = proj.poster;
+        const posterImg = new Image();
+        posterImg.src = proj.poster;
+        mediaReady = cap(posterImg.decode().catch(function () {}));
+      } else {
+        mediaReady = cap(new Promise(r => {
+          if (videoEl.readyState >= 2) r(); else videoEl.addEventListener('loadeddata', r, { once: true });
+        }));
+      }
       videoEl.src = proj.video;
-      mediaReady = cap(new Promise(r => {
-        if (videoEl.readyState >= 2) r(); else videoEl.addEventListener('loadeddata', r, { once: true });
-      }));
     } else if (proj.image) {
       const still = document.createElement('img');
       still.src = proj.image; still.alt = proj.title;
@@ -891,8 +922,8 @@
     // is as good as clicking the links. An item given as { embed, w, h, label, href }
     // renders an iframe in the same frame box, with a caption and an open-in-new-tab link.
     const ROBIN_ROWS = [
-      { cls: 'pf-row--full', items: [ { embed: 'https://salesforceapp.vercel.app/', w: 16, h: 10, label: 'Live demo' } ] },
-      { cls: 'pf-row--break pf-row--full', items: [ { embed: 'https://robinslidedeck.vercel.app/', w: 16, h: 9, label: 'Slide deck', keys: true } ] },
+      { cls: 'pf-row--full', items: [ { embed: 'https://salesforceapp.vercel.app/', w: 16, h: 10, phone: [9, 16], label: 'Live demo' } ] },
+      { cls: 'pf-row--break pf-row--full', items: [ { embed: 'https://robinslidedeck.vercel.app/', w: 16, h: 9, phone: [2, 3], label: 'Slide deck', keys: true } ] },
     ];
 
     const PROJECT_FRAMES = {
@@ -903,13 +934,20 @@
     };
 
     // one-shot scroll reveal, staggered by position within its row
+    // Frame reveals behave the same scrolling down and up: a frame animates in whenever
+    // it enters the viewport, from the side it enters by. Once a frame is fully off screen
+    // it is re-armed (invisibly) to come back from that same side.
     const frameRevealObs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        e.target.classList.add('in');
-        frameRevealObs.unobserve(e.target);
-      });
+      entries.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('in'); });
     }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    const frameResetObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) return;
+        const el = e.target;
+        el.classList.toggle('from-top', e.boundingClientRect.bottom <= 0); // left via the top
+        el.classList.remove('in');
+      });
+    }, { threshold: 0 });
 
     const frameSet = PROJECT_FRAMES[params.get('p')] || { base: '', rows: [] };
     const frameRows = frameSet.rows;
@@ -932,6 +970,7 @@
           frame.style.aspectRatio = w + ' / ' + h;
           if (!Array.isArray(it) && it.embed) {           // live site in the frame box
             frame.classList.add('pf-frame--embed');
+            if (it.phone) frame.style.setProperty('--ar-phone', it.phone[0] + ' / ' + it.phone[1]);
             const ifr = document.createElement('iframe');
             ifr.src = it.embed;
             ifr.title = it.label || proj.title;
@@ -959,7 +998,7 @@
             cap.appendChild(a);
             cell.appendChild(cap);
             rowEl.appendChild(cell);
-            frameRevealObs.observe(cell);
+            frameRevealObs.observe(cell); frameResetObs.observe(cell);
             return;
           }
           const img = document.createElement('img');
@@ -975,7 +1014,7 @@
             cell.appendChild(cap);
           }
           rowEl.appendChild(cell);
-          frameRevealObs.observe(cell);
+          frameRevealObs.observe(cell); frameResetObs.observe(cell);
         });
         framesWrap.appendChild(rowEl);
       });

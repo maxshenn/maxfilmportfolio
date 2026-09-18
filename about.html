@@ -381,10 +381,11 @@
     }
 
     @media (max-width: 640px) {
-      .about-photos {
-        flex-direction: column;
-        max-width: 460px;
-      }
+      /* Phone: same two weighted columns as desktop (flush bottoms), just tighter —
+         stacking them full-width made a 1,200px column of photos */
+      .about-photos { flex-direction: row; gap: 8px; max-width: 460px; }
+      .about-photo-col-b, .about-photo-col-c { gap: 8px; }
+      .about-photo-frame { box-shadow: 0 10px 22px -14px rgba(26, 25, 23, 0.28); }
     }
 
       .nav-name:focus-visible { outline: 2px solid #000; outline-offset: 6px; border-radius: 4px; }
