@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Destination — Max Shen</title>
-  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/public/favicon-32.png" sizes="32x32" type="image/png">
-  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+  <link rel="icon" href="public/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="public/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="public/apple-touch-icon.png">
   <!-- Type assets: self-hosted, preload only the two above-the-fold faces.
        See CLAUDE.md › Typography System. -->
-  <link rel="preload" href="/public/fonts/general-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/public/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="public/fonts/general-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="public/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     /* ── Type assets ──────────────────────────────────────────────
        General Sans (Fontshare, ITF-FFL v2.0 — shipped as-is, unsubset)
@@ -19,17 +19,17 @@
        nothing — layout is identical before and after the font lands. */
     @font-face {
       font-family: "General Sans";
-      src: url("/public/fonts/general-sans-variable.woff2") format("woff2");
+      src: url("public/fonts/general-sans-variable.woff2") format("woff2");
       font-weight: 200 700; font-style: normal; font-display: swap;
     }
     @font-face {
       font-family: "General Sans";
-      src: url("/public/fonts/general-sans-variable-italic.woff2") format("woff2");
+      src: url("public/fonts/general-sans-variable-italic.woff2") format("woff2");
       font-weight: 200 700; font-style: italic; font-display: swap;
     }
     @font-face {
       font-family: "Geist Mono";
-      src: url("/public/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+      src: url("public/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
       font-weight: 100 900; font-style: normal; font-display: swap;
       unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
     }
@@ -632,7 +632,7 @@
     // the ratio (not the image itself) to decide column placement and
     // to size each box before the image has even loaded. Swap in real
     // photos for the other destinations the same way Spain's are below.
-    const R2SPAIN = '/public/destinations/spain/';
+    const R2SPAIN = 'public/destinations/spain/';
     const SPAIN_PHOTOS = [
       { file: 'yacht-flag-girl-crop.jpg',    w: 1692, h: 1560 }, // girl + yacht, american flag — hand-cropped
       { file: 'jump.jpg',                    w: 2880, h: 2160 }, // overhead cliff jump, turquoise cove
@@ -656,7 +656,7 @@
       { file: 'Timeline 1_01_01_29_09.jpg',  w: 3840, h: 2160 }, // sunbathers — closer
     ].map(function (p) { return { src: R2SPAIN + p.file, w: p.w, h: p.h }; });
 
-    const R2JAPAN = '/public/destinations/japan/';
+    const R2JAPAN = 'public/destinations/japan/';
     // Spain-style mix: an aligned 3:2 top row, then wides / squares /
     // 3:2s interleaved so every column gets one of each shape (the
     // middle rows mismatch on purpose while the column totals stay
@@ -687,7 +687,7 @@
       { file: 'glico-crop.jpg',             w: 2880, h: 2160 }, // Glico sign, Osaka
     ].map(function (p) { return { src: R2JAPAN + p.file, w: p.w, h: p.h }; });
 
-    const R2ITALY = '/public/destinations/italy/';
+    const R2ITALY = 'public/destinations/italy/';
     // Same Spain-style mix as Japan: aligned 16:9 opener, then one 4:3,
     // one square, and one 3:2 per column so the middle rows mismatch
     // while the columns still end flush.
@@ -709,7 +709,7 @@
       { file: 'bridge.jpg',        w: 3840, h: 2160 }, // village bridge, flower boxes
     ].map(function (p) { return { src: R2ITALY + p.file, w: p.w, h: p.h }; });
 
-    const R2VAN = '/public/destinations/vancouver/';
+    const R2VAN = 'public/destinations/vancouver/';
     // Same recipe as Japan: every column collects two 3:2s, one wide,
     // one square, and one 4:3 night shot — rows mismatch from the top,
     // columns end flush, and the fireworks close the page.
@@ -732,7 +732,7 @@
       { file: 'fw-gold-43.jpg',    w: 2880, h: 2160 }, // green-gold pair from the beach
     ].map(function (p) { return { src: R2VAN + p.file, w: p.w, h: p.h }; });
 
-    const R2MOROCCO = '/public/destinations/morocco/';
+    const R2MOROCCO = 'public/destinations/morocco/';
     // Italy's four-shape rotation (16:9 / square / 3:2 / 4:3, one of
     // each per column): rows mismatch from the top, columns end flush.
     // The arc runs dawn to dusk — balloons open, the golden-hour trio

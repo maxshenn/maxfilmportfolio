@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Project — Max Shen</title>
-  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/public/favicon-32.png" sizes="32x32" type="image/png">
-  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+  <link rel="icon" href="public/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="public/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="public/apple-touch-icon.png">
   <!-- Type assets: self-hosted, preload only the two above-the-fold faces.
        See CLAUDE.md › Typography System. -->
-  <link rel="preload" href="/public/fonts/general-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/public/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="public/fonts/general-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="public/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     /* ── Type assets ──────────────────────────────────────────────
        General Sans (Fontshare, ITF-FFL v2.0 — shipped as-is, unsubset)
@@ -19,17 +19,17 @@
        nothing — layout is identical before and after the font lands. */
     @font-face {
       font-family: "General Sans";
-      src: url("/public/fonts/general-sans-variable.woff2") format("woff2");
+      src: url("public/fonts/general-sans-variable.woff2") format("woff2");
       font-weight: 200 700; font-style: normal; font-display: swap;
     }
     @font-face {
       font-family: "General Sans";
-      src: url("/public/fonts/general-sans-variable-italic.woff2") format("woff2");
+      src: url("public/fonts/general-sans-variable-italic.woff2") format("woff2");
       font-weight: 200 700; font-style: italic; font-display: swap;
     }
     @font-face {
       font-family: "Geist Mono";
-      src: url("/public/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+      src: url("public/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
       font-weight: 100 900; font-style: normal; font-display: swap;
       unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
     }
@@ -737,13 +737,13 @@
     const CALIFORNIA_YOUTUBE_URL = 'https://www.youtube.com/watch?v=JbRsOZo8NM4';
 
     const PROJECTS = {
-      california: { title: 'Youtube Project', video: '/public/videos/california.mp4',
+      california: { title: 'Youtube Project', video: 'public/videos/california.mp4',
         caption: [
           'A personal video project I made while visiting a friend in California. I shot and edited everything myself, documenting the trip as it happened. No plan, a camera, and some friends trying to have a good time.',
           // a paragraph can be a list of segments; a segment with an href becomes a link
           [ 'Watch the full video on ', { text: 'YouTube', href: CALIFORNIA_YOUTUBE_URL }, '.' ],
         ] },
-      wip:        { title: 'WIP Marketplace', video: '/public/videos/wip.mp4',
+      wip:        { title: 'WIP Marketplace', video: 'public/videos/wip.mp4',
         caption: [
           'WIP Marketplace is a campus-focused, student-only mobile app designed for college students to buy, sell, sublease, and find services within their school community.',
         ],
@@ -754,7 +754,7 @@
       // Assets pending: add `video` (mp4) or `image` (still) when ready;
       // until then the page shows title + copy and skips the media block.
       robin: { title: 'Robin by Salesforce',
-        image: '/public/projects/robin/team.jpg',
+        image: 'public/projects/robin/team.jpg',
         caption: [
           'Robin is a Salesforce agent my team and I developed for a case competition to reduce context switching between tools like Salesforce, Slack, and Gmail. It automatically detects what a user is working on and surfaces relevant client context (contacts, deals, activity, connected data) without requiring them to open another dashboard.',
           'Our goal was simple: make Salesforce indispensable by making it invisible.',
@@ -764,7 +764,7 @@
       lucky7: {
         title: 'Lucky7Collectives',
         caption: [ 'I co-founded a Pokémon Card business in highschool along side my friend Brent.' ],
-        image: '/public/posters/lucky7-cover.jpg',
+        image: 'public/posters/lucky7-cover.jpg',
         // the story sits under the cover
         note: [
           'What started as getting back into a childhood hobby turned into Lucky7Collectives, a Pokémon card and collectibles business I ran with my friend Brent. Pokemon cards were starting to make a comeback, and we got in at the perfect time. We started buying cards on Whatnot streams for as little as a dollar. If it looked cool, we bought it.',
@@ -835,7 +835,7 @@
 
     // ── Frames from the shoot — matched pairs share a row, the
     //    unmatched singles get their own block after a breather ─────
-    const WIPBASE = '/public/projects/wip/';
+    const WIPBASE = 'public/projects/wip/';
     const WIP_ROWS = [
       { items: [ ['subway1.jpg', 3840, 2160], ['subway2.jpg', 3840, 2160] ] },
       { items: [ ['street1.jpg', 3840, 2160], ['street2.jpg', 3840, 2160] ] },
@@ -896,10 +896,10 @@
     ];
 
     const PROJECT_FRAMES = {
-      robin:      { base: '/public/projects/robin/',      rows: ROBIN_ROWS },
-      wip:        { base: '/public/projects/wip/',        rows: WIP_ROWS },
-      california: { base: '/public/projects/california/', rows: CALIFORNIA_ROWS },
-      lucky7:     { base: '/public/projects/lucky7/',     rows: LUCKY7_ROWS },
+      robin:      { base: 'public/projects/robin/',      rows: ROBIN_ROWS },
+      wip:        { base: 'public/projects/wip/',        rows: WIP_ROWS },
+      california: { base: 'public/projects/california/', rows: CALIFORNIA_ROWS },
+      lucky7:     { base: 'public/projects/lucky7/',     rows: LUCKY7_ROWS },
     };
 
     // one-shot scroll reveal, staggered by position within its row

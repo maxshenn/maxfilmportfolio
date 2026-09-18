@@ -27,10 +27,10 @@ const state = {
   onPlayButtonClick: null,
 };
 
-const MODEL_PATH = '/public/models/nikon_z6_camera (1).glb';
+const MODEL_PATH = 'public/models/nikon_z6_camera (1).glb';
 // Hero video is served same-origin so VideoTexture can sample its pixels
 // (R2 doesn't send Access-Control-Allow-Origin, which would taint a WebGL texture).
-const HERO_VIDEO_PATH = '/public/videos/hero.mp4';
+const HERO_VIDEO_PATH = 'public/videos/hero.mp4';
 
 export function getState() { return state; }
 
