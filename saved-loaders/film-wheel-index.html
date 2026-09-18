@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Max Shen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+
+  <!-- GSAP core — drives the loading-screen character turn + shutter/flash -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+    integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt"
+    crossorigin="anonymous"
+  ></script>
+
+  <style>
+
+    /* ─────────────────────────────────────────────
+       TOKENS
+    ───────────────────────────────────────────── */
+    :root {
+      --bg:     #ffffff;
+      --text:   #1a1917;
+      --muted:  rgba(26, 25, 23, 0.55);
+      --dim:    rgba(26, 25, 23, 0.10);
+      --gap:    1px;
+      --nav-h:  76px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 300;
+      line-height: 1;
+      overflow-x: hidden;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       FILM GRAIN
+    ───────────────────────────────────────────── */
+    #grain {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      pointer-events: none;
+      opacity: 0.042;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px;
+      mix-blend-mode: screen;
+      animation: grain 0.12s steps(1) infinite;
+    }
+    @keyframes grain {
+      0%  { transform: translate(0,0); }
+      25% { transform: translate(-5px, 3px); }
+      50% { transform: translate(4px, -4px); }
+      75% { transform: translate(-3px, 5px); }
+    }
+
+
+
+
+    /* ─────────────────────────────────────────────
+       NAV
+    ───────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      height: var(--nav-h);
+      padding: 0 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-name {
+      font-family: 'Montserrat', sans-serif;
+      font-style: normal;
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: #000;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .nav-name:focus-visible { outline: 2px solid #000; outline-offset: 6px; border-radius: 4px; }
+    .nav-name svg { display: block; overflow: visible; }
+
+    /* Bubbly animated wordmark — MAX SHEN framed by a comic "boom" burst
+       outline. Intro (once per session): a starburst + radial light rays
+       detonate at the name's center, the letters are thrown outward through
+       the blast — materializing from flash-amber to black with squash
+       landings — then the jagged boom outline snaps in around the name and
+       a shockwave echo expands off it. Hovering a letter boops it; hovering
+       the mark jolts the boom outline. */
+    .wm-l { transform-box: fill-box; transform-origin: 50% 100%; }
+    .wm-l path { fill: none; stroke: #000; stroke-linecap: round; stroke-linejoin: round; }
+    .wm-l .wm-shine { stroke: #fff; opacity: 0.85; }
+    .wm-l .wm-hit { fill: transparent; stroke: none; }
+
+    /* boom outline: persistent part of the lockup */
+    .wm-boom { transform-box: fill-box; transform-origin: 50% 50%; }
+    .wm-shock { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-flash { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-rays { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-rays-a, .wm-rays-b { transform-box: fill-box; transform-origin: 50% 50%; }
+
+    /* ── intro: detonation ── */
+    .wm-intro .wm-flash { animation: wm-flash 0.5s ease-out both; }
+    @keyframes wm-flash {
+      0%   { opacity: 0; transform: scale(0) rotate(-20deg); }
+      22%  { opacity: 1; transform: scale(1.7) rotate(-6deg); }
+      55%  { opacity: 1; transform: scale(2.1) rotate(2deg); }
+      100% { opacity: 0; transform: scale(2.6) rotate(8deg); }
+    }
+    .wm-intro .wm-rays { animation: rays-burst 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both; }
+    .wm-intro .wm-rays-a { animation: rays-spin-a 0.8s linear 0.04s both; }
+    .wm-intro .wm-rays-b { animation: rays-spin-b 0.8s linear 0.04s both; }
+    @keyframes rays-burst {
+      0%   { opacity: 0; transform: scale(0.1); }
+      18%  { opacity: 1; transform: scale(0.9); }
+      55%  { opacity: 0.85; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(1.16); }
+    }
+    @keyframes rays-spin-a { from { transform: rotate(-5deg); } to { transform: rotate(4deg); } }
+    @keyframes rays-spin-b { from { transform: rotate(5deg); } to { transform: rotate(-4deg); } }
+
+    .wm-intro .wm-l { animation: wm-eject 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+                      animation-delay: calc(0.12s + var(--d)); }
+    .wm-intro .wm-l .wm-ink { animation: wm-materialize 0.7s ease-out both;
+                              animation-delay: calc(0.12s + var(--d)); }
+    @keyframes wm-materialize {
+      0%   { stroke: #ffd76a; }
+      40%  { stroke: #c98a2c; }
+      75%  { stroke: #000; }
+      100% { stroke: #000; }
+    }
+    @keyframes wm-eject {
+      0%   { opacity: 0; transform: translate(var(--ex), 24px) rotate(var(--er)) scale(0.1); }
+      55%  { opacity: 1; transform: translate(calc(var(--ex) * -0.05), -12px) rotate(calc(var(--er) * -0.25)) scale(1.15, 0.85); }
+      78%  { transform: translate(0, 4px) rotate(0deg) scale(0.94, 1.06); }
+      100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+    }
+
+    /* boom outline snaps in around the landed name, then the shockwave echoes */
+    .wm-intro .wm-boom { animation: boom-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.72s both; }
+    @keyframes boom-in {
+      0%   { opacity: 0; transform: scale(0.55) rotate(-3deg); }
+      45%  { opacity: 1; transform: scale(1.09, 0.93) rotate(1.2deg); }
+      70%  { transform: scale(0.97, 1.04) rotate(-0.6deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .wm-intro .wm-shock { animation: shock-out 0.6s ease-out 0.86s both; }
+    @keyframes shock-out {
+      0%   { opacity: 0.6; transform: scale(0.98); }
+      100% { opacity: 0; transform: scale(1.3); }
+    }
+
+    /* ── hover: letter boops + outline jolt ── */
+    .wm-l.wm-boop { animation: wm-boop 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes wm-boop {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.12, 0.88); }
+      45%  { transform: scale(0.92, 1.08); }
+      62%  { transform: scale(1.06, 0.94); }
+      78%  { transform: scale(0.98, 1.02); }
+      100% { transform: scale(1); }
+    }
+    .wm-boom.wm-jolt { animation: boom-jolt 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes boom-jolt {
+      0%   { transform: scale(1) rotate(0deg); }
+      30%  { transform: scale(1.05, 0.96) rotate(1.2deg); }
+      55%  { transform: scale(0.97, 1.03) rotate(-0.8deg); }
+      78%  { transform: scale(1.02, 0.99) rotate(0.4deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wm-intro .wm-l, .wm-intro .wm-boom { animation: wm-fade 0.3s ease-out both; }
+      .wm-intro .wm-flash, .wm-intro .wm-rays, .wm-intro .wm-rays-a, .wm-intro .wm-rays-b,
+      .wm-intro .wm-shock, .wm-intro .wm-l .wm-ink, .wm-boom.wm-jolt, .wm-l.wm-boop { animation: none; }
+    }
+    @keyframes wm-fade { from { opacity: 0; } to { opacity: 1; } }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      list-style: none;
+    }
+    /* Nav links echo the wordmark: rounded terminals, chunky uniform
+       stroke, tightly packed — Fredoka is the typeset cousin of the
+       hand-drawn bubble letterforms on the left. */
+    .nav-links a {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #000;
+      text-decoration: none;
+      opacity: 0.72;
+      text-shadow: none;
+      transition: opacity 0.2s, color 0.3s, text-shadow 0.3s;
+    }
+    .nav-links a:hover { opacity: 1; }
+    .nav-links .about-btn a {
+      opacity: 0.72;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 0;
+      text-shadow: none;
+      transition: opacity 0.2s;
+    }
+    .nav-links .about-btn a:hover {
+      opacity: 1;
+    }
+    /* Active-section indicator. Position/width are set inline by JS (from
+       the active link's own rect) so the bar tracks exact glyph widths;
+       only the motion itself lives in CSS. */
+    #navUnderline {
+      position: absolute;
+      height: 2px;
+      border-radius: 2px;
+      background: #000;
+      left: 0;
+      width: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: left 0.5s cubic-bezier(0.65, 0, 0.35, 1),
+                  width 0.5s cubic-bezier(0.65, 0, 0.35, 1),
+                  opacity 0.25s ease;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       HERO — video framed like a print, white matting
+       on every side. Sits in normal flow below the nav.
+    ───────────────────────────────────────────── */
+    .hero-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      height: 100dvh;
+      box-sizing: border-box;
+      padding: calc(var(--nav-h) + 32px) 80px 56px;
+    }
+    .hero-media {
+      width: 100%;
+      max-width: 1300px;
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: #f4f3f0;
+    }
+    .hero-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       SECTION LABELS (shared utility)
+    ───────────────────────────────────────────── */
+    .section-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text);
+      display: block;
+      text-align: center;
+    }
+    .section-label::before {
+      display: none;
+      width: 0;
+      height: 0;
+      background: none;
+      flex-shrink: 0;
+    }
+    .section-header {
+      padding: 0 80px;
+      margin-bottom: 40px;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       FEATURED WORK — 3-column grid
+    ───────────────────────────────────────────── */
+    .featured-section {
+      padding-top: 56px;
+      padding-bottom: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Centered decorative section header */
+    .work-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      margin-bottom: 44px;
+      padding: 0 80px;
+    }
+    .work-header-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .work-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 2px;
+      padding: 0 80px;
+    }
+
+    .work-item {
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .work-item.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .work-media {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: #0d0c0b;
+    }
+
+    .work-thumb {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.9) saturate(1.1);
+      opacity: 0;
+      transition: opacity 0.5s ease,
+                  filter 0.55s ease,
+                  transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .work-thumb.thumb-ready { opacity: 1; }
+    .work-item:hover .work-thumb,
+    .work-item.touch-playing .work-thumb {
+      filter: brightness(1.04) saturate(1.25);
+      transform: scale(1.045);
+    }
+
+    /* Bottom vignette on each card */
+    .work-media::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to top, rgba(9,8,7,0.55), transparent);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ─────────────────────────────────────────────
+       FRAMES — Chaos video strip
+    ───────────────────────────────────────────── */
+    .frames-section {
+      padding: 56px 0 96px;
+    }
+
+    .frames-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+      padding: 0 80px;
+    }
+
+    .frames-item {
+      position: relative;
+      cursor: pointer;
+      aspect-ratio: 61 / 46;
+      overflow: hidden;
+      background: #0d0c0b;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .frames-item.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* Bottom vignette on each tile — kept subtle now that there's no
+       caption text to protect, just a touch of depth. */
+    .frames-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to top, rgba(9,8,7,0.2), transparent);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .frames-thumb {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.9) saturate(1.1);
+      opacity: 0;
+      transition: opacity 0.5s ease,
+                  filter 0.55s ease,
+                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .frames-thumb.thumb-ready { opacity: 1; }
+    .frames-item:hover .frames-thumb,
+    .frames-item.touch-playing .frames-thumb {
+      filter: brightness(1.04) saturate(1.25);
+      transform: scale(1.045);
+    }
+
+    /* ─────────────────────────────────────────────
+       DESTINATIONS — 3x3 cover grid, place name hidden
+       until hover
+    ───────────────────────────────────────────── */
+    .dest-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 0 80px;
+    }
+
+    .dest-item {
+      position: relative;
+      cursor: pointer;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: #0d0c0b;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .dest-item.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .dest-thumb {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(1.04) saturate(1.18);
+      transition: filter 0.6s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dest-item:hover .dest-thumb,
+    .dest-item.touch-active .dest-thumb {
+      filter: brightness(0.5) saturate(0.85);
+      transform: scale(1.06);
+    }
+
+    /* Scrim behind the label — only dark enough to read text against any
+       photo, fades in together with the label itself. */
+    .dest-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.22);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    .dest-item:hover::after,
+    .dest-item.touch-active::after {
+      opacity: 1;
+    }
+
+    .dest-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+      pointer-events: none;
+    }
+    .dest-item:hover .dest-label,
+    .dest-item.touch-active .dest-label {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+
+    /* ─────────────────────────────────────────────
+       DANIEL CAESAR — concert grid
+       Same grid structure, song titles always visible
+    ───────────────────────────────────────────── */
+    .dc-section {
+      padding-top: 120px;
+    }
+
+    .dc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap);
+    }
+
+    .dc-item {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      aspect-ratio: 1 / 1;
+      background: #111;
+      opacity: 0;
+      transform: translateY(36px);
+      transition: opacity 1.0s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 1.0s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .dc-item.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .dc-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.58) saturate(0.55);
+      transition: filter 0.65s ease,
+                  transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dc-item:hover .dc-video {
+      filter: brightness(0.8) saturate(0.75);
+      transform: scale(1.04);
+    }
+
+    /* always-on bottom gradient for song label */
+    .dc-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        to top,
+        rgba(9, 8, 7, 0.88) 0%,
+        rgba(9, 8, 7, 0.22) 36%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+
+    .dc-label {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 2;
+      padding: 18px 16px;
+    }
+    .dc-song {
+      font-family: 'Montserrat', sans-serif;
+      font-style: italic;
+      font-size: 17px;
+      font-weight: 300;
+      color: rgba(240, 236, 226, 0.78);
+      display: block;
+      line-height: 1.2;
+    }
+    .dc-artist {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 8px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(240, 236, 226, 0.36);
+      margin-top: 5px;
+      display: block;
+    }
+
+
+
+
+    /* ─────────────────────────────────────────────
+       ABOUT — photos left, bio right
+    ───────────────────────────────────────────── */
+    /* ─────────────────────────────────────────────
+       CONTACT — icon row + handle, footer-style
+    ───────────────────────────────────────────── */
+    .contact-section {
+      padding: 72px 40px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .contact-icons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+    }
+    .contact-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.22s, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .contact-icon:hover {
+      color: var(--muted);
+      transform: scale(1.12);
+    }
+    .contact-icon:active { transform: scale(0.94); }
+    .contact-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .contact-handle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+
+
+    /* ─────────────────────────────────────────────
+       FOOTER
+    ───────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--dim);
+      padding: 20px 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-copy,
+    .footer-handle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-handle:hover { color: var(--text); }
+
+
+    /* ─────────────────────────────────────────────
+       LIGHTBOX
+    ───────────────────────────────────────────── */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      background: rgba(0, 0, 0, 0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #lightbox.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .lightbox-inner {
+      position: relative;
+      width: 94vw;
+      display: flex;
+      flex-direction: column;
+    }
+    #lightboxVideo {
+      display: block;
+      width: 94vw;
+      height: 86vh;
+      object-fit: contain;
+      background: #000;
+    }
+    .lightbox-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding: 0 1px;
+    }
+    #lightboxTitle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .overlay-close {
+      position: fixed;
+      top: 28px;
+      left: 36px;
+      z-index: 5100;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: rgba(255,255,255,0.55);
+      transition: color 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .overlay-close:hover {
+      color: #fff;
+      transform: scale(1.12);
+    }
+    .overlay-close:active { transform: scale(0.94); }
+    .overlay-close svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    /* ─────────────────────────────────────────────
+       SCROLL REVEAL — cinematic upward lift
+    ───────────────────────────────────────────── */
+    /* ── Intro / About (between hero and frames) ────────────── */
+    .intro-section {
+      max-width: 1340px;
+      margin: 0 auto;
+      padding: 15vh 32px 13vh;
+      text-align: center;
+    }
+    .intro-title, .intro-body { max-width: 780px; margin-left: auto; margin-right: auto; }
+    .intro-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: clamp(26px, 3.4vw, 44px);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: #000;
+      margin: 0 auto 40px;
+    }
+    .intro-body p {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: #000;
+      margin: 0 0 22px;
+    }
+    .intro-body p:last-child { margin-bottom: 0; }
+    /* gallery wall: five frames, alternating orientations, offset
+       baselines — reveals in sequence on scroll */
+    .intro-gallery {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 76px;
+    }
+    .intro-frame {
+      overflow: hidden;
+      background: #f4f3f0;
+      box-shadow:
+        0 30px 60px -32px rgba(26, 25, 23, 0.26),
+        0 10px 20px -10px rgba(26, 25, 23, 0.14);
+    }
+    .intro-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .intro-frame:hover img { transform: scale(1.05); }
+    .if-a { flex: 0 0 15%; aspect-ratio: 2 / 3; margin-top: 34px; }
+    .if-b { flex: 0 0 22%; aspect-ratio: 4 / 3; }
+    .if-c { flex: 0 0 16%; aspect-ratio: 3 / 4; margin-top: 52px; }
+    .if-d { flex: 0 0 22%; aspect-ratio: 4 / 3; margin-top: 18px; }
+    .if-e { flex: 0 0 20%; aspect-ratio: 3 / 2; margin-top: 60px; }
+    @media (max-width: 640px) {
+      .intro-gallery { flex-wrap: wrap; gap: 14px; margin-top: 48px; }
+      .if-a, .if-b, .if-c, .if-d, .if-e { flex: 0 0 46%; margin-top: 0; }
+    }
+    @media (max-width: 560px) {
+      .intro-section { padding: 10vh 24px 9vh; }
+      .intro-body p { font-size: 15px; }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(48px);
+      transition: opacity 1.15s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 1.15s cubic-bezier(0.22, 0.61, 0.36, 1);
+      will-change: transform, opacity;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: 0.14s; }
+    .reveal-d2 { transition-delay: 0.28s; }
+    .reveal-d3 { transition-delay: 0.44s; }
+    .reveal-d4 { transition-delay: 0.62s; }
+
+    /* Work grid reveal handled inline via .work-item.revealed */
+
+
+    /* ─────────────────────────────────────────────
+       HAMBURGER + MOBILE MENU
+    ───────────────────────────────────────────── */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      z-index: 600;
+      position: relative;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 1px;
+      background: rgba(26,25,23,0.85);
+      transition: transform 0.32s cubic-bezier(0.16,1,0.3,1),
+                  opacity 0.22s ease, background 0.3s;
+      transform-origin: center;
+    }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    #mobileMenu {
+      position: fixed;
+      inset: 0;
+      z-index: 490;
+      background: rgba(255,255,255,0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.38s cubic-bezier(0.22,0.61,0.36,1);
+    }
+    #mobileMenu.open { opacity: 1; pointer-events: all; }
+    #mobileMenu ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+    }
+    #mobileMenu a {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #000;
+      text-decoration: none;
+      transition: color 0.22s;
+    }
+    #mobileMenu a:active { color: #000; }
+    #mobileMenu .mobile-about a {
+      color: #000;
+    }
+
+    /* ─────────────────────────────────────────────
+       RESPONSIVE
+    ───────────────────────────────────────────── */
+    @media (max-width: 960px) {
+      nav { padding: 0 24px; }
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+
+      .section-header { padding: 0 24px; }
+      .work-header { padding: 0 24px; }
+
+      .hero-section { height: auto; padding: calc(var(--nav-h) + 24px) 24px 40px; }
+
+      .work-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto;
+        padding: 0 24px;
+        gap: 4px;
+      }
+      .work-media { aspect-ratio: 4 / 3; flex: none; }
+
+      .dc-grid { grid-template-columns: repeat(2, 1fr); }
+      .frames-grid {
+        grid-template-columns: repeat(3, 1fr);
+        padding: 0 24px;
+        gap: 3px;
+      }
+      .dest-grid { padding: 0 24px; gap: 6px; }
+
+      .dc-section { padding-top: 72px; }
+      .contact-section { padding: 56px 24px 64px; }
+      footer { padding: 20px 24px; }
+
+      #lightboxVideo { height: auto; aspect-ratio: 16/9; }
+      .project-inner { padding: 80px 24px 80px; }
+    }
+
+    @media (max-width: 560px) {
+      nav { padding: 0 20px; }
+      .hero-section { height: auto; padding: calc(var(--nav-h) + 16px) 16px 24px; }
+
+      .work-grid {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+        gap: 6px;
+      }
+      .work-media { aspect-ratio: 16 / 10; }
+
+      .dc-grid { grid-template-columns: repeat(2, 1fr); }
+      .frames-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0 16px;
+        gap: 3px;
+      }
+      .dest-grid { padding: 0 16px; gap: 4px; }
+      .dest-label { font-size: 11px; letter-spacing: 0.16em; }
+
+      .dc-section { padding-top: 56px; }
+
+      .contact-section { padding: 48px 20px 56px; }
+      footer { padding: 20px; flex-direction: column; gap: 8px; text-align: center; }
+      .project-inner { padding: 72px 16px 72px; }
+    }
+
+    /* Touch devices — no hover capability */
+    @media (hover: none) {
+      /* Work items: show thumbnail at normal brightness */
+      .work-thumb { filter: brightness(1.0) saturate(1.15); }
+      .frames-thumb { filter: brightness(1.0) saturate(1.15); }
+    }
+
+    /* ── Cinematic site intro loader: the film wheel ──────────────
+       A fixed portrait box is the front face of a virtual drum. Panels
+       occupy angular slots; their on-screen top/bottom are the projection
+       of the slot edges (y = R·sinθ), so each panel enters short at the
+       bottom, swells to max height at center, and compresses out the top
+       — widths never change, neighbors always touch. Each panel is a
+       moving APERTURE over a stationary clip (inner video counter-offset
+       per frame), like footage etched in place behind a passing slit.
+       The final slot is transparent: it reveals the LIVE homepage hero
+       (magnified 1.8×), stretches to full box height, and then the
+       window expands four-corners-out while the hero zooms out to
+       natural scale — one continuous camera pull-back into the page.
+       Once per session; reduced motion gets a plain fade. */
+    #siteIntro {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: none;
+    }
+    html.si-lock #siteIntro, html.si-fade #siteIntro { display: block; }
+    html.si-lock #grain { display: none; } /* invisible under the loader — skip its compositing */
+    html.si-lock, html.si-lock body { overflow: hidden; }
+    html.si-fade #siteIntro { background: #ffffff; }
+    .si-p { position: absolute; inset: 0; background: #ffffff; will-change: transform; }
+    .si-p-top    { transform-origin: 50% 0; }
+    .si-p-bottom { transform-origin: 50% 100%; }
+    .si-p-left   { transform-origin: 0 50%; }
+    .si-p-right  { transform-origin: 100% 50%; }
+    /* Film wheel stage: panels are full-stage layers revealed through
+       animated clip-path slits (compositor-only). Footage is stationary
+       by construction — each slit passes over a pinned clip. */
+    .si-stage { position: absolute; overflow: hidden; contain: layout paint; }
+    html.si-fade .si-stage { display: none; }
+    .si-wpanel { position: absolute; inset: 0; will-change: clip-path, transform; }
+    .si-wpanel video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      will-change: transform;
+    }
+    #siteIntro .si-mark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(120px, 13vw, 180px);
+      height: auto;
+      mix-blend-mode: difference;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 2;
+    }
+    #siteIntro.p-mark .si-mark { opacity: 1; }
+    .si-mark .wm-ink { stroke: #fff !important; }
+    .si-mark .wm-boom, .si-mark .wm-shine, .si-mark .wm-flash, .si-mark .wm-rays, .si-mark .wm-shock, .si-mark .wm-hit { display: none; }
+    .si-mark .wm-l, .si-mark .wm-l .wm-ink { animation: none !important; }
+    #siteIntro.p-rise .si-mark { opacity: 0; }
+    #siteIntro.p-out { opacity: 0; transition: opacity 0.6s ease; pointer-events: none; }
+    /* hero magnified beneath the wheel; zooms out with the expansion */
+    html.si-zoom .hero-video { transform: scale(1.8); transform-origin: 50% 50%; }
+    html.si-zoomout .hero-video {
+      transform: scale(1);
+      transform-origin: 50% 50%;
+      transition: transform 0.85s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    /* staged homepage reveal */
+    html.si-lock nav { opacity: 0; transform: translateY(-10px); }
+    html.si-reveal nav {
+      opacity: 1;
+      transform: none;
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s,
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
+    }
+  </style>
+  <script>
+    // Site intro gate — decides before first paint whether the cinematic
+    // loader (once per session) or a plain fade (reduced motion) runs.
+    (function () {
+      try {
+        if (sessionStorage.getItem('siteIntroPlayed')) return;
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var cls = reduced ? 'si-fade' : 'si-lock';
+        document.documentElement.classList.add(cls);
+      } catch (e) { /* no sessionStorage — skip the intro */ }
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- ── Cinematic intro loader (once per session) ── -->
+  <div id="siteIntro" aria-hidden="true">
+    <div class="si-p si-p-top"></div>
+    <div class="si-p si-p-bottom"></div>
+    <div class="si-p si-p-left"></div>
+    <div class="si-p si-p-right"></div>
+    <div class="si-stage"></div>
+  </div>
+
+  <!-- Film grain -->
+  <div id="grain" aria-hidden="true"></div>
+
+
+  <!-- ── Nav ───────────────────────────────── -->
+  <nav id="nav">
+    <a href="#" class="nav-name" aria-label="Max Shen — home">
+      <svg class="wordmark" viewBox="-80 -72 800 258" height="40" role="img" aria-label="MAX SHEN">
+    <defs>
+      <linearGradient id="wmray" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffd76a" stop-opacity="0.95"/>
+        <stop offset="0.65" stop-color="#ffe9ae" stop-opacity="0.45"/>
+        <stop offset="1" stop-color="#fff3cf" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="wmglow">
+        <stop offset="0" stop-color="#fff6d8" stop-opacity="0.95"/>
+        <stop offset="0.55" stop-color="#ffd76a" stop-opacity="0.5"/>
+        <stop offset="1" stop-color="#ffd76a" stop-opacity="0"/>
+      </radialGradient>
+      <path id="wmboomp" d="M -5.4 -47.6 L 36.7 -16.9 L 97.3 -61.8 L 138.6 -15.4 L 193.7 -56.9 L 251.1 -15.4 L 316.7 -65.9 L 353.3 -17.7 L 408.8 -54.9 L 463.2 -16.2 L 535.3 -46.7 L 574.7 -17.3 L 676.1 1.9 L 643.4 21.3 L 693.3 60.1 L 646.6 89.7 L 631.4 158.7 L 588.7 127.2 L 521.8 165.0 L 483.4 128.3 L 408.2 156.6 L 364.4 132.0 L 317.0 168.1 L 258.9 129.7 L 196.1 160.0 L 146.8 131.6 L 87.5 162.7 L 50.1 130.9 L -65.0 122.4 L -25.7 93.8 L -71.2 62.1 L -22.9 22.0 Z"/>
+    </defs>
+
+    <!-- explosion rays (intro only), radiating from the name's center -->
+    <g transform="translate(309,57)"><g class="wm-rays" fill="url(#wmray)">
+      <circle r="52" fill="url(#wmglow)"/>
+      <g class="wm-rays-a">
+        <path transform="rotate(4)" d="M 0 0 L 330 -15 L 330 15 Z"/>
+        <path transform="rotate(176)" d="M 0 0 L 330 -15 L 330 15 Z"/>
+        <path transform="rotate(24)" d="M 0 0 L 240 -12 L 240 12 Z"/>
+        <path transform="rotate(156)" d="M 0 0 L 240 -12 L 240 12 Z"/>
+        <path transform="rotate(266)" d="M 0 0 L 100 -9 L 100 9 Z"/>
+      </g>
+      <g class="wm-rays-b">
+        <path transform="rotate(-14)" d="M 0 0 L 290 -12 L 290 12 Z"/>
+        <path transform="rotate(194)" d="M 0 0 L 290 -12 L 290 12 Z"/>
+        <path transform="rotate(60)" d="M 0 0 L 110 -9 L 110 9 Z"/>
+        <path transform="rotate(120)" d="M 0 0 L 110 -9 L 110 9 Z"/>
+        <path transform="rotate(288)" d="M 0 0 L 95 -8 L 95 8 Z"/>
+        <path transform="rotate(252)" d="M 0 0 L 95 -8 L 95 8 Z"/>
+      </g>
+    </g></g>
+
+    <!-- shockwave echo (intro only) + persistent boom outline -->
+    <use class="wm-shock" href="#wmboomp" fill="none" stroke="#e0a93c" stroke-width="4" stroke-linejoin="round"/>
+    <use class="wm-boom" href="#wmboomp" fill="none" stroke="#000" stroke-width="9" stroke-linejoin="round"/>
+
+    <!-- explosion core starburst (intro only) -->
+    <g transform="translate(309,57)"><g class="wm-flash">
+      <path fill="#ffd76a" stroke="#000" stroke-width="5" stroke-linejoin="round"
+        d="M 34 0 L 12.9 5.4 L 24 24 L 5.4 12.9 L 0 34 L -5.4 12.9 L -24 24 L -12.9 5.4 L -34 0 L -12.9 -5.4 L -24 -24 L -5.4 -12.9 L 0 -34 L 5.4 -12.9 L 24 -24 L 12.9 -5.4 Z"/>
+      <circle r="9" fill="#fff" stroke="#000" stroke-width="4"/>
+    </g></g>
+
+    <!-- letters -->
+    <g transform="translate(0,0) rotate(-2.5 46 60)"><g class="wm-l" style="--ex:264px; --er:-26deg; --d:0.15s">
+      <rect class="wm-hit" x="2" y="6" width="86" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 98 C 12 72 12 46 18 22 L 46 62 L 74 22 C 80 46 80 72 75 98"/>
+      <path class="wm-shine" stroke-width="9" d="M 17 34 L 17 45"/>
+    </g></g>
+    <g transform="translate(96,0) rotate(2 42 60)"><g class="wm-l" style="--ex:171px; --er:20deg; --d:0.10s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 13 98 C 20 72 30 46 42 22 C 54 46 64 72 71 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 27 73 L 57 73"/>
+      <path class="wm-shine" stroke-width="9" d="M 31 43 L 36 31"/>
+    </g></g>
+    <g transform="translate(180,0) rotate(-1.5 40 60)"><g class="wm-l" style="--ex:89px; --er:-16deg; --d:0.05s">
+      <rect class="wm-hit" x="2" y="6" width="76" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 14 22 C 30 46 48 72 66 98"/>
+      <path class="wm-ink" stroke-width="28" d="M 66 22 C 50 46 32 72 14 98"/>
+      <path class="wm-shine" stroke-width="9" d="M 20 32 L 28 42"/>
+    </g></g>
+    <g transform="translate(296,0) rotate(2.5 39 60)"><g class="wm-l" style="--ex:-26px; --er:14deg; --d:0s">
+      <rect class="wm-hit" x="2" y="6" width="76" height="106"/>
+      <path class="wm-ink" stroke-width="26" d="M 65 31 C 59 15 17 13 15 36 C 13 58 65 55 65 79 C 64 104 18 104 12 85"/>
+      <path class="wm-shine" stroke-width="9" d="M 39 24 L 49 25"/>
+    </g></g>
+    <g transform="translate(378,0) rotate(-2 42 60)"><g class="wm-l" style="--ex:-111px; --er:-20deg; --d:0.05s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 22 C 12 46 12 72 17 98"/>
+      <path class="wm-ink" stroke-width="28" d="M 67 22 C 72 46 72 72 67 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 17 60 L 67 60"/>
+      <path class="wm-shine" stroke-width="9" d="M 16 34 L 16 45"/>
+    </g></g>
+    <g transform="translate(464,0) rotate(1.5 40 60)"><g class="wm-l" style="--ex:-191px; --er:22deg; --d:0.10s">
+      <rect class="wm-hit" x="2" y="6" width="72" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 19 22 C 14 46 14 72 19 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 25 L 61 25"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 60 L 53 60"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 95 L 61 95"/>
+      <path class="wm-shine" stroke-width="9" d="M 18 36 L 18 47"/>
+    </g></g>
+    <g transform="translate(532,0) rotate(-2.5 42 60)"><g class="wm-l" style="--ex:-265px; --er:-24deg; --d:0.15s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 98 C 12 72 12 46 17 22 L 67 98 C 72 72 72 46 67 22"/>
+      <path class="wm-shine" stroke-width="9" d="M 16 34 L 16 45"/>
+    </g></g>
+  </svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#hero">Home</a></li>
+      <li class="about-btn"><a href="#about">About</a></li>
+      <li><a href="#frames">Frames</a></li>
+      <li><a href="#work">Projects</a></li>
+    </ul>
+    <span id="navUnderline" aria-hidden="true"></span>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div id="mobileMenu" aria-hidden="true">
+    <ul>
+      <li><a href="#hero">Home</a></li>
+      <li class="mobile-about"><a href="#about">About</a></li>
+      <li><a href="#frames">Frames</a></li>
+      <li><a href="#work">Projects</a></li>
+    </ul>
+  </div>
+
+  <!-- ── Hero ───────────────────────────────── -->
+  <section class="hero-section" id="hero">
+    <div class="hero-media">
+      <video class="hero-video" src="/public/videos/hero.mp4" autoplay muted loop playsinline></video>
+    </div>
+  </section>
+
+  <!-- ── Intro / About ──────────────────────── -->
+  <section class="intro-section" id="about">
+    <h2 class="intro-title reveal">A compilation of my frames, projects, and creative journey.</h2>
+    <div class="intro-body">
+      <p class="reveal reveal-d1">Hey, I’m Max. I’m currently studying Business and Technology Management at New York University with a concentration in Finance.</p>
+      <p class="reveal reveal-d2">I grew up in Vancouver, Canada, the most beautiful city in the world. I’m passionate about creation and the process of building something from the ground up. For me, that mostly happens through my camera.</p>
+      <p class="reveal reveal-d3">In my free time, you can find me playing basketball, DJing, or working on my next video idea.</p>
+    </div>
+    <div class="intro-gallery">
+      <div class="intro-frame if-a reveal"><img src="maxshen3.JPG" alt="Max Shen holding a camera against a stone wall"></div>
+      <div class="intro-frame if-b reveal reveal-d1"><img src="maxshen1.JPG" alt="Max Shen at dusk by the ocean"></div>
+      <div class="intro-frame if-c reveal reveal-d2"><img src="maxshen5.jpeg" alt="Max Shen photographing a sunset over the water"></div>
+      <div class="intro-frame if-d reveal reveal-d3"><img src="maxshen2.JPG" alt="Max Shen photographing by a canal"></div>
+      <div class="intro-frame if-e reveal reveal-d4"><img src="maxshen4.jpg" alt="Max Shen with two friends at a tech conference"></div>
+    </div>
+  </section>
+
+  <!-- ── Frames ─────────────────────────────── -->
+  <section class="frames-section" id="frames">
+    <div class="work-header">
+      <span class="work-header-title">Frames</span>
+    </div>
+    <div class="dest-grid" id="framesGrid" data-cols="3"></div>
+  </section>
+
+
+  <!-- ── Featured Work ─────────────────────── -->
+  <section class="featured-section" id="work">
+
+    <div class="work-header">
+      <span class="work-header-title">Projects</span>
+    </div>
+
+    <div class="work-grid" id="workGrid"></div>
+  </section>
+
+
+  <!-- ── Contact ────────────────────────────── -->
+  <section id="contact">
+    <div class="contact-section">
+      <div class="contact-icons">
+        <!-- Instagram -->
+        <a href="https://instagram.com/maxshen.mp4" target="_blank" rel="noopener" class="contact-icon" aria-label="Instagram">
+          <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <!-- LinkedIn -->
+        <a href="https://www.linkedin.com/in/max-shen-18555321a/" target="_blank" rel="noopener" class="contact-icon" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><line x1="7" y1="10" x2="7" y2="17"/><circle cx="7" cy="6.7" r="1" fill="currentColor" stroke="none"/><line x1="11.5" y1="17" x2="11.5" y2="10"/><path d="M11.5 13c0-1.8 1.2-3 3-3s3 1.2 3 3v4"/></svg>
+        </a>
+        <!-- Email -->
+        <a href="mailto:maxshenfilm@gmail.com" class="contact-icon" aria-label="Email">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        </a>
+      </div>
+      <p class="contact-handle">maxshenfilm@gmail.com</p>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────── -->
+
+  <!-- ── Lightbox ───────────────────────────── -->
+  <div id="lightbox">
+    <button id="lightboxClose" class="overlay-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></svg>
+    </button>
+    <div class="lightbox-inner">
+      <video id="lightboxVideo" controls></video>
+      <div class="lightbox-bar">
+        <span id="lightboxTitle"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Project overlay: a Featured Work project's video, then its
+       photo frames below it ─────────────────────── -->
+  <script>
+    // No loading screen — the page renders directly.
+
+    // ── Video: seek to thumbnail frame ───────────────────────
+    const isMobileDevice = window.matchMedia('(hover: none), (max-width: 960px)').matches;
+    document.querySelectorAll('.work-thumb, .dc-video').forEach(video => {
+      video.addEventListener('loadedmetadata', () => {
+        // Mobile: stay at frame 0 — decodes immediately with minimal data downloaded.
+        // Desktop: seek to 18% for a more representative thumbnail frame.
+        if (!isMobileDevice && video.duration > 4) {
+          video.currentTime = video.duration * 0.18;
+        }
+      });
+    });
+    // ── Work thumbnails: fade in once a frame is decoded ────────
+    // loadeddata fires when currentTime=0 frame is ready (mobile, no seek).
+    // seeked fires after seeking to 18% on desktop.
+    // Both paths add thumb-ready — whichever fires first wins.
+    document.querySelectorAll('.work-thumb').forEach(video => {
+      video.addEventListener('seeked',     () => video.classList.add('thumb-ready'));
+      video.addEventListener('loadeddata', () => video.classList.add('thumb-ready'));
+      if (video.readyState >= 2) video.classList.add('thumb-ready');
+      // Poster image present — show immediately without waiting for video data
+      if (video.poster) video.classList.add('thumb-ready');
+    });
+
+    // ── Lazy thumbnail preloader (frames + work grids) ───────
+    // Work grid: trigger 300px early — just below hero, loads fast.
+    // Frames grid: trigger 600px early — further down the page,
+    // needs more lead time so thumbnails are decoded when user arrives.
+    function makeLazyLoader(rootMargin) {
+      return new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          entry.target.querySelectorAll('video').forEach(video => {
+            if (video.preload === 'none') {
+              video.preload = 'metadata';
+              video.load();
+            }
+          });
+          entry.target._lazyLoader.unobserve(entry.target);
+        });
+      }, { rootMargin });
+    }
+
+    const workLazyObs = makeLazyLoader('300px 0px');
+
+
+    // ── Frames: hover play + staggered reveal on scroll ─────
+    function setupHoverPlay(selector, playFromStart = false) {
+      document.querySelectorAll(selector).forEach(item => {
+        const video = item.querySelector('video');
+        if (!video) return;
+        let resetTimer = null;
+
+        item.addEventListener('mouseenter', () => {
+          clearTimeout(resetTimer);
+          if (playFromStart) video.currentTime = 0;
+          video.play().catch(() => {});
+        });
+        item.addEventListener('mouseleave', () => {
+          video.pause();
+          resetTimer = setTimeout(() => {
+            if (video.duration > 4) video.currentTime = video.duration * 0.18;
+          }, 300);
+        });
+        item.addEventListener('click', () => {
+          if (item.dataset.src) {
+            const labelEl = item.querySelector('.frame-label-text');
+            const title = (labelEl && labelEl.textContent) || item.dataset.title;
+            openLightbox(item.dataset.src, title);
+          }
+        });
+      });
+    }
+
+    setupHoverPlay('.dc-item');
+
+
+    // ── Staggered scroll reveal for dc/work/frames grids (grid-level) ─
+    const gridRevealObs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const grid = entry.target;
+        const cols  = parseInt(grid.dataset.cols || '3', 10);
+        const items = Array.from(grid.children);
+        items.forEach((item, i) => {
+          const row = Math.floor(i / cols);
+          const col = i % cols;
+          const delay = row * 0.1 + col * 0.05;
+          item.style.transitionDelay = delay + 's';
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            item.classList.add('revealed');
+          }));
+        });
+        gridRevealObs.unobserve(grid);
+      });
+    }, { threshold: 0.04, rootMargin: '0px 0px -4% 0px' });
+
+    document.querySelectorAll('.dc-grid').forEach(grid => {
+      gridRevealObs.observe(grid);
+    });
+
+    // ── Lightbox ─────────────────────────────────────────────
+    const lightbox      = document.getElementById('lightbox');
+    const lightboxVideo = document.getElementById('lightboxVideo');
+    const lightboxTitle = document.getElementById('lightboxTitle');
+    const lightboxClose = document.getElementById('lightboxClose');
+
+    function openLightbox(src, title) {
+      lightboxVideo.src = decodeURIComponent(src);
+      lightboxTitle.textContent = title || '';
+      lightbox.classList.add('open');
+      lightboxVideo.load();
+      lightboxVideo.addEventListener('canplay', () => {
+        lightboxVideo.play().catch(() => {});
+      }, { once: true });
+
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightboxVideo.pause();
+      lightboxVideo.src = '';
+    }
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+
+    // ── Featured Work: project data, grid, and detail overlay ────────────
+    // Each project's cover is a still image; clicking it opens the project
+    // video full-size with a grid of photo frames from that shoot below it.
+    (function initFeaturedWork() {
+      const PROJECTS = [
+        {
+          title: 'WIP Marketplace',
+          slug: 'wip',
+          cover: '/public/posters/wip-cover.png',
+        },
+        {
+          title: 'California',
+          slug: 'california',
+          cover: '/public/posters/california.jpg',
+        },
+      ];
+      const workGrid = document.getElementById('workGrid');
+
+      // Clicking a project opens its own page (same fade-out transition
+      // the Frames tiles use).
+      function goToProject(project) {
+        const url = 'project.html?p=' + encodeURIComponent(project.slug);
+        document.body.style.transition = 'opacity 0.55s cubic-bezier(0.4,0,0.2,1)';
+        document.body.style.opacity = '0';
+        setTimeout(function () { window.location.href = url; }, 560);
+      }
+
+      PROJECTS.forEach(function (project) {
+        const item = document.createElement('div');
+        item.className = 'work-item';
+
+        const media = document.createElement('div');
+        media.className = 'work-media';
+
+        const img = document.createElement('img');
+        img.className = 'work-thumb';
+        img.src = project.cover;
+        img.alt = project.title;
+        img.loading = 'lazy';
+        img.addEventListener('load', function () { img.classList.add('thumb-ready'); });
+        if (img.complete) img.classList.add('thumb-ready');
+
+        media.appendChild(img);
+        item.appendChild(media);
+        item.addEventListener('click', function () { goToProject(project); });
+        workGrid.appendChild(item);
+      });
+
+      gridRevealObs.observe(workGrid);
+    })();
+
+
+    // ── Generic scroll reveal (about, contact) ────────────────
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
+      });
+    }, { threshold: 0.01, rootMargin: '0px 0px -5% 0px' });
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+    // ── Mobile hamburger menu ─────────────────────────────────
+    const hamburger  = document.getElementById('navHamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    function toggleMenu(force) {
+      const open = typeof force === 'boolean' ? force : !hamburger.classList.contains('open');
+      hamburger.classList.toggle('open', open);
+      mobileMenu.classList.toggle('open', open);
+      mobileMenu.setAttribute('aria-hidden', String(!open));
+      document.body.style.overflow = open ? 'hidden' : '';
+    }
+
+    hamburger.addEventListener('click', () => toggleMenu());
+
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => toggleMenu(false));
+    });
+
+    // ── Nav underline: tracks the section currently in view ──
+    (function () {
+      const navEl      = document.getElementById('nav');
+      const underline  = document.getElementById('navUnderline');
+      const sectionIds = ['hero', 'frames', 'work', 'about'];
+      const linkFor    = id => navEl.querySelector('.nav-links a[href="#' + id + '"]');
+
+      let activeId = null;
+
+      function moveUnderlineTo(id) {
+        const link = linkFor(id);
+        if (!link) return;
+        const navRect  = navEl.getBoundingClientRect();
+        const linkRect = link.getBoundingClientRect();
+        underline.style.left    = (linkRect.left - navRect.left) + 'px';
+        underline.style.top     = (linkRect.bottom - navRect.top + 4) + 'px';
+        underline.style.width   = linkRect.width + 'px';
+        underline.style.opacity = '1';
+      }
+
+      // A section "activates" the moment it crosses the vertical center of
+      // the viewport — a thin observation band there reads as one flowing
+      // scrollspy instead of a jumpy per-section on/off toggle.
+      const spy = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          if (entry.target.id === activeId) return;
+          activeId = entry.target.id;
+          moveUnderlineTo(activeId);
+        });
+      }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+
+      sectionIds.forEach(id => {
+        const section = document.getElementById(id);
+        if (section) spy.observe(section);
+      });
+
+      // Default to Home before any section has crossed center (page load,
+      // or a viewport tall enough that hero alone fills it).
+      activeId = 'hero';
+      moveUnderlineTo(activeId);
+      // Re-measure once the webfont swaps in — glyph widths shift slightly
+      // and the bar is sized from the link's exact rendered width.
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => moveUnderlineTo(activeId));
+      }
+
+      window.addEventListener('resize', () => moveUnderlineTo(activeId));
+    })();
+
+    // ── Touch: tap to play video in thumbnail ────────────────
+    if (isMobileDevice) {
+      document.querySelectorAll('.work-item').forEach(item => {
+        const video = item.querySelector('video');
+        if (!video) return;
+
+        item.addEventListener('touchstart', () => {
+          video.play().catch(() => {});
+          item.classList.add('touch-playing');
+        }, { passive: true });
+
+        item.addEventListener('touchend', () => {
+          setTimeout(() => item.classList.remove('touch-playing'), 600);
+        }, { passive: true });
+      });
+
+      // Fallback: large files without faststart encoding (e.g. 119MB, 164MB)
+      // can take 5+ seconds to load metadata on mobile. After 3s, force
+      // thumb-ready so the card shows the video element rather than staying
+      // invisible. Re-encoding with HandBrake "Web Optimized" is the real fix.
+      setTimeout(() => {
+        document.querySelectorAll('.work-thumb').forEach(v => {
+          v.classList.add('thumb-ready');
+        });
+      }, 3000);
+    }
+    // ── FRAMES GRID — a 5x4 tile grid of every clip ───────────────────────
+    (function initDestinationsGrid() {
+      // Cover photos are placeholders until the real one is in — swap the
+      // `cover` value in as each place's photo is ready. The place name
+      // stays hidden until hover (tap on touch devices). Clicking a tile
+      // navigates to that destination's own page (destination.html), not
+      // a popup, so the photo layout there has the full page to work with.
+      const SPAIN_COVER = '/public/destinations/spain/cover.jpg';
+      const JAPAN_COVER = '/public/destinations/japan/bells.jpg';
+      const ITALY_COVER = '/public/destinations/italy/peaks.jpg';
+
+      const DESTINATIONS = [
+        { name: 'Spain',      slug: 'spain',      cover: SPAIN_COVER },
+        { name: 'Japan',      slug: 'japan',      cover: JAPAN_COVER },
+        { name: 'Italy',      slug: 'italy',      cover: ITALY_COVER },
+        { name: 'Vancouver',  slug: 'vancouver',  cover: null },
+        { name: 'Morocco',    slug: 'morocco',    cover: null },
+      ];
+
+      const grid = document.getElementById('framesGrid');
+      if (!grid) return;
+
+      // Matches the fade-then-navigate transition already used for the
+      // About page link, so drilling into a destination feels consistent.
+      function goToDestination(dest) {
+        const url = 'destination.html?place=' + encodeURIComponent(dest.slug);
+        document.body.style.transition = 'opacity 0.55s cubic-bezier(0.4,0,0.2,1)';
+        document.body.style.opacity = '0';
+        setTimeout(function () { window.location.href = url; }, 560);
+      }
+
+      DESTINATIONS.forEach(function (dest, i) {
+        const place = dest.name;
+        const cell = document.createElement('div');
+        cell.className = 'dest-item';
+
+        const img = document.createElement('img');
+        img.className = 'dest-thumb';
+        // Numbered rather than named, so the placeholder itself doesn't
+        // spoil the hover reveal.
+        img.src = dest.cover || ('https://placehold.co/900x900/1a1917/3a3936?text=' +
+          String(i + 1).padStart(2, '0'));
+        img.alt = place;
+        img.loading = 'lazy';
+
+        const label = document.createElement('span');
+        label.className = 'dest-label';
+        label.textContent = place;
+
+        cell.appendChild(img);
+        cell.appendChild(label);
+
+        // Desktop: the name is already visible on hover, so a click
+        // navigates straight away. Touch has no hover — the first tap
+        // reveals the name (like hover), and a second tap navigates.
+        cell.addEventListener('click', function () {
+          if (isMobileDevice && !cell.classList.contains('touch-active')) {
+            grid.querySelectorAll('.dest-item.touch-active').forEach(function (other) {
+              other.classList.remove('touch-active');
+            });
+            cell.classList.add('touch-active');
+            return;
+          }
+          goToDestination(dest);
+        });
+
+        grid.appendChild(cell);
+      });
+
+      gridRevealObs.observe(grid);
+    })();
+
+    // ── Fix blank page on browser Back/Forward ────────────────
+    // Navigating away fades body opacity to 0 first. If the browser then
+    // restores this page from bfcache (back/forward) instead of reloading
+    // it, that inline opacity:0 is still sitting there with nothing to
+    // reset it — the page looks blank until a manual refresh. `pageshow`
+    // fires on bfcache restores (unlike DOMContentLoaded), so undo it there.
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      document.body.style.transition = 'none';
+      document.body.style.opacity = '';
+      void document.body.offsetWidth;
+      document.body.style.transition = '';
+    });
+  </script>
+
+  <script>
+    // Cinematic intro driver — the film wheel (see the si-* CSS notes).
+    (function () {
+      const html = document.documentElement;
+      const intro = document.getElementById('siteIntro');
+      if (!intro) return;
+
+      const finish = function () {
+        html.classList.add('si-reveal');
+        intro.classList.add('p-out');
+        setTimeout(function () {
+          html.classList.remove('si-lock', 'si-fade', 'si-zoom', 'si-zoomout');
+          intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
+          intro.remove();
+        }, 650);
+      };
+
+      if (html.classList.contains('si-fade')) {
+        try {
+          sessionStorage.setItem('siteIntroPlayed', '1');
+          sessionStorage.setItem('wmIntroPlayed', '1');
+        } catch (e) {}
+        setTimeout(finish, 250);
+        return;
+      }
+      if (!html.classList.contains('si-lock')) { intro.remove(); return; }
+      try {
+        sessionStorage.setItem('siteIntroPlayed', '1');
+        sessionStorage.setItem('wmIntroPlayed', '1');
+      } catch (e) {}
+      html.classList.add('si-zoom'); // hero magnified beneath the wheel
+
+      // blend-mode logo: clone the real wordmark asset
+      const navMark = document.querySelector('.wordmark');
+      if (navMark) {
+        const mark = navMark.cloneNode(true);
+        mark.classList.remove('wordmark', 'wm-intro');
+        mark.classList.add('si-mark');
+        mark.removeAttribute('height');
+        mark.setAttribute('aria-hidden', 'true');
+        intro.appendChild(mark);
+      }
+
+      // clip pool: one persistent playing element per clip
+      const SRC = '/public/loader/';
+      const FILES = ['boom.mp4', 'brent.mp4', 'fantastic.mp4', 'morocco-1.mp4', 'stanley-car.mp4', 'morocco-2.mp4'];
+      // hand-picked in-points: each clip's most interesting beat
+      const START = {
+        'boom.mp4': 0.2,        // sparkler flares into the burst
+        'brent.mp4': 5.5,       // snowboarder carves close past camera
+        'fantastic.mp4': 2.6,   // the hug-spin on the pier at dusk
+        'morocco-1.mp4': 1.0,   // beach panorama, riders and walkers mid-frame
+        'stanley-car.mp4': 4.6, // mountain vista streaming past the van window
+        'morocco-2.mp4': 2.3,   // both riders silhouetted under the lights
+      };
+      const pool = FILES.map(function (file) {
+        const v = document.createElement('video');
+        v.muted = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.loop = true;
+        v.preload = 'auto';
+        v.src = SRC + file;
+        // play + pre-seek as soon as THIS clip is ready — all decode work
+        // happens during the preload window, none at wheel start
+        v.addEventListener('canplay', function () {
+          v.play().catch(function () {});
+          try {
+            const k = FILES.indexOf(file);
+            const tgt = (START[file] || 0) - k * 0.127;
+            v.currentTime = Math.max(tgt, 0.04);
+          } catch (e) {}
+        }, { once: true });
+        return v;
+      });
+      const preloaded = Promise.race([
+        Promise.all(pool.map(function (v) {
+          return new Promise(function (res) {
+            v.addEventListener('canplay', res, { once: true });
+            v.addEventListener('error', res, { once: true });
+          });
+        })),
+        new Promise(function (res) { setTimeout(res, 3000); }),
+      ]);
+      const whiteHold = new Promise(function (res) { setTimeout(res, 120); });
+
+      Promise.all([preloaded, whiteHold]).then(function () {
+        const EASE = 'cubic-bezier(0.76, 0, 0.24, 1)';
+        const stage = intro.querySelector('.si-stage');
+        const heroEl = document.querySelector('.hero-video') || document.querySelector('.hero-media');
+        const hero = heroEl.getBoundingClientRect();
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const W = Math.round(vw <= 560 ? vw * 0.5 : vw * 0.2);
+        const H = Math.round(Math.min(vh * 0.46, hero.height));
+        const R = H / 2;
+        const box = { left: Math.round((vw - W) / 2), top: Math.round((vh - H) / 2) };
+        box.right = box.left + W;
+        box.bottom = box.top + H;
+        stage.style.left = box.left + 'px';
+        stage.style.top = box.top + 'px';
+        stage.style.width = W + 'px';
+        stage.style.height = H + 'px';
+
+        // window beneath the wheel = the box rect (the live hero shows
+        // through wherever the wheel face is open)
+        intro.querySelector('.si-p-top').style.transform = 'scaleY(' + (box.top / vh) + ')';
+        intro.querySelector('.si-p-bottom').style.transform = 'scaleY(' + ((vh - box.bottom) / vh) + ')';
+        intro.querySelector('.si-p-left').style.transform = 'scaleX(' + (box.left / vw) + ')';
+        intro.querySelector('.si-p-right').style.transform = 'scaleX(' + ((vw - box.right) / vw) + ')';
+        void intro.offsetWidth;
+
+        // ── drum model ────────────────────────────────────────────
+        // Slot k sits at angle (90 + 36k) − Ω and rises as Ω grows: it
+        // enters short at the bottom, swells to max height at center, and
+        // compresses out through the top — while its footage stays pinned
+        // in place behind the moving slit. Slot HERO (k=6) is a
+        // transparent aperture onto the live hero.
+        const STEP = 36, HALF = 18, HERO_K = 6;
+        const rad = function (d) { return d * Math.PI / 180; };
+        // y grows downward: θ=+90 is the box bottom (entry), θ=0 center,
+        // θ=−90 the box top (exit) — panels rise. ONE blended projection
+        // drives every edge: the sine term gives the wheel swell
+        // (short → tall → short), the linear term guarantees every edge
+        // keeps moving — no crawl at entry, no crawl at the top, edges
+        // reach y=0 exactly at −90°. A single motion field, so all
+        // boundaries share one continuous speed profile.
+        const MIX = 0.5;
+        const yOf = function (deg) {
+          const d = Math.max(-90, Math.min(90, deg));
+          return R + R * ((1 - MIX) * Math.sin(rad(d)) + MIX * (d / 90));
+        };
+
+        // white box backdrop behind the cascading panels; covers
+        // everything except the hero region (which takes the box from
+        // the bottom up at the end).
+        // cascading vertical compression WITHOUT gaps: a monotonic remap
+        // shared by every boundary tightens the upper region ~30%, so
+        // bands flatten as they rise while staying perfectly contiguous
+        const CASC = 0.3;
+        const remap = function (y) {
+          const c = Math.max(0, Math.min(H, y));
+          return c * ((1 - CASC) + CASC * (c / H));
+        };
+        const whiteback = document.createElement('div');
+        whiteback.style.cssText = 'position:absolute;left:0;top:0;width:100%;background:#ffffff;height:' + H +
+          'px;transform-origin:50% 0;will-change:transform;';
+        stage.appendChild(whiteback);
+
+        const yCT = remap(yOf(-HALF));
+
+        const slots = {};
+        function slotEl(k) {
+          if (slots[k]) return slots[k];
+          const el = document.createElement('div');
+          el.className = 'si-wpanel';
+          el.appendChild(pool[k % FILES.length]);
+          stage.appendChild(el);
+          slots[k] = { el: el };
+          return slots[k];
+        }
+        // OVERLAY MODEL: every video is a full-box stationary layer,
+        // z-ordered oldest-on-top, clipped only at its BOTTOM boundary.
+        // Each band is simply the strip of a layer not covered by the
+        // older layer above it — stacked like overlays, so as a video
+        // rises it uncovers more of the next one beneath, and gaps are
+        // impossible by construction. Above center the footage rides
+        // with its band so exits carry real content to the top.
+        function layoutSlot(k, omega) {
+          const theta = (90 + STEP * k) - omega;
+          const s = slotEl(k);
+          const bot = remap(yOf(theta + HALF));
+          s.el.style.clipPath = 'inset(0px 0px ' + Math.max(H - bot, 0) + 'px 0px)';
+          const vid = s.el.firstChild;
+          if (vid && bot <= 0) {
+            if (!vid.paused) vid.pause(); // fully exited — free the decoder
+          } else if (vid) {
+            let ride = 0;
+            if (theta < 0) {
+              ride = Math.min(-theta / 70, 1);
+              ride = ride * ride * (3 - 2 * ride);
+            }
+            const top = remap(yOf(theta - HALF));
+            vid.style.transform = 'translateY(' + (ride * (top - yCT)) + 'px)';
+          }
+          return bot;
+        }
+
+        // build all layers up front, NEWEST first so the oldest clip
+        // paints on top (overlay order); whiteback re-appended above all.
+        // Every GPU layer exists before motion starts — the frame loop
+        // only writes clip-path values.
+        for (let k = HERO_K - 1; k >= 0; k--) {
+          slotEl(k).el.style.clipPath = 'inset(0px 0px ' + H + 'px 0px)';
+        }
+        stage.appendChild(whiteback);
+
+        // CONSTANT angular velocity, first frame to last: every clip
+        // passes at the same pace; the rotation runs until the final clip
+        // exits the top and the live hero fills the box behind it.
+        const OMEGA_EXIT = 90 + STEP * (HERO_K - 1) + HALF + 90;
+        const T_WHEEL = 1400;
+        const t0 = performance.now();
+        setTimeout(function () { intro.classList.add('p-mark'); }, 250);
+        function frame(now) {
+          if (!document.body.contains(stage)) return;
+          const t = Math.min(Math.max((now - t0) / T_WHEEL, 0), 1);
+          const omega = -HALF + (OMEGA_EXIT + HALF) * t;
+
+          for (let k = 0; k < HERO_K; k++) layoutSlot(k, omega);
+          // the white sheet is the topmost overlay: it covers everything
+          // above the first clip's top boundary, receding as the tape
+          // rolls in and gone once the leading band reaches the top
+          const lead = remap(yOf((90 - omega) - HALF));
+          whiteback.style.transform = 'scaleY(' + (Math.max(lead, 0) / H) + ')';
+
+          if (t >= 1) { onFilled(); return; }
+          requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+
+        function onFilled() {
+          // the whole box is now the live hero (magnified). Brief hold,
+          // then: four-corner window expansion + hero zoom-out on the
+          // same clock — one continuous camera pull-back into the page.
+          setTimeout(function () {
+            ['top', 'bottom', 'left', 'right'].forEach(function (side) {
+              intro.querySelector('.si-p-' + side).style.transition = 'transform 0.85s ' + EASE;
+            });
+            intro.querySelector('.si-p-top').style.transform = 'scaleY(' + (hero.top / vh) + ')';
+            intro.querySelector('.si-p-bottom').style.transform = 'scaleY(' + ((vh - hero.bottom) / vh) + ')';
+            intro.querySelector('.si-p-left').style.transform = 'scaleX(' + (hero.left / vw) + ')';
+            intro.querySelector('.si-p-right').style.transform = 'scaleX(' + ((vw - hero.right) / vw) + ')';
+            html.classList.remove('si-zoom');
+            html.classList.add('si-zoomout');
+            intro.classList.add('p-rise');
+            stage.style.transition = 'opacity 0.35s ease';
+            stage.style.opacity = '0';
+            setTimeout(function () { html.classList.add('si-reveal'); }, 350);
+            setTimeout(function () {
+              html.classList.remove('si-lock', 'si-zoomout');
+              intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
+              intro.remove();
+            }, 1400);
+          }, 250);
+        }
+      });
+    })();
+  </script>
+  <script>
+    // Wordmark: once-per-session explosion intro, hover boops + boom jolt.
+    (function () {
+      const mark = document.querySelector('.wordmark');
+      if (!mark) return;
+      const letters = mark.querySelectorAll('.wm-l');
+      const boom = mark.querySelector('.wm-boom');
+      if (!sessionStorage.getItem('wmIntroPlayed')) {
+        sessionStorage.setItem('wmIntroPlayed', '1');
+        mark.classList.add('wm-intro');
+        setTimeout(function () { mark.classList.remove('wm-intro'); }, 1700);
+      }
+      letters.forEach(function (l) {
+        l.addEventListener('animationend', function () { l.classList.remove('wm-boop'); });
+        l.addEventListener('mouseenter', function () {
+          if (!mark.classList.contains('wm-intro') && !l.classList.contains('wm-boop')) l.classList.add('wm-boop');
+        });
+      });
+      if (boom) {
+        boom.addEventListener('animationend', function () { boom.classList.remove('wm-jolt'); });
+        mark.addEventListener('mouseenter', function () {
+          if (!mark.classList.contains('wm-intro') && !boom.classList.contains('wm-jolt')) boom.classList.add('wm-jolt');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

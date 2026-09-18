@@ -4,31 +4,85 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Max Shen</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/public/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+  <!-- Type assets: self-hosted, preload only the two above-the-fold faces.
+       See CLAUDE.md › Typography System. -->
+  <link rel="preload" href="/public/fonts/general-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/public/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    /* ── Type assets ──────────────────────────────────────────────
+       General Sans (Fontshare, ITF-FFL v2.0 — shipped as-is, unsubset)
+       for everything readable; Geist Mono (OFL) for labels only. Each
+       family has a metric-matched local fallback so the swap moves
+       nothing — layout is identical before and after the font lands. */
+    @font-face {
+      font-family: "General Sans";
+      src: url("/public/fonts/general-sans-variable.woff2") format("woff2");
+      font-weight: 200 700; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: "General Sans";
+      src: url("/public/fonts/general-sans-variable-italic.woff2") format("woff2");
+      font-weight: 200 700; font-style: italic; font-display: swap;
+    }
+    @font-face {
+      font-family: "Geist Mono";
+      src: url("/public/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+      font-weight: 100 900; font-style: normal; font-display: swap;
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    @font-face {
+      font-family: "General Sans Fallback";
+      src: local("Arial"), local("Helvetica");
+      size-adjust: 108.73%; ascent-override: 92.89%; descent-override: 22.07%; line-gap-override: 9.2%;
+    }
+    @font-face {
+      font-family: "Geist Mono Fallback";
+      src: local("Menlo"), local("Courier New");
+      size-adjust: 99.66%; ascent-override: 100.84%; descent-override: 29.6%; line-gap-override: 0%;
+    }
+    :root {
+      --font-sans: "General Sans", "General Sans Fallback", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, Menlo, Consolas, monospace;
+      --tracking-caps: 0.1em;
+      --label-muted: #6b6a67; /* 4.9:1 on white — the floor for 12px labels */
+    }
+    html { -webkit-text-size-adjust: 100%; font-synthesis: none; hanging-punctuation: first last; }
+    input, textarea { hanging-punctuation: none; }
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-optical-sizing: auto; }
+  </style>
+
+  <!-- GSAP core — drives the loading-screen character turn + shutter/flash -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"
+    integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt"
+    crossorigin="anonymous"
+  ></script>
+
   <style>
 
     /* ─────────────────────────────────────────────
        TOKENS
     ───────────────────────────────────────────── */
     :root {
-      --bg:     #090807;
-      --text:   #f0ece2;
-      --muted:  rgba(240, 236, 226, 0.36);
-      --dim:    rgba(240, 236, 226, 0.08);
+      --bg:     #ffffff;
+      --text:   #1a1917;
+      --muted:  rgba(26, 25, 23, 0.55);
+      --dim:    rgba(26, 25, 23, 0.10);
       --gap:    1px;
-      --nav-h:  58px;
+      --nav-h:  76px;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       background: var(--bg);
       color: var(--text);
-      font-weight: 300;
+      font-weight: 400;
       line-height: 1;
       overflow-x: hidden;
     }
@@ -72,114 +126,179 @@
       justify-content: space-between;
     }
     .nav-name {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       font-style: normal;
-      font-size: 13px;
-      font-weight: 400;
+      font-size: 19px;
+      font-weight: 600;
       letter-spacing: 0.06em;
-      color: #fff;
+      color: #000;
       text-decoration: none;
-      text-shadow: 0 1px 14px rgba(0,0,0,0.55);
+      display: inline-block;
     }
-    .nav-name .ext { color: rgba(255,255,255,0.52); }
+    .nav-name:focus-visible { outline: 2px solid #000; outline-offset: 6px; border-radius: 4px; }
+    .nav-name svg { display: block; overflow: visible; }
+
+    /* Bubbly animated wordmark — MAX SHEN framed by a comic "boom" burst
+       outline. Intro (once per session): a starburst + radial light rays
+       detonate at the name's center, the letters are thrown outward through
+       the blast — materializing from flash-amber to black with squash
+       landings — then the jagged boom outline snaps in around the name and
+       a shockwave echo expands off it. Hovering a letter boops it; hovering
+       the mark jolts the boom outline. */
+    .wm-l { transform-box: fill-box; transform-origin: 50% 100%; }
+    .wm-l path { fill: none; stroke: #000; stroke-linecap: round; stroke-linejoin: round; }
+    .wm-l .wm-shine { stroke: #fff; opacity: 0.85; }
+    .wm-l .wm-hit { fill: transparent; stroke: none; }
+
+    /* boom outline: persistent part of the lockup */
+    .wm-boom { transform-box: fill-box; transform-origin: 50% 50%; }
+    .wm-shock { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-flash { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-rays { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-rays-a, .wm-rays-b { transform-box: fill-box; transform-origin: 50% 50%; }
+
+    /* ── intro: detonation ── */
+    .wm-intro .wm-flash { animation: wm-flash 0.5s ease-out both; }
+    @keyframes wm-flash {
+      0%   { opacity: 0; transform: scale(0) rotate(-20deg); }
+      22%  { opacity: 1; transform: scale(1.7) rotate(-6deg); }
+      55%  { opacity: 1; transform: scale(2.1) rotate(2deg); }
+      100% { opacity: 0; transform: scale(2.6) rotate(8deg); }
+    }
+    .wm-intro .wm-rays { animation: rays-burst 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both; }
+    .wm-intro .wm-rays-a { animation: rays-spin-a 0.8s linear 0.04s both; }
+    .wm-intro .wm-rays-b { animation: rays-spin-b 0.8s linear 0.04s both; }
+    @keyframes rays-burst {
+      0%   { opacity: 0; transform: scale(0.1); }
+      18%  { opacity: 1; transform: scale(0.9); }
+      55%  { opacity: 0.85; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(1.16); }
+    }
+    @keyframes rays-spin-a { from { transform: rotate(-5deg); } to { transform: rotate(4deg); } }
+    @keyframes rays-spin-b { from { transform: rotate(5deg); } to { transform: rotate(-4deg); } }
+
+    .wm-intro .wm-l { animation: wm-eject 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+                      animation-delay: calc(0.12s + var(--d)); }
+    .wm-intro .wm-l .wm-ink { animation: wm-materialize 0.7s ease-out both;
+                              animation-delay: calc(0.12s + var(--d)); }
+    @keyframes wm-materialize {
+      0%   { stroke: #ffd76a; }
+      40%  { stroke: #c98a2c; }
+      75%  { stroke: #000; }
+      100% { stroke: #000; }
+    }
+    @keyframes wm-eject {
+      0%   { opacity: 0; transform: translate(var(--ex), 24px) rotate(var(--er)) scale(0.1); }
+      55%  { opacity: 1; transform: translate(calc(var(--ex) * -0.05), -12px) rotate(calc(var(--er) * -0.25)) scale(1.15, 0.85); }
+      78%  { transform: translate(0, 4px) rotate(0deg) scale(0.94, 1.06); }
+      100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+    }
+
+    /* boom outline snaps in around the landed name, then the shockwave echoes */
+    .wm-intro .wm-boom { animation: boom-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.72s both; }
+    @keyframes boom-in {
+      0%   { opacity: 0; transform: scale(0.55) rotate(-3deg); }
+      45%  { opacity: 1; transform: scale(1.09, 0.93) rotate(1.2deg); }
+      70%  { transform: scale(0.97, 1.04) rotate(-0.6deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .wm-intro .wm-shock { animation: shock-out 0.6s ease-out 0.86s both; }
+    @keyframes shock-out {
+      0%   { opacity: 0.6; transform: scale(0.98); }
+      100% { opacity: 0; transform: scale(1.3); }
+    }
+
+    /* ── hover: letter boops + outline jolt ── */
+    .wm-l.wm-boop { animation: wm-boop 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes wm-boop {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.12, 0.88); }
+      45%  { transform: scale(0.92, 1.08); }
+      62%  { transform: scale(1.06, 0.94); }
+      78%  { transform: scale(0.98, 1.02); }
+      100% { transform: scale(1); }
+    }
+    .wm-boom.wm-jolt { animation: boom-jolt 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes boom-jolt {
+      0%   { transform: scale(1) rotate(0deg); }
+      30%  { transform: scale(1.05, 0.96) rotate(1.2deg); }
+      55%  { transform: scale(0.97, 1.03) rotate(-0.8deg); }
+      78%  { transform: scale(1.02, 0.99) rotate(0.4deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wm-intro .wm-l, .wm-intro .wm-boom { animation: wm-fade 0.3s ease-out both; }
+      .wm-intro .wm-flash, .wm-intro .wm-rays, .wm-intro .wm-rays-a, .wm-intro .wm-rays-b,
+      .wm-intro .wm-shock, .wm-intro .wm-l .wm-ink, .wm-boom.wm-jolt, .wm-l.wm-boop { animation: none; }
+    }
+    @keyframes wm-fade { from { opacity: 0; } to { opacity: 1; } }
     .nav-links {
       display: flex;
-      gap: 36px;
+      align-items: center;
+      gap: 40px;
       list-style: none;
     }
+    /* Nav: 14px / 500 / sentence case / 0 tracking — the body family, one
+       tier quieter than the wordmark. Hover idiom of the tier: siblings
+       recede, the hovered link holds. */
     .nav-links a {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 10px;
-      font-weight: 300;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: #fff;
-      text-decoration: none;
-      opacity: 0.72;
-      text-shadow: 0 1px 10px rgba(0,0,0,0.5);
-      transition: opacity 0.2s;
-    }
-    .nav-links a:hover { opacity: 1; }
-    .nav-links .about-btn a {
-      opacity: 1;
-      font-size: 11px;
-      font-weight: 400;
-      border: 1px solid rgba(255,255,255,0.65);
-      padding: 7px 18px;
-      text-shadow: none;
-      transition: background 0.22s, color 0.22s, opacity 0.22s, border-color 0.22s;
-    }
-    .nav-links .about-btn a:hover {
-      background: #fff;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      line-height: 1;
       color: #000;
+      text-decoration: none;
       opacity: 1;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-links:hover a:not(:hover) { opacity: 0.45; }
+    /* Active-section indicator. Position/width are set inline by JS (from
+       the active link's own rect) so the bar tracks exact glyph widths;
+       only the motion itself lives in CSS. */
+    #navUnderline {
+      position: absolute;
+      height: 2px;
+      border-radius: 2px;
+      background: #000;
+      left: 0;
+      width: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: left 0.5s cubic-bezier(0.65, 0, 0.35, 1),
+                  width 0.5s cubic-bezier(0.65, 0, 0.35, 1),
+                  opacity 0.25s ease;
     }
 
 
     /* ─────────────────────────────────────────────
-       HERO — full-viewport video, text bottom-left
+       HERO — video framed like a print, white matting
+       on every side. Sits in normal flow below the nav.
     ───────────────────────────────────────────── */
     .hero-section {
-      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       height: 100vh;
-      height: 100svh;
-      overflow: hidden;
-    }
-    .hero-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 180px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, transparent 100%);
-      pointer-events: none;
-      z-index: 1;
-    }
-    .hero-section::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 220px;
-      background: linear-gradient(to bottom, transparent, var(--bg));
-      pointer-events: none;
-      z-index: 1;
+      height: 100dvh;
+      box-sizing: border-box;
+      padding: calc(var(--nav-h) + 32px) 80px 56px;
     }
     .hero-media {
-      position: absolute;
-      inset: 0;
+      width: 100%;
+      max-width: 1300px;
+      max-height: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: #f4f3f0;
     }
     .hero-video {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: brightness(0.82);
-    }
-    .hero-text {
-      position: absolute;
-      bottom: 72px;
-      left: 56px;
-      z-index: 2;
-    }
-    .hero-name {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700;
-      font-size: clamp(72px, 10.5vw, 150px);
-      letter-spacing: -0.02em;
-      line-height: 0.88;
-      color: var(--text);
-      text-transform: uppercase;
-    }
-    .hero-tagline {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 0.2em;
-      color: rgba(240, 236, 226, 0.82);
-      margin-top: 20px;
-      text-shadow: 0 1px 12px rgba(0,0,0,0.6);
+      display: block;
     }
 
 
@@ -187,10 +306,11 @@
        SECTION LABELS (shared utility)
     ───────────────────────────────────────────── */
     .section-label {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 400;
-      letter-spacing: 0.3em;
+      line-height: 1.2;
+      letter-spacing: var(--tracking-caps);
       text-transform: uppercase;
       color: var(--text);
       display: block;
@@ -220,34 +340,105 @@
       flex-direction: column;
     }
 
-    /* Centered decorative section header */
+    /* Section label: a mono eyebrow — the creative-dev "data voice"
+       (Lusion, Osmo, Studio Freight).
+       Flush left on the same grid line as the tiles beneath it. */
     .work-header {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 22px;
-      margin-bottom: 44px;
-      padding: 0 80px;
+      align-items: baseline;
+      /* label → mark = exactly one space of the label's mono: 0.6em advance + its tracking */
+      font-size: 12px;
+      gap: calc(0.6em + var(--tracking-caps));
+      margin: 0 80px 40px;
     }
     .work-header-title {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 400;
+      font-family: var(--font-mono);
       font-size: 12px;
-      letter-spacing: 0.3em;
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: var(--tracking-caps);
       text-transform: uppercase;
-      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "case", "tnum";
       white-space: nowrap;
     }
+    .work-header-title { color: #000; }
+    /* the globe beside the Frames label — turns only while the section is on screen */
+    .globe {
+      width: 16px; height: 16px;
+      flex: none;
+      align-self: center;
+      overflow: visible;
+    }
+    .globe use { fill: #000; }
+    .globe-rim { fill: none; stroke: #000; stroke-width: 1.1; }
+    /* one full turn = the 40-unit map width; the second copy makes the wrap seamless */
+    .globe-map { animation: globe-turn 9s linear infinite; animation-play-state: paused; }
+    .frames-section.in-view .globe-map { animation-play-state: running; }
+    @keyframes globe-turn {
+      from { transform: translate(-8px, 2px); }
+      to   { transform: translate(-48px, 2px); }
+    }
+    @media (prefers-reduced-motion: reduce) { .globe-map { animation: none; } }
+    /* the laptop beside the Projects label — lid opens while the section is on screen */
+    .laptop {
+      position: relative;
+      display: block;
+      width: 19px; height: 16px;
+      flex: none;
+      align-self: center;
+      perspective: 36px;
+      perspective-origin: 50% 20%;
+    }
+    .laptop-base {
+      position: absolute; left: 0; right: 0; bottom: 2px;
+      height: 3px;
+      box-sizing: border-box;
+      border: 1.1px solid #000;
+      border-radius: 1px 1px 2px 2px;
+      background: #fff;
+    }
+    .laptop-lid {
+      position: absolute; left: 2.5px; right: 2.5px; bottom: 4.5px;
+      height: 10px;
+      box-sizing: border-box;
+      border: 1.1px solid #000;
+      border-radius: 1.5px 1.5px 0 0;
+      background: #fff;
+      transform-origin: 50% 100%;
+      transform: rotateX(0deg);
+      animation: laptop-open 5s infinite;
+      animation-play-state: paused;
+      will-change: transform;
+    }
+    .laptop-screen {
+      position: absolute; inset: 1.2px 1.2px 1.2px;
+      background: rgba(0, 0, 0, 0.10);
+      border-radius: 0.5px;
+    }
+    .featured-section.in-view .laptop-lid { animation-play-state: running; }
+    /* closed (lid flat on the base) → opens with a small settle → holds → folds shut → rests */
+    @keyframes laptop-open {
+      0%, 10%  { transform: rotateX(-86deg); animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+      30%      { transform: rotateX(6deg);   animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+      38%, 72% { transform: rotateX(0deg);   animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1); }
+      88%, 100% { transform: rotateX(-86deg); }
+    }
+    @media (prefers-reduced-motion: reduce) { .laptop-lid { animation: none; } }
 
+    /* 2×2: two large tiles per row; rows size from the tiles' own
+       aspect ratio, so with two projects one full row shows and new
+       projects fill the second row as they're added */
     .work-grid {
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-      gap: 3px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px 4px; /* rows open up for the captions; columns stay a tight pair */
       padding: 0 80px;
+      align-content: start;
     }
+    .work-grid .work-media { aspect-ratio: 16 / 9; flex: none; }
 
     .work-item {
       cursor: pointer;
@@ -262,6 +453,16 @@
     .work-item.revealed {
       opacity: 1;
       transform: translateY(0);
+    }
+    /* caption under each tile — nav-tier type, always full ink */
+    .work-caption {
+      margin: 14px 0 0;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.3;
+      letter-spacing: 0;
+      color: #000;
     }
 
     .work-media {
@@ -278,147 +479,193 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: brightness(0.70) saturate(0.60);
+      filter: brightness(1.04) saturate(1.18);
       opacity: 0;
       transition: opacity 0.5s ease,
                   filter 0.55s ease,
                   transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .work-thumb.thumb-ready { opacity: 1; }
+    /* graphic covers (title cards) stay at true white; photos keep the dim */
+    .work-item--card .work-thumb { filter: none; }
+    .work-item--card:hover .work-thumb { filter: none; }
     .work-item:hover .work-thumb,
     .work-item.touch-playing .work-thumb {
-      filter: brightness(0.90) saturate(0.80);
-      transform: scale(1.04);
+      filter: brightness(1.08) saturate(1.25);
+      transform: scale(1.045);
     }
-
-    /* Bottom vignette on each card */
-    .work-media::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 40%;
-      background: linear-gradient(to top, rgba(9,8,7,0.55), transparent);
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .work-caption {
-      padding: 12px 0 18px;
-    }
-    .work-title {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-      color: var(--text);
-      margin-bottom: 5px;
-    }
-    .work-category {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 300;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
 
     /* ─────────────────────────────────────────────
        FRAMES — Chaos video strip
     ───────────────────────────────────────────── */
     .frames-section {
-      position: relative;
-      height: 100vh;
-      overflow: hidden;
-      isolation: isolate;
+      padding: 56px 0 64px;
     }
 
-    .fs-grid-svg {
+    .frames-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+      padding: 0 80px;
+    }
+
+    .frames-item {
+      position: relative;
+      cursor: pointer;
+      aspect-ratio: 61 / 46;
+      overflow: hidden;
+      background: #0d0c0b;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .frames-item.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* Bottom vignette on each tile — kept subtle now that there's no
+       caption text to protect, just a touch of depth. */
+    .frames-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to top, rgba(9,8,7,0.2), transparent);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .frames-thumb {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      color: var(--text);
+      object-fit: cover;
+      filter: brightness(0.9) saturate(1.1);
+      opacity: 0;
+      transition: opacity 0.5s ease,
+                  filter 0.55s ease,
+                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .frames-thumb.thumb-ready { opacity: 1; }
+    .frames-item:hover .frames-thumb,
+    .frames-item.touch-playing .frames-thumb {
+      filter: brightness(1.04) saturate(1.25);
+      transform: scale(1.045);
     }
 
-    .fs-vignette {
-      position: absolute;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-      background: radial-gradient(ellipse 76% 80% at center, transparent 8%, var(--bg) 84%);
+    /* ─────────────────────────────────────────────
+       DESTINATIONS — 3x3 cover grid, place name hidden
+       until hover
+    ───────────────────────────────────────────── */
+    .dest-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 0 80px;
     }
 
-    .fs-strip-mask {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%);
-      mask-image: linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%);
+    /* Five destinations in a three-column grid left a hole in the last
+       row. This mosaic packs the same five into a 4×2 block with no
+       empty cell: two cinematic wides, two boxes, and one full-height
+       portrait anchoring the right edge. Rows carry the height, so the
+       tiles take their shape from their spans rather than a fixed
+       aspect ratio. JS adds .dg-five only when the count is exactly
+       five — any other number falls back to the plain grid above. */
+    .dest-grid.dg-five {
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: clamp(180px, 19.5vw, 300px);
+      gap: 12px;
+    }
+    .dg-five .dest-item { aspect-ratio: auto; }
+    .dg-five .dest-item:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
+    .dg-five .dest-item:nth-child(2) { grid-column: 3;     grid-row: 1; }
+    .dg-five .dest-item:nth-child(3) { grid-column: 4;     grid-row: 1 / 3; }
+    .dg-five .dest-item:nth-child(4) { grid-column: 1;     grid-row: 2; }
+    .dg-five .dest-item:nth-child(5) { grid-column: 2 / 4; grid-row: 2; }
+
+    .dest-item {
+      position: relative;
+      cursor: pointer;
+      aspect-ratio: 16 / 9;
       overflow: hidden;
+      background: #0d0c0b;
+      opacity: 0;
+      transform: translateY(26px);
+      /* the mask IS the reveal: the tile opens from a letterboxed slit
+         while its photo settles from a slight push-in */
+      clip-path: inset(14% 0 14% 0);
+      transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+                  clip-path 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dest-item.revealed {
+      opacity: 1;
+      transform: translateY(0);
+      clip-path: inset(0 0 0 0);
     }
 
-    #fsStrip {
+    .dest-thumb {
       position: absolute;
       inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(1.04) saturate(1.18);
+      transform: scale(1.14);
+      transition: filter 0.6s ease, transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dest-item.revealed .dest-thumb { transform: scale(1); }
+    /* after .revealed so hover wins at equal specificity */
+    .dest-item:hover .dest-thumb,
+    .dest-item.touch-active .dest-thumb {
+      filter: brightness(0.5) saturate(0.85);
+      transform: scale(1.06);
+    }
+
+
+    /* Scrim behind the label — only dark enough to read text against any
+       photo, fades in together with the label itself. */
+    .dest-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.22);
+      opacity: 0;
+      transition: opacity 0.5s ease;
       pointer-events: none;
     }
-
-    .fs-cell {
-      pointer-events: auto;
-      position: absolute;
-      top: 0; left: 0;
+    .dest-item:hover::after,
+    .dest-item.touch-active::after {
+      opacity: 1;
     }
 
-    .fs-copy {
+    .dest-label {
       position: absolute;
-      bottom: 56px;
-      left: 56px;
-      z-index: 40;
-      pointer-events: none;
-    }
-
-    .fs-eyebrow {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 10px;
-      font-weight: 300;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 16px;
+      inset: 0;
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    .fs-eyebrow::before {
-      content: '';
-      display: block;
-      width: 28px;
-      height: 1px;
-      background: currentColor;
-      flex-shrink: 0;
-    }
-
-    .fs-title {
-      font-family: 'Montserrat', sans-serif;
-      font-size: clamp(2.6rem, 4.2vw, 4rem);
-      font-weight: 300;
-      line-height: 1.06;
-      letter-spacing: -0.02em;
-      color: var(--text);
-    }
-    .fs-title em { font-style: italic; }
-    .fs-subtitle {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 10px;
-      font-weight: 300;
-      letter-spacing: 0.3em;
+      justify-content: center;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-top: 10px;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.45s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                  letter-spacing 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    /* the name settles up and its tracking opens as it arrives */
+    .dest-item:hover .dest-label,
+    .dest-item.touch-active .dest-label { letter-spacing: 0.16em; }
+    .dest-item:hover .dest-label,
+    .dest-item.touch-active .dest-label {
+      opacity: 1;
+      transform: translateY(0);
     }
 
 
@@ -489,7 +736,7 @@
       padding: 18px 16px;
     }
     .dc-song {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       font-style: italic;
       font-size: 17px;
       font-weight: 300;
@@ -498,7 +745,7 @@
       line-height: 1.2;
     }
     .dc-artist {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       font-size: 8px;
       font-weight: 300;
       letter-spacing: 0.22em;
@@ -512,7 +759,10 @@
 
 
     /* ─────────────────────────────────────────────
-       CONTACT
+       ABOUT — photos left, bio right
+    ───────────────────────────────────────────── */
+    /* ─────────────────────────────────────────────
+       CONTACT — icon row + handle, footer-style
     ───────────────────────────────────────────── */
     .contact-section {
       padding: 72px 40px 80px;
@@ -521,129 +771,48 @@
       align-items: center;
       text-align: center;
     }
-    .contact-heading {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 300;
-      font-size: clamp(36px, 4.2vw, 60px);
-      line-height: 1.06;
-      letter-spacing: -0.02em;
-      color: var(--text);
-    }
-    .contact-heading em {
-      font-style: italic;
-      color: var(--muted);
-    }
     .contact-icons {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 28px;
-      margin-top: 24px;
+      gap: 26px;
     }
     .contact-icon {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: rgba(240, 236, 226, 0.6);
+      color: var(--text);
       text-decoration: none;
       transition: color 0.22s, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .contact-icon:hover {
-      color: var(--text);
-      transform: scale(1.16);
+      color: var(--muted);
+      transform: scale(1.12);
     }
     .contact-icon:active { transform: scale(0.94); }
     .contact-icon svg {
-      width: 44px;
-      height: 44px;
+      width: 22px;
+      height: 22px;
       stroke: currentColor;
       fill: none;
-      stroke-width: 1.3;
+      stroke-width: 1.5;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
-
-
-    /* ─────────────────────────────────────────────
-       CONTACT FORM
-    ───────────────────────────────────────────── */
-    .contact-form {
-      margin-top: 44px;
-      width: 100%;
-      max-width: 520px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .contact-form textarea {
-      width: 100%;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid rgba(240, 236, 226, 0.18);
-      padding: 0 0 8px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 11px;
-      font-weight: 300;
-      letter-spacing: 0.06em;
-      color: var(--text);
-      resize: none;
-      outline: none;
-      line-height: 1.6;
-      min-height: 28px;
-      transition: border-color 0.25s;
-    }
-    .contact-form textarea::placeholder {
-      color: rgba(240, 236, 226, 0.24);
-      letter-spacing: 0.1em;
-    }
-    .contact-form textarea:focus {
-      border-bottom-color: rgba(240, 236, 226, 0.55);
-    }
-    .contact-form-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .contact-form-hint {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 300;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(240, 236, 226, 0.2);
-    }
-    .contact-send {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 9px;
+    .contact-handle {
+      font-family: var(--font-sans);
+      font-size: 15px;
       font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(240, 236, 226, 0.5);
-      background: none;
-      border: 1px solid rgba(240, 236, 226, 0.22);
-      padding: 8px 20px;
-      cursor: pointer;
-      transition: color 0.22s, border-color 0.22s, background 0.22s;
+      color: var(--muted);
+      margin-top: 20px;
     }
-    .contact-send:hover {
-      color: #000;
-      background: var(--text);
-      border-color: var(--text);
+    .contact-copy {
+      margin: 10px 0 0;
+      font-family: var(--font-sans); /* same voice as the email line above it */
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--muted);
     }
-    .contact-send:active { transform: scale(0.97); }
-    .contact-confirm {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 300;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(240, 236, 226, 0.38);
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      text-align: center;
-      margin-top: 4px;
-    }
-    .contact-confirm.visible { opacity: 1; }
 
 
     /* ─────────────────────────────────────────────
@@ -658,7 +827,7 @@
     }
     .footer-copy,
     .footer-handle {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       font-size: 10px;
       font-weight: 300;
       letter-spacing: 0.12em;
@@ -710,14 +879,14 @@
       padding: 0 1px;
     }
     #lightboxTitle {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       font-size: 10px;
       font-weight: 300;
       letter-spacing: 0.22em;
       text-transform: uppercase;
       color: rgba(255,255,255,0.35);
     }
-    #lightboxClose {
+    .overlay-close {
       position: fixed;
       top: 28px;
       left: 36px;
@@ -734,12 +903,12 @@
       color: rgba(255,255,255,0.55);
       transition: color 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    #lightboxClose:hover {
+    .overlay-close:hover {
       color: #fff;
       transform: scale(1.12);
     }
-    #lightboxClose:active { transform: scale(0.94); }
-    #lightboxClose svg {
+    .overlay-close:active { transform: scale(0.94); }
+    .overlay-close svg {
       width: 22px;
       height: 22px;
       stroke: currentColor;
@@ -747,10 +916,151 @@
       stroke-linecap: round;
     }
 
-
     /* ─────────────────────────────────────────────
        SCROLL REVEAL — cinematic upward lift
     ───────────────────────────────────────────── */
+    /* ── Intro / About (between hero and frames) ────────────── */
+    /* Spacing is tuned so the two visible gaps around this section read
+       the same: above it the hero already contributes its own slack
+       below the video, so this padding-top is the smaller of the two;
+       below it the Frames header adds its own 56px. Clamped px rather
+       than vh so the rhythm doesn't swing with window height. */
+    .intro-section {
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: clamp(40px, 6vh, 72px) 32px clamp(64px, 10vh, 112px);
+      text-align: center;
+    }
+    .intro-title, .intro-body { max-width: 780px; margin-left: auto; margin-right: auto; }
+    .intro-title {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: clamp(26px, 3.4vw, 44px);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: #000;
+      margin: 0 auto 40px;
+    }
+    .intro-body p {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: #000;
+      margin: 0 0 22px;
+    }
+    .intro-body p:last-child { margin-bottom: 0; }
+    /* gallery wall: five frames, alternating orientations, offset
+       baselines — reveals in sequence on scroll */
+    .intro-gallery {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 12px;
+      margin: 76px 0 0;
+    }
+    .intro-frame {
+      overflow: hidden;
+      background: #f4f3f0;
+      box-shadow:
+        0 30px 60px -32px rgba(26, 25, 23, 0.26),
+        0 10px 20px -10px rgba(26, 25, 23, 0.14);
+    }
+    .intro-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .intro-frame:hover img { transform: scale(1.05); }
+    .intro-frame { cursor: zoom-in; }
+    .intro-frame:focus-visible { outline: 2px solid #000; outline-offset: 6px; }
+    /* ── Lightbox — a frame expands from its own spot to full size ──
+       The image is positioned at its final fitted rect and FLIP-animated
+       from the frame's rect with a transform (compositor-only). */
+    .ig-lb { position: fixed; inset: 0; z-index: 6000; display: none; }
+    .ig-lb.is-open { display: block; }
+    .ig-lb-scrim {
+      position: absolute; inset: 0;
+      background: rgba(26, 25, 23, 0.94);
+      opacity: 0;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: zoom-out;
+    }
+    .ig-lb.is-in .ig-lb-scrim { opacity: 1; }
+    .ig-lb-img {
+      position: absolute; top: 0; left: 0;
+      display: block;
+      object-fit: cover;
+      transform-origin: 0 0;
+      will-change: transform;
+      box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.6);
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease-out;
+      cursor: zoom-out;
+    }
+    .ig-lb-btn {
+      position: absolute;
+      width: 44px; height: 44px;
+      display: grid; place-items: center;
+      border: 0; padding: 0; background: transparent;
+      color: #fff; cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.625, 0.05, 0, 1);
+    }
+    .ig-lb.is-in .ig-lb-btn { opacity: 0.8; }
+    .ig-lb-btn:hover { opacity: 1; transform: scale(0.95); }
+    .ig-lb-btn:active { transform: scale(0.9); }
+    .ig-lb-btn:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 2px; opacity: 1; }
+    .ig-lb-btn svg { width: 22px; height: 22px; display: block; stroke: currentColor; stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .ig-lb-close { top: 18px; right: 22px; }
+    .ig-lb-prev, .ig-lb-next { top: 50%; transform: translateY(-50%); }
+    .ig-lb-prev:hover, .ig-lb-next:hover { transform: translateY(-50%) scale(0.95); }
+    .ig-lb-prev:active, .ig-lb-next:active { transform: translateY(-50%) scale(0.9); }
+    .ig-lb-prev { left: 18px; }
+    .ig-lb-next { right: 18px; }
+    .ig-lb-count {
+      position: absolute; left: 0; right: 0; bottom: 22px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: var(--tracking-caps);
+      text-transform: uppercase;
+      font-feature-settings: "case", "tnum";
+      color: rgba(255, 255, 255, 0.72);
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .ig-lb.is-in .ig-lb-count { opacity: 1; }
+    @media (max-width: 640px) {
+      /* no room beside the photo on a phone: arrows sit either side of the counter */
+      .ig-lb-prev, .ig-lb-next { top: auto; bottom: 8px; transform: none; }
+      .ig-lb-prev:hover, .ig-lb-next:hover { transform: scale(0.95); }
+      .ig-lb-prev:active, .ig-lb-next:active { transform: scale(0.9); }
+      .ig-lb-prev { left: calc(50% - 88px); }
+      .ig-lb-next { right: calc(50% - 88px); }
+      .ig-lb-count { bottom: 22px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ig-lb-img { transition: opacity 0.25s ease-out; }
+      .ig-lb-scrim { transition-duration: 0.25s; }
+    }
+    /* four frames + three 12px gaps sit centred in one row; widths sum
+       to 93.5% so the wall keeps clear air from the viewport edges */
+    .if-b { flex: 0 0 25%; aspect-ratio: 4 / 3; }
+    .if-c { flex: 0 0 18.5%; aspect-ratio: 3 / 4; margin-top: 52px; }
+    .if-d { flex: 0 0 25%; aspect-ratio: 4 / 3; margin-top: 18px; }
+    .if-e { flex: 0 0 25%; aspect-ratio: 3 / 2; margin-top: 60px; }
+    @media (max-width: 640px) {
+      .intro-gallery { flex-wrap: wrap; gap: 14px; margin: 48px 0 0; }
+      .if-b, .if-c, .if-d, .if-e { flex: 0 0 46%; margin-top: 0; }
+    }
+    @media (max-width: 560px) {
+      .intro-section { padding: clamp(32px, 5vh, 56px) 24px clamp(48px, 8vh, 80px); }
+      .intro-body p { font-size: 15px; }
+    }
+
     .reveal {
       opacity: 0;
       transform: translateY(48px);
@@ -765,22 +1075,6 @@
     .reveal-d4 { transition-delay: 0.62s; }
 
     /* Work grid reveal handled inline via .work-item.revealed */
-
-    /* Hero text entrance (triggered via .loaded class from JS) */
-    .hero-name, .hero-tagline {
-      opacity: 0;
-      transform: translateY(32px);
-    }
-    .hero-text.loaded .hero-name {
-      opacity: 1; transform: translateY(0);
-      transition: opacity 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.2s,
-                  transform 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.2s;
-    }
-    .hero-text.loaded .hero-tagline {
-      opacity: 1; transform: translateY(0);
-      transition: opacity 1.15s cubic-bezier(0.22, 0.61, 0.36, 1) 0.52s,
-                  transform 1.15s cubic-bezier(0.22, 0.61, 0.36, 1) 0.52s;
-    }
 
 
     /* ─────────────────────────────────────────────
@@ -802,9 +1096,9 @@
       display: block;
       width: 22px;
       height: 1px;
-      background: rgba(255,255,255,0.88);
+      background: rgba(26,25,23,0.85);
       transition: transform 0.32s cubic-bezier(0.16,1,0.3,1),
-                  opacity 0.22s ease;
+                  opacity 0.22s ease, background 0.3s;
       transform-origin: center;
     }
     .nav-hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
@@ -815,7 +1109,7 @@
       position: fixed;
       inset: 0;
       z-index: 490;
-      background: rgba(9,8,7,0.97);
+      background: rgba(255,255,255,0.97);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -834,20 +1128,18 @@
       gap: 36px;
     }
     #mobileMenu a {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 12px;
-      font-weight: 300;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      color: rgba(240,236,226,0.6);
+      font-family: var(--font-sans);
+      font-size: 24px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      text-transform: none;
+      color: #000;
       text-decoration: none;
       transition: color 0.22s;
     }
-    #mobileMenu a:active { color: var(--text); }
+    #mobileMenu a:active { color: #000; }
     #mobileMenu .mobile-about a {
-      color: rgba(240,236,226,0.88);
-      border: 1px solid rgba(255,255,255,0.4);
-      padding: 10px 28px;
+      color: #000;
     }
 
     /* ─────────────────────────────────────────────
@@ -859,136 +1151,247 @@
       .nav-hamburger { display: flex; }
 
       .section-header { padding: 0 24px; }
-      .work-header { padding: 0 24px; }
+      .work-header { margin: 0 24px 32px; }
 
-      .hero-text { bottom: 56px; left: 32px; }
+      .hero-section { height: auto; padding: calc(var(--nav-h) + 24px) 24px 40px; }
 
       .work-grid {
         grid-template-columns: repeat(2, 1fr);
         grid-template-rows: auto;
         padding: 0 24px;
-        gap: 8px;
+        gap: 32px 4px;
       }
-      .work-media { aspect-ratio: 4 / 3; flex: none; }
+      .work-grid .work-media { aspect-ratio: 4 / 3; flex: none; }
 
       .dc-grid { grid-template-columns: repeat(2, 1fr); }
-      .frames-grid { grid-template-columns: 1fr; }
+      .frames-grid {
+        grid-template-columns: repeat(3, 1fr);
+        padding: 0 24px;
+        gap: 3px;
+      }
+      /* tablet: the mosaic collapses to two even columns, last tile wide */
+      .dest-grid { padding: 0 24px; gap: 6px; }
+      .dest-grid.dg-five { grid-template-columns: repeat(2, 1fr); grid-auto-rows: auto; gap: 6px; }
+      .dg-five .dest-item { aspect-ratio: 16 / 9; grid-column: auto !important; grid-row: auto !important; }
+      /* the closing tile runs the full width as a banner — 3.6:1 keeps
+         its height level with the 16:9 tiles above it */
+      .dg-five .dest-item:nth-child(5) { grid-column: 1 / 3 !important; aspect-ratio: 3.6 / 1; }
 
       .dc-section { padding-top: 72px; }
       .contact-section { padding: 56px 24px 64px; }
       footer { padding: 20px 24px; }
 
       #lightboxVideo { height: auto; aspect-ratio: 16/9; }
+      .project-inner { padding: 80px 24px 80px; }
     }
 
     @media (max-width: 560px) {
       nav { padding: 0 20px; }
-      .hero-text { bottom: 44px; left: 20px; }
+      .hero-section { height: auto; padding: calc(var(--nav-h) + 16px) 16px 24px; }
 
       .work-grid {
         grid-template-columns: 1fr;
         padding: 0 16px;
-        gap: 12px;
+        gap: 28px 6px;
       }
-      .work-media { aspect-ratio: 16 / 10; }
+      .work-grid .work-media { aspect-ratio: 16 / 10; }
 
       .dc-grid { grid-template-columns: repeat(2, 1fr); }
+      .frames-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0 16px;
+        gap: 3px;
+      }
+      .work-header { margin: 0 16px 28px; }
+      .dest-grid { padding: 0 16px; gap: 4px; }
+      .dest-grid.dg-five { grid-template-columns: 1fr; gap: 4px; }
+      .dg-five .dest-item:nth-child(5) { grid-column: auto !important; aspect-ratio: 16 / 9; }
+      .dest-label { font-size: 11px; letter-spacing: 0.12em; }
 
       .dc-section { padding-top: 56px; }
 
-      .fs-copy { bottom: 24px; left: 20px; right: 20px; }
-      .fs-title { font-size: 1.8rem; letter-spacing: -0.01em; }
-      .fs-subtitle { font-size: 9px; letter-spacing: 0.22em; margin-top: 8px; }
-
       .contact-section { padding: 48px 20px 56px; }
       footer { padding: 20px; flex-direction: column; gap: 8px; text-align: center; }
+      .project-inner { padding: 72px 16px 72px; }
     }
 
     /* Touch devices — no hover capability */
     @media (hover: none) {
       /* Work items: show thumbnail at normal brightness */
-      .work-thumb { filter: brightness(0.82) saturate(0.72); }
-      /* Swap "click" for "tap" on touch screens */
-      .fs-subtitle { visibility: hidden; }
-      .fs-subtitle::after { content: 'tap to explore'; visibility: visible; }
+      .work-thumb { filter: brightness(1.04) saturate(1.18); }
+      .frames-thumb { filter: brightness(1.0) saturate(1.15); }
     }
 
-    /* ─────────────────────────────────────────────
-       LOADING SCREEN
-    ───────────────────────────────────────────── */
-    #loader {
+    /* ── Cinematic site intro loader: the orbit sphere ────────────
+       A full 360° ring of video cards on an imaginary sphere, entirely
+       inside the viewport: true perspective (x = R·sinφ·K/(K−cosφ),
+       scale = K/(K−cosφ)) makes front cards large and bright while the
+       ones wrapping the back stream the other way — smaller, dimmer,
+       and passing BEHIND the front row. The hero slot is a transparent
+       window (the gap between the four white cover panels) that starts
+       at dead back-center, rides around the left limb to the front, and
+       glides to a stop at center; a beat later the window expands
+       four-corners-out while the hero zooms out to natural scale — one
+       continuous camera pull-back into the page.
+       Once per session; reduced motion gets a plain fade.
+       (Previous "film wheel" loader saved at saved-loaders/.) */
+    #siteIntro {
       position: fixed;
       inset: 0;
       z-index: 10000;
-      background: #090807;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+      display: none;
+      /* one shared vanishing point — off-center cards foreshorten and
+         rotateY reads as real depth, not a flat scale. The shorter the
+         perspective, the deeper the scene. */
+      perspective: 1000px;
+      perspective-origin: 50% 50%;
     }
-    #loader.fade-out {
+    html.si-lock #siteIntro, html.si-fade #siteIntro { display: block; }
+    html.si-lock #grain { display: none; } /* invisible under the loader — skip its compositing */
+    html.si-lock, html.si-lock body { overflow: hidden; }
+    html.si-fade #siteIntro { background: #ffffff; }
+    .si-p { position: absolute; inset: 0; background: #ffffff; will-change: transform; }
+    .si-p-top    { transform-origin: 50% 0; }
+    .si-p-bottom { transform-origin: 50% 100%; }
+    .si-p-left   { transform-origin: 0 50%; }
+    .si-p-right  { transform-origin: 100% 50%; }
+    /* Orbit cards: fixed base size, positioned by transform only —
+       translateX(R·sinθ) scale(cosθ) — so the frame loop is
+       compositor-only. Center card paints on top via cosθ z-index. */
+    .si-card {
+      position: absolute;
+      overflow: hidden;
+      background: #0d0c0b;
+      will-change: transform, clip-path, opacity;
+      backface-visibility: hidden;
+      /* soft grounded shadow lifts the card off the white — depth cue */
+      box-shadow: 0 18px 48px rgba(13, 12, 11, 0.22);
+    }
+    /* depth haze: an opaque-card-friendly dim — the veil whitens the
+       footage on the back hemisphere while the card itself stays 100%
+       opaque, so overlapping cards can never show through each other */
+    .si-veil {
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
       opacity: 0;
       pointer-events: none;
+      will-change: opacity;
     }
-    #loader-inner {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 26px;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 1s cubic-bezier(0.22, 0.61, 0.36, 1),
-                  transform 1s cubic-bezier(0.22, 0.61, 0.36, 1);
-    }
-    #loader-inner.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    #loader-title {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 20px;
-      font-weight: 500;
-      letter-spacing: 0.03em;
-      color: #f0ece2;
-    }
-    #loader-bar-track {
-      width: 220px;
-      height: 1px;
-      background: rgba(240, 236, 226, 0.10);
-      position: relative;
-      overflow: hidden;
-    }
-    #loader-bar-fill {
+    /* footage oversized inside its card and panned per-frame against
+       the card's travel — inner parallax, the award-site depth cue */
+    .si-card video {
       position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 0%;
-      background: #f0ece2;
+      left: -7%;
+      top: -7%;
+      width: 114%;
+      height: 114%;
+      object-fit: cover;
+      will-change: transform;
     }
-    #loader-pct {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 10px;
-      font-weight: 300;
-      letter-spacing: 0.24em;
-      color: rgba(240, 236, 226, 0.32);
-      min-width: 3ch;
-      text-align: center;
+    html.si-fade .si-card { display: none; }
+    #siteIntro .si-mark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: clamp(120px, 13vw, 180px);
+      height: auto;
+      mix-blend-mode: difference;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 300; /* above the orbit cards (z 100–200) */
     }
-
+    #siteIntro.p-mark .si-mark { opacity: 1; }
+    .si-mark .wm-ink { stroke: #fff !important; }
+    .si-mark .wm-boom, .si-mark .wm-shine, .si-mark .wm-flash, .si-mark .wm-rays, .si-mark .wm-shock, .si-mark .wm-hit { display: none; }
+    .si-mark .wm-l, .si-mark .wm-l .wm-ink { animation: none !important; }
+    #siteIntro.p-rise .si-mark { opacity: 0; }
+    #siteIntro.p-out { opacity: 0; transition: opacity 0.6s ease; pointer-events: none; }
+    /* hero magnified beneath the wheel; zooms out with the expansion */
+    html.si-zoom .hero-video { transform: scale(1.8); transform-origin: 50% 50%; }
+    html.si-zoomout .hero-video {
+      transform: scale(1);
+      transform-origin: 50% 50%;
+      transition: transform 0.85s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    /* staged homepage reveal */
+    html.si-lock nav { opacity: 0; transform: translateY(-10px); }
+    html.si-reveal nav {
+      opacity: 1;
+      transform: none;
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s,
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
+    }
+    /* nav steps out of the way: hides on scroll-down, returns on scroll-up, always present near the top.
+       The transition only arms after the first scroll so the page's own nav reveal keeps its timing. */
+    #nav.nav-scroll {
+      transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #nav.nav-hidden { opacity: 0; transform: translateY(-14px); pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) {
+      #nav.nav-scroll { transition: opacity 0.25s ease-out; }
+      #nav.nav-hidden { transform: none; }
+    }
+    /* Page transitions — arrival and exit mirror each other. Arriving: the content rises
+       into place from 18px below while fading in (0.7s expo-out). Leaving: it lifts away
+       18px while fading out (0.55s page-transition curve). The fixed nav only fades. */
+    body { transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+    body > section, body > main, body > .contact-section {
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    html.page-enter body { opacity: 0; transition: none; }
+    html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section {
+      transform: translateY(18px); transition: none;
+    }
+    html.page-exit body { opacity: 0; transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1); }
+    html.page-exit body > section, html.page-exit body > main, html.page-exit body > .contact-section {
+      transform: translateY(-18px); transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section,
+      html.page-exit body > section, html.page-exit body > main, html.page-exit body > .contact-section { transform: none; }
+    }
   </style>
+  <script>
+    // Site intro gate — decides before first paint whether the cinematic
+    // loader (once per session) or a plain fade (reduced motion) runs.
+    (function () {
+      try {
+        // Plays once per tab (sessionStorage): the first open of the site, never again on
+        // Back/Forward or in-site links. `?intro=1` forces it (for previewing).
+        try { localStorage.removeItem('siteIntroPlayed'); } catch (e2) {}   // clear the old per-browser flag
+        var force = /[?&]intro=1(&|$)/.test(location.search);
+        if (!force && sessionStorage.getItem('siteIntroPlayed')) return;
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var cls = reduced ? 'si-fade' : 'si-lock';
+        document.documentElement.classList.add(cls);
+      } catch (e) { /* no sessionStorage — skip the intro */ }
+    })();
+  </script>
+  <script>
+    // page-enter: fade the body in on arrival (skipped while the cinematic loader owns the reveal)
+    (function () {
+      var h = document.documentElement;
+      if (!h.classList.contains('si-lock') && !h.classList.contains('si-fade')) h.classList.add('page-enter');
+    })();
+    // leave the page with the exit choreography, then navigate (matches the enter fade)
+    window.pageLeave = function (url) {
+      var h = document.documentElement;
+      h.classList.remove('page-enter'); h.classList.add('page-exit');
+      setTimeout(function () { window.location.href = url; }, 560);
+    };
+  </script>
 </head>
 <body>
 
-  <!-- Loading screen -->
-  <div id="loader" aria-label="Loading" aria-live="polite">
-    <div id="loader-inner">
-      <p id="loader-title">maxshen.mp4</p>
-      <div id="loader-bar-track">
-        <div id="loader-bar-fill"></div>
-      </div>
-      <span id="loader-pct">0%</span>
-    </div>
+  <!-- ── Cinematic intro loader (once per session) ── -->
+  <div id="siteIntro" aria-hidden="true">
+    <div class="si-p si-p-top"></div>
+    <div class="si-p si-p-bottom"></div>
+    <div class="si-p si-p-left"></div>
+    <div class="si-p si-p-right"></div>
   </div>
 
   <!-- Film grain -->
@@ -997,12 +1400,105 @@
 
   <!-- ── Nav ───────────────────────────────── -->
   <nav id="nav">
-    <a href="#" class="nav-name">maxshen<span class="ext">.mp4</span></a>
+    <a href="#" class="nav-name" aria-label="Max Shen — home">
+      <svg class="wordmark" viewBox="-80 -72 800 258" height="40" role="img" aria-label="MAX SHEN">
+    <defs>
+      <linearGradient id="wmray" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffd76a" stop-opacity="0.95"/>
+        <stop offset="0.65" stop-color="#ffe9ae" stop-opacity="0.45"/>
+        <stop offset="1" stop-color="#fff3cf" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="wmglow">
+        <stop offset="0" stop-color="#fff6d8" stop-opacity="0.95"/>
+        <stop offset="0.55" stop-color="#ffd76a" stop-opacity="0.5"/>
+        <stop offset="1" stop-color="#ffd76a" stop-opacity="0"/>
+      </radialGradient>
+      <path id="wmboomp" d="M -5.4 -47.6 L 36.7 -16.9 L 97.3 -61.8 L 138.6 -15.4 L 193.7 -56.9 L 251.1 -15.4 L 316.7 -65.9 L 353.3 -17.7 L 408.8 -54.9 L 463.2 -16.2 L 535.3 -46.7 L 574.7 -17.3 L 676.1 1.9 L 643.4 21.3 L 693.3 60.1 L 646.6 89.7 L 631.4 158.7 L 588.7 127.2 L 521.8 165.0 L 483.4 128.3 L 408.2 156.6 L 364.4 132.0 L 317.0 168.1 L 258.9 129.7 L 196.1 160.0 L 146.8 131.6 L 87.5 162.7 L 50.1 130.9 L -65.0 122.4 L -25.7 93.8 L -71.2 62.1 L -22.9 22.0 Z"/>
+    </defs>
+
+    <!-- explosion rays (intro only), radiating from the name's center -->
+    <g transform="translate(309,57)"><g class="wm-rays" fill="url(#wmray)">
+      <circle r="52" fill="url(#wmglow)"/>
+      <g class="wm-rays-a">
+        <path transform="rotate(4)" d="M 0 0 L 330 -15 L 330 15 Z"/>
+        <path transform="rotate(176)" d="M 0 0 L 330 -15 L 330 15 Z"/>
+        <path transform="rotate(24)" d="M 0 0 L 240 -12 L 240 12 Z"/>
+        <path transform="rotate(156)" d="M 0 0 L 240 -12 L 240 12 Z"/>
+        <path transform="rotate(266)" d="M 0 0 L 100 -9 L 100 9 Z"/>
+      </g>
+      <g class="wm-rays-b">
+        <path transform="rotate(-14)" d="M 0 0 L 290 -12 L 290 12 Z"/>
+        <path transform="rotate(194)" d="M 0 0 L 290 -12 L 290 12 Z"/>
+        <path transform="rotate(60)" d="M 0 0 L 110 -9 L 110 9 Z"/>
+        <path transform="rotate(120)" d="M 0 0 L 110 -9 L 110 9 Z"/>
+        <path transform="rotate(288)" d="M 0 0 L 95 -8 L 95 8 Z"/>
+        <path transform="rotate(252)" d="M 0 0 L 95 -8 L 95 8 Z"/>
+      </g>
+    </g></g>
+
+    <!-- shockwave echo (intro only) + persistent boom outline -->
+    <use class="wm-shock" href="#wmboomp" fill="none" stroke="#e0a93c" stroke-width="4" stroke-linejoin="round"/>
+    <use class="wm-boom" href="#wmboomp" fill="none" stroke="#000" stroke-width="9" stroke-linejoin="round"/>
+
+    <!-- explosion core starburst (intro only) -->
+    <g transform="translate(309,57)"><g class="wm-flash">
+      <path fill="#ffd76a" stroke="#000" stroke-width="5" stroke-linejoin="round"
+        d="M 34 0 L 12.9 5.4 L 24 24 L 5.4 12.9 L 0 34 L -5.4 12.9 L -24 24 L -12.9 5.4 L -34 0 L -12.9 -5.4 L -24 -24 L -5.4 -12.9 L 0 -34 L 5.4 -12.9 L 24 -24 L 12.9 -5.4 Z"/>
+      <circle r="9" fill="#fff" stroke="#000" stroke-width="4"/>
+    </g></g>
+
+    <!-- letters -->
+    <g transform="translate(0,0) rotate(-2.5 46 60)"><g class="wm-l" style="--ex:264px; --er:-26deg; --d:0.15s">
+      <rect class="wm-hit" x="2" y="6" width="86" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 98 C 12 72 12 46 18 22 L 46 62 L 74 22 C 80 46 80 72 75 98"/>
+      <path class="wm-shine" stroke-width="9" d="M 17 34 L 17 45"/>
+    </g></g>
+    <g transform="translate(96,0) rotate(2 42 60)"><g class="wm-l" style="--ex:171px; --er:20deg; --d:0.10s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 13 98 C 20 72 30 46 42 22 C 54 46 64 72 71 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 27 73 L 57 73"/>
+      <path class="wm-shine" stroke-width="9" d="M 31 43 L 36 31"/>
+    </g></g>
+    <g transform="translate(180,0) rotate(-1.5 40 60)"><g class="wm-l" style="--ex:89px; --er:-16deg; --d:0.05s">
+      <rect class="wm-hit" x="2" y="6" width="76" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 14 22 C 30 46 48 72 66 98"/>
+      <path class="wm-ink" stroke-width="28" d="M 66 22 C 50 46 32 72 14 98"/>
+      <path class="wm-shine" stroke-width="9" d="M 20 32 L 28 42"/>
+    </g></g>
+    <g transform="translate(296,0) rotate(2.5 39 60)"><g class="wm-l" style="--ex:-26px; --er:14deg; --d:0s">
+      <rect class="wm-hit" x="2" y="6" width="76" height="106"/>
+      <path class="wm-ink" stroke-width="26" d="M 65 31 C 59 15 17 13 15 36 C 13 58 65 55 65 79 C 64 104 18 104 12 85"/>
+      <path class="wm-shine" stroke-width="9" d="M 39 24 L 49 25"/>
+    </g></g>
+    <g transform="translate(378,0) rotate(-2 42 60)"><g class="wm-l" style="--ex:-111px; --er:-20deg; --d:0.05s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 22 C 12 46 12 72 17 98"/>
+      <path class="wm-ink" stroke-width="28" d="M 67 22 C 72 46 72 72 67 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 17 60 L 67 60"/>
+      <path class="wm-shine" stroke-width="9" d="M 16 34 L 16 45"/>
+    </g></g>
+    <g transform="translate(464,0) rotate(1.5 40 60)"><g class="wm-l" style="--ex:-191px; --er:22deg; --d:0.10s">
+      <rect class="wm-hit" x="2" y="6" width="72" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 19 22 C 14 46 14 72 19 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 25 L 61 25"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 60 L 53 60"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 95 L 61 95"/>
+      <path class="wm-shine" stroke-width="9" d="M 18 36 L 18 47"/>
+    </g></g>
+    <g transform="translate(532,0) rotate(-2.5 42 60)"><g class="wm-l" style="--ex:-265px; --er:-24deg; --d:0.15s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 98 C 12 72 12 46 17 22 L 67 98 C 72 72 72 46 67 22"/>
+      <path class="wm-shine" stroke-width="9" d="M 16 34 L 16 45"/>
+    </g></g>
+  </svg>
+    </a>
     <ul class="nav-links">
+      <li><a href="#hero">Home</a></li>
+      <li class="about-btn"><a href="#about">About</a></li>
       <li><a href="#frames">Frames</a></li>
-      <li><a href="#work">Portfolio</a></li>
-      <li class="about-btn"><a href="about.html">About</a></li>
+      <li><a href="#work">Projects</a></li>
     </ul>
+    <span id="navUnderline" aria-hidden="true"></span>
     <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
       <span></span><span></span><span></span>
     </button>
@@ -1010,36 +1506,64 @@
 
   <div id="mobileMenu" aria-hidden="true">
     <ul>
+      <li><a href="#hero">Home</a></li>
+      <li class="mobile-about"><a href="#about">About</a></li>
       <li><a href="#frames">Frames</a></li>
-      <li><a href="#work">Portfolio</a></li>
-      <li class="mobile-about"><a href="about.html">About</a></li>
+      <li><a href="#work">Projects</a></li>
     </ul>
   </div>
 
-  <!-- ── Hero ──────────────────────────────── -->
-  <section class="hero-section">
-    <div class="hero-text">
-      <h1 class="hero-name">MAX<br>SHEN</h1>
-      <p class="hero-tagline">my digital portfolio</p>
-    </div>
+  <!-- ── Hero ───────────────────────────────── -->
+  <section class="hero-section" id="hero">
     <div class="hero-media">
-      <video class="hero-video" muted playsinline loop preload="none">
-        <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames2025.mp4" type="video/mp4">
-      </video>
+      <video class="hero-video" src="/public/videos/hero.mp4" autoplay muted loop playsinline></video>
+    </div>
+  </section>
+
+  <!-- ── Intro / About ──────────────────────── -->
+  <section class="intro-section" id="about">
+    <h2 class="intro-title reveal">A compilation of my frames, projects, and creative journey.</h2>
+    <div class="intro-body">
+      <p class="reveal reveal-d1">Hey, I’m Max. I’m currently studying Business and Technology Management at New York University with a concentration in Finance.</p>
+      <p class="reveal reveal-d2">I grew up in Vancouver, Canada, the best city in the world. I’m passionate about creation and the process of building something from the ground up. For me, that mostly happens through my camera.</p>
+      <p class="reveal reveal-d3">In my free time, you can find me playing basketball, DJing, or working on my next video idea.</p>
+    </div>
+    <div class="intro-gallery">
+      <div class="intro-frame if-b reveal reveal-d1"><img src="maxshen1.JPG" alt="Max Shen at dusk by the ocean"></div>
+      <div class="intro-frame if-c reveal reveal-d2"><img src="maxshen5.jpeg" alt="Max Shen photographing a sunset over the water"></div>
+      <div class="intro-frame if-d reveal reveal-d3"><img src="maxshen2.JPG" alt="Max Shen photographing by a canal"></div>
+      <div class="intro-frame if-e reveal reveal-d4"><img src="lapa.JPG" alt="Max Shen with two friends at dinner"></div>
     </div>
   </section>
 
   <!-- ── Frames ─────────────────────────────── -->
   <section class="frames-section" id="frames">
-    <svg class="fs-grid-svg" id="fsGridSvg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
-    <div class="fs-vignette"></div>
-    <div class="fs-strip-mask">
-      <div id="fsStrip"></div>
+    <div class="work-header">
+      <span class="work-header-title">Frames From Around the World</span>
+      <!-- globe: Natural Earth 110m coastlines (world-atlas, public domain). Longitude runs flat across a
+           40-wide map that scrolls behind the disc (180° = the diameter); latitude is placed at 10−10·sin φ,
+           so the poles compress to the rim like a real globe instead of smearing across the top. -->
+      <svg class="globe" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="globeClip"><circle cx="12" cy="12" r="9.6"/></clipPath>
+          <path id="globeLand" d="M39.2 16.5L39.2 16.9L39.0 17.2L38.6 17.2L38.8 16.9L39.0 16.8L39.2 16.5ZM39.4 15.9L39.6 16.1L39.6 16.5L39.3 16.4L39.4 16.1L39.2 15.8ZM25.6 12.3L25.6 12.7L25.5 13.1L25.4 13.5L25.3 13.8L25.2 14.2L24.9 14.2L24.8 13.9L24.9 13.6L24.9 13.2L24.9 12.9L25.2 12.6L25.4 12.3ZM36.0 12.4L36.1 12.7L36.2 13.1L36.4 13.3L36.6 13.6L36.8 14.0L37.0 14.3L37.0 14.6L37.0 14.9L37.0 15.2L36.8 15.6L36.7 15.9L36.4 16.2L36.1 16.2L35.7 16.2L35.5 16.0L35.4 15.6L35.0 15.7L34.8 15.3L34.4 15.2L34.0 15.3L33.7 15.6L33.4 15.6L33.1 15.7L32.8 15.6L32.9 15.3L32.8 15.0L32.7 14.7L32.6 14.4L32.6 14.0L32.7 13.7L33.0 13.5L33.3 13.4L33.5 13.2L33.7 12.8L33.9 12.6L34.1 12.4L34.4 12.6L34.5 12.3L34.7 12.1L35.0 12.1L35.1 12.5L35.2 12.7L35.5 12.9L35.7 12.7L35.7 12.4L35.8 12.1L36.0 12.3ZM32.1 11.2L32.5 11.2L32.9 11.5L32.5 11.5L32.2 11.3L31.8 11.3ZM34.9 10.2L35.1 10.6L35.3 10.3L35.5 10.4L35.9 10.6L36.1 10.8L36.4 11.1L36.5 11.4L36.7 11.7L36.3 11.6L36.1 11.3L35.8 11.6L35.6 11.4L35.4 11.1L35.1 10.8L34.9 10.6L34.6 10.3ZM33.9 9.8L33.6 9.9L33.3 10.1L33.7 10.1L33.5 10.3L33.7 10.8L33.4 10.6L33.4 11.0L33.3 10.6L33.3 10.2L33.3 9.9L33.7 9.8ZM31.8 11.0L31.4 10.7L31.2 10.4L31.0 10.0L30.9 9.6L30.6 9.1L30.9 9.3L31.2 9.6L31.5 9.9L31.6 10.2L31.8 10.5L31.8 11.0ZM33.1 9.7L33.1 10.0L32.9 10.4L32.8 10.7L32.5 10.6L32.2 10.3L32.1 9.9L32.4 9.7L32.6 9.3L32.8 9.1L33.0 8.8L33.2 9.1L33.0 9.4ZM34.0 8.5L34.0 8.9L33.7 8.6L33.9 8.3ZM33.5 6.8L33.6 7.2L33.5 7.5L33.8 7.8L33.5 7.6L33.3 7.3L33.4 7.0ZM11.1 6.1L11.4 6.3L11.8 6.5L11.4 6.6L11.3 6.3L10.9 6.2L10.6 6.3L10.8 6.1L11.1 6.1ZM35.7 4.0L35.4 4.3L35.1 4.5L34.8 4.4L34.6 4.8L34.4 4.5L34.7 4.3L35.0 4.2L35.2 3.9L35.5 3.8L35.5 3.5L35.7 3.8ZM13.8 2.3L14.1 2.4L14.1 2.7L13.8 2.7L13.4 2.6L13.6 2.3ZM19.7 1.5L19.9 1.8L20.2 2.0L19.9 2.3L19.6 2.3L19.5 2.0L19.4 1.7L19.7 1.5ZM18.4 0.8L18.0 1.0L17.5 1.0L17.9 0.8L18.2 0.8ZM0.0 0.7L0.6 0.8L0.9 0.8L0.6 1.0L0.2 0.9L40.0 0.9L39.7 1.1L39.4 1.2L39.0 1.3L38.5 1.4L38.2 1.4L38.1 1.7L37.8 1.9L37.6 2.1L37.3 1.8L37.6 1.5L38.0 1.3L38.3 1.1L37.8 1.3L37.4 1.2L37.1 1.4L36.8 1.4L36.5 1.4L36.2 1.4L35.8 1.4L35.4 1.6L35.0 1.8L35.4 1.9L35.7 2.0L35.6 2.3L35.4 2.7L35.1 3.1L34.8 3.2L34.4 3.3L34.2 3.6L34.4 3.9L34.3 4.3L34.1 4.4L34.0 4.0L33.9 3.7L33.6 3.7L33.2 3.7L33.5 3.9L33.3 4.2L33.4 4.5L33.5 4.9L33.5 5.3L33.3 5.7L33.0 6.0L32.8 6.1L32.4 6.3L32.1 6.3L31.8 6.6L31.9 7.1L32.1 7.7L32.0 8.1L31.8 8.3L31.5 8.2L31.3 7.8L31.1 8.1L31.1 8.6L31.3 8.8L31.5 9.2L31.5 9.5L31.2 9.3L31.1 8.9L31.0 8.6L31.0 8.3L30.9 7.9L30.9 7.4L30.8 7.1L30.5 7.3L30.5 6.9L30.3 6.6L30.2 6.3L29.9 6.2L29.7 6.5L29.5 6.7L29.2 7.0L29.0 7.3L28.9 7.6L28.9 7.9L28.8 8.2L28.7 8.6L28.5 8.2L28.3 7.8L28.3 7.5L28.1 6.9L28.1 6.5L27.7 6.2L27.5 5.9L27.2 5.7L26.8 5.8L26.5 5.7L26.3 5.4L25.9 5.5L25.7 5.2L25.4 5.0L25.4 5.4L25.6 5.6L25.7 5.9L26.1 5.8L26.3 5.6L26.3 5.9L26.6 6.1L26.5 6.4L26.4 6.7L26.2 6.9L26.0 7.1L25.7 7.4L25.4 7.6L25.1 7.7L24.8 7.6L24.7 7.3L24.6 6.9L24.5 6.6L24.3 6.3L24.2 5.9L24.1 5.6L23.9 5.3L23.6 5.0L23.7 5.4L23.8 5.7L23.9 6.0L24.1 6.3L24.1 6.6L24.3 6.9L24.4 7.3L24.6 7.5L24.8 7.8L24.9 8.1L25.2 8.1L25.5 8.0L25.6 8.4L25.5 8.8L25.3 9.3L25.1 9.6L24.8 9.9L24.6 10.3L24.5 10.6L24.3 11.0L24.4 11.3L24.4 11.8L24.5 12.2L24.5 12.5L24.4 12.9L24.0 13.2L23.9 13.5L23.9 13.9L23.8 14.2L23.6 14.5L23.6 14.8L23.4 15.1L23.2 15.3L22.9 15.5L22.6 15.6L22.3 15.7L22.0 15.5L22.0 15.1L21.8 14.8L21.7 14.4L21.6 14.0L21.5 13.7L21.4 13.4L21.3 13.0L21.3 12.6L21.4 12.3L21.5 12.0L21.4 11.6L21.4 11.2L21.3 10.9L21.1 10.5L21.0 10.2L21.1 9.8L21.1 9.5L20.9 9.2L20.7 9.3L20.5 8.9L20.1 9.0L19.8 9.2L19.5 9.1L19.2 9.2L18.9 9.0L18.6 8.7L18.5 8.4L18.3 8.1L18.1 7.7L18.1 7.4L18.2 7.1L18.2 6.7L18.1 6.4L18.2 6.1L18.4 5.8L18.5 5.4L18.8 5.2L18.9 4.8L19.0 4.5L19.3 4.2L19.7 4.2L20.1 4.1L20.4 4.0L20.7 4.0L21.1 3.9L21.2 4.3L21.4 4.6L21.7 4.8L22.1 5.0L22.2 4.7L22.5 4.6L22.9 4.8L23.3 4.8L23.7 4.8L23.9 4.6L24.0 4.2L23.6 4.1L23.3 4.1L23.0 3.9L23.0 3.5L23.5 3.4L23.9 3.3L24.3 3.4L24.6 3.4L24.4 3.1L24.2 3.0L24.3 2.7L24.0 2.7L23.8 3.0L23.5 2.8L23.2 3.0L23.1 3.2L22.9 3.6L22.6 3.5L22.7 3.8L22.5 4.1L22.3 3.8L22.2 3.5L22.0 3.2L21.8 3.1L21.5 2.9L21.6 3.2L21.9 3.4L21.9 3.7L21.6 3.5L21.3 3.3L21.1 3.1L20.8 3.1L20.5 3.1L20.2 3.4L20.0 3.7L19.8 4.0L19.4 4.1L19.1 4.0L18.9 3.7L19.0 3.4L19.1 3.1L19.5 3.1L19.8 3.1L19.8 2.7L19.5 2.5L19.8 2.5L20.1 2.3L20.4 2.2L20.7 2.0L21.0 1.9L20.9 1.6L21.2 1.9L21.5 1.9L21.8 1.9L22.2 1.9L22.4 1.6L22.7 1.5L23.0 1.4L22.5 1.4L22.3 1.1L22.7 0.9L22.4 0.9L22.0 1.1L22.0 1.4L21.8 1.7L21.4 1.8L21.2 1.4L20.8 1.5L20.6 1.2L21.0 1.1L21.4 0.9L21.8 0.7L22.1 0.6L22.6 0.6L22.9 0.5L23.5 0.6L24.1 0.7L24.5 0.7L23.8 0.8L24.0 1.0L24.4 1.0L24.7 0.8L25.1 0.7L25.6 0.7L26.0 0.7L26.4 0.7L26.8 0.7L27.2 0.6L27.6 0.7L27.8 0.4L28.1 0.5L27.9 0.8L28.2 0.8L28.3 0.5L28.9 0.5L29.4 0.4L29.8 0.3L30.3 0.3L30.7 0.3L31.0 0.3L31.3 0.2L31.8 0.2L32.3 0.3L32.7 0.3L32.2 0.4L32.6 0.4L33.2 0.4L33.7 0.4L34.1 0.4L34.4 0.5L34.9 0.5L35.3 0.5L35.6 0.4L36.6 0.5L37.0 0.6L37.4 0.5L37.8 0.6L38.2 0.6L38.6 0.6L39.0 0.7L39.3 0.6L39.8 0.6L0.0 0.7ZM9.9 0.6L10.3 0.8L10.7 0.6L11.0 0.7L10.6 0.8L10.3 1.0L9.9 1.0L9.6 1.2L9.5 1.4L9.7 1.6L10.1 1.6L10.4 1.7L10.7 1.8L11.0 2.1L11.3 2.1L11.4 1.7L11.3 1.4L11.3 1.1L11.7 1.2L12.0 1.2L12.3 1.4L12.6 1.4L13.1 1.5L13.3 1.7L13.6 1.8L13.8 2.1L13.5 2.2L13.1 2.3L12.7 2.3L12.4 2.4L12.1 2.7L12.4 2.5L12.8 2.4L12.8 2.8L13.2 2.8L12.9 3.0L12.5 2.9L12.2 3.1L12.1 3.4L11.8 3.5L11.7 3.8L11.6 4.2L11.3 4.4L11.1 4.6L11.0 5.0L11.1 5.3L11.1 5.6L10.8 5.4L10.7 5.0L10.4 4.9L10.1 5.0L9.7 5.1L9.4 5.2L9.2 5.5L9.1 5.9L9.1 6.3L9.3 6.6L9.5 6.9L9.8 6.8L9.9 6.5L10.3 6.3L10.3 6.7L10.2 7.0L10.1 7.3L10.4 7.3L10.7 7.4L10.7 7.7L10.7 8.0L10.8 8.3L11.2 8.3L11.5 8.5L11.6 8.2L11.9 8.0L12.0 8.3L12.2 8.0L12.5 8.2L12.9 8.2L13.2 8.3L13.4 8.5L13.5 8.8L13.8 9.0L14.1 9.1L14.3 9.4L14.4 9.7L14.4 10.0L14.8 10.2L15.1 10.4L15.4 10.5L15.7 10.6L15.9 10.9L16.1 11.2L16.1 11.6L15.9 11.9L15.7 12.3L15.7 12.7L15.6 13.1L15.5 13.6L15.3 13.9L15.0 14.0L14.7 14.2L14.6 14.6L14.5 14.9L14.3 15.3L14.1 15.6L13.8 15.7L13.6 16.2L13.2 16.3L13.0 16.6L12.8 16.8L12.7 17.1L12.7 17.4L12.4 17.7L12.1 18.0L11.8 18.0L11.6 17.7L11.6 17.4L11.7 17.0L11.8 16.4L11.8 16.0L12.0 15.6L12.0 15.1L12.1 14.8L12.1 14.3L12.2 14.0L12.2 13.6L12.2 13.1L11.8 12.8L11.6 12.5L11.4 12.1L11.3 11.8L11.2 11.5L11.1 11.1L11.0 10.8L11.1 10.5L11.0 10.2L11.1 9.9L11.3 9.6L11.4 9.3L11.4 9.0L11.3 8.7L11.0 8.7L10.7 8.5L10.6 8.2L10.4 8.0L10.2 7.7L9.9 7.6L9.6 7.3L9.3 7.3L9.0 7.1L8.7 7.0L8.5 6.8L8.3 6.5L8.2 6.1L8.0 5.8L7.9 5.5L7.6 5.3L7.5 5.0L7.2 4.7L7.3 5.0L7.5 5.3L7.6 5.7L7.8 6.0L7.5 5.8L7.4 5.5L7.2 5.1L7.0 4.8L6.9 4.5L6.6 4.3L6.4 3.9L6.2 3.6L6.2 3.2L6.2 2.9L6.1 2.5L5.8 2.2L5.6 2.0L5.3 1.8L5.1 1.5L4.7 1.5L4.4 1.4L4.0 1.3L3.7 1.3L3.4 1.4L3.0 1.3L2.7 1.5L2.4 1.7L2.1 1.8L1.7 1.9L2.0 1.7L2.4 1.6L2.1 1.5L1.7 1.3L2.0 1.0L1.7 1.0L1.3 0.9L1.7 0.8L2.0 0.9L1.7 0.8L2.0 0.6L2.3 0.6L2.8 0.5L3.1 0.6L3.6 0.6L4.0 0.6L4.5 0.6L4.9 0.6L5.4 0.6L5.7 0.6L6.2 0.6L6.5 0.6L6.9 0.7L7.3 0.7L7.7 0.7L8.0 0.7L8.4 0.7L8.7 0.8L9.1 0.7L9.4 0.7L9.7 0.5ZM7.3 0.4L7.7 0.5L8.0 0.5L8.3 0.5L8.6 0.6L8.2 0.7L7.9 0.7L7.6 0.7L7.2 0.6L7.5 0.6L7.1 0.6L6.7 0.5L7.2 0.4ZM10.4 0.4L10.9 0.4L11.2 0.5L11.6 0.5L12.0 0.5L12.4 0.6L12.6 0.7L13.0 0.8L12.6 0.8L12.8 1.1L12.4 1.0L12.6 1.2L12.3 1.1L12.0 1.1L11.7 1.0L11.4 1.0L11.8 0.9L11.5 0.7L11.0 0.6L10.6 0.6L10.1 0.6L10.5 0.4ZM12.4 0.1L12.9 0.1L12.6 0.1L12.3 0.1L11.9 0.2L11.5 0.2L11.1 0.2L10.8 0.3L10.4 0.3L10.1 0.3L10.6 0.2L10.2 0.2L10.5 0.2L10.9 0.1L10.3 0.1L9.8 0.1L10.3 0.1L10.6 0.1L11.0 0.1L11.5 0.1L11.9 0.1L12.4 0.1ZM17.0 0.1L17.7 0.1L17.1 0.1L16.5 0.1L16.9 0.1L17.2 0.1L17.5 0.1L18.2 0.1L18.6 0.1L18.2 0.1L17.8 0.1L17.5 0.4L17.2 0.5L17.5 0.6L17.2 0.6L16.9 0.7L16.6 0.7L16.2 0.8L15.9 0.9L15.6 0.9L15.2 1.1L15.0 1.3L14.6 1.3L14.3 1.0L14.0 0.8L14.3 0.7L13.9 0.6L14.3 0.6L13.9 0.5L13.6 0.4L13.2 0.3L12.7 0.3L12.3 0.3L12.6 0.2L12.1 0.2L12.7 0.2L13.1 0.1L13.6 0.1L14.0 0.1L14.4 0.1L14.8 0.1L15.2 0.1L15.6 0.1L16.1 0.1L17.0 0.1Z"/>
+          <radialGradient id="globeShade" cx="38%" cy="32%" r="78%">
+            <stop offset="0" stop-color="#fff" stop-opacity="0.45"/>
+            <stop offset="0.55" stop-color="#fff" stop-opacity="0"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0.18"/>
+          </radialGradient>
+        </defs>
+        <g clip-path="url(#globeClip)">
+          <g class="globe-map" transform="translate(-8 2)">
+            <use href="#globeLand"/>
+            <use href="#globeLand" x="40"/>
+          </g>
+          <circle cx="12" cy="12" r="9.6" fill="url(#globeShade)"/>
+        </g>
+        <circle cx="12" cy="12" r="10" class="globe-rim"/>
+      </svg>
     </div>
-    <div class="fs-copy">
-      <h2 class="fs-title">Years in Frames</h2>
-      <p class="fs-subtitle">click to explore</p>
-    </div>
+    <div class="dest-grid" id="framesGrid" data-cols="3"></div>
   </section>
 
 
@@ -1047,120 +1571,55 @@
   <section class="featured-section" id="work">
 
     <div class="work-header">
-      <span class="work-header-title">Featured Work</span>
+      <span class="work-header-title">Projects</span>
+      <!-- laptop: the lid hinges open in 3D (rotateX about its bottom edge), holds, and folds shut -->
+      <span class="laptop" aria-hidden="true">
+        <span class="laptop-lid"><span class="laptop-screen"></span></span>
+        <span class="laptop-base"></span>
+      </span>
     </div>
 
-    <div class="work-grid">
-
-      <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/take%20your%20time.mp4" data-title="Take Your Time">
-        <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="none" loop poster="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/posters/take%20your%20time%20ss.png">
-            <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/take%20your%20time.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="work-caption">
-          <p class="work-title">Take Your Time</p>
-          <p class="work-category">Grad Trip</p>
-        </div>
-      </div>
-
-      <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/toronto2026.mp4" data-title="Toronto 2026">
-        <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="none" loop>
-            <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/toronto2026.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="work-caption">
-          <p class="work-title">Toronto 2026</p>
-          <p class="work-category">Spring Break</p>
-        </div>
-      </div>
-
-      <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/lake%20cowichan.mp4" data-title="Lake Cowichan">
-        <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="none" loop>
-            <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/lake%20cowichan.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="work-caption">
-          <p class="work-title">Lake Cowichan</p>
-          <p class="work-category">Summer Break</p>
-        </div>
-      </div>
-
-      <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/ski%20trip%202026.mp4" data-title="Ski Trip 2026">
-        <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="none" loop>
-            <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/ski%20trip%202026.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="work-caption">
-          <p class="work-title">Ski Trip 2026</p>
-          <p class="work-category">Winter Break</p>
-        </div>
-      </div>
-
-      <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/notgoinghome2.mp4" data-title="Morocco 2026">
-        <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="none" loop>
-            <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/notgoinghome2.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="work-caption">
-          <p class="work-title">Morocco 2026</p>
-          <p class="work-category">Spring Break</p>
-        </div>
-      </div>
-
-      <div class="work-item" data-src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/pursuit%20of%20authenticity.mp4" data-title="Pursuit of Authenticity">
-        <div class="work-media">
-          <video class="work-thumb" muted playsinline preload="none" loop poster="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/posters/pursuit%20of%20authenticity%20ss.png">
-            <source src="https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/pursuit%20of%20authenticity.mp4" type="video/mp4">
-          </video>
-        </div>
-        <div class="work-caption">
-          <p class="work-title">Pursuit of Authenticity</p>
-          <p class="work-category">Capstone Project</p>
-        </div>
-      </div>
-
-    </div>
+    <div class="work-grid" id="workGrid"></div>
   </section>
-
-
 
 
   <!-- ── Contact ────────────────────────────── -->
   <section id="contact">
     <div class="contact-section">
-      <h2 class="contact-heading reveal">Let's create <em>something.</em></h2>
-      <div class="contact-icons reveal reveal-d1">
-        <!-- Email -->
-        <a href="mailto:maxshenfilm@gmail.com" class="contact-icon" aria-label="Email">
-          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-        </a>
+      <div class="contact-icons">
         <!-- Instagram -->
         <a href="https://instagram.com/maxshen.mp4" target="_blank" rel="noopener" class="contact-icon" aria-label="Instagram">
           <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
         </a>
+        <!-- LinkedIn -->
+        <a href="https://www.linkedin.com/in/max-shen-18555321a/" target="_blank" rel="noopener" class="contact-icon" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><line x1="7" y1="10" x2="7" y2="17"/><circle cx="7" cy="6.7" r="1" fill="currentColor" stroke="none"/><line x1="11.5" y1="17" x2="11.5" y2="10"/><path d="M11.5 13c0-1.8 1.2-3 3-3s3 1.2 3 3v4"/></svg>
+        </a>
+        <!-- Email -->
+        <a href="mailto:maxshenfilm@gmail.com" class="contact-icon" aria-label="Email">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        </a>
       </div>
-
-      <form class="contact-form reveal reveal-d2" id="contactForm" novalidate>
-        <textarea id="contactMsg" rows="1" placeholder="write a message…" maxlength="1000"></textarea>
-        <div class="contact-form-row">
-          <span class="contact-form-hint">maxshenfilm@gmail.com</span>
-          <button type="submit" class="contact-send">Send</button>
-        </div>
-        <p class="contact-confirm" id="contactConfirm">message sent —</p>
-      </form>
+      <p class="contact-handle">maxshenfilm@gmail.com</p>
+      <p class="contact-copy">© 2026 Max Shen</p>
     </div>
   </section>
 
   <!-- ── Footer ─────────────────────────────── -->
 
   <!-- ── Lightbox ───────────────────────────── -->
+  <!-- intro gallery photo lightbox -->
+  <div class="ig-lb" id="igLightbox" role="dialog" aria-modal="true" aria-label="Expanded photo" aria-hidden="true">
+    <div class="ig-lb-scrim"></div>
+    <img class="ig-lb-img" alt="">
+    <button class="ig-lb-btn ig-lb-prev" type="button" aria-label="Previous photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="ig-lb-btn ig-lb-next" type="button" aria-label="Next photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="ig-lb-btn ig-lb-close" type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="ig-lb-count" aria-live="polite"></div>
+  </div>
+
   <div id="lightbox">
-    <button id="lightboxClose" aria-label="Close">
+    <button id="lightboxClose" class="overlay-close" aria-label="Close">
       <svg viewBox="0 0 24 24" fill="none"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/></svg>
     </button>
     <div class="lightbox-inner">
@@ -1171,116 +1630,10 @@
     </div>
   </div>
 
-
+  <!-- ── Project overlay: a Featured Work project's video, then its
+       photo frames below it ─────────────────────── -->
   <script>
-    // ── Loading screen ────────────────────────────────────────
-    (function () {
-      const loader      = document.getElementById('loader');
-      const loaderInner = document.getElementById('loader-inner');
-      const barFill     = document.getElementById('loader-bar-fill');
-      const pctLabel    = document.getElementById('loader-pct');
-      const heroVideo   = document.querySelector('.hero-video');
-
-      // Lock scroll while loading
-      document.body.style.overflow = 'hidden';
-
-      const isMobile = window.matchMedia('(hover: none), (max-width: 960px)').matches;
-
-      // Always start buffering the hero video immediately so it has the full
-      // loading screen duration (1.8s mobile / 2.8s desktop) to download.
-      // On mobile we don't block the loader on it, but starting early means
-      // it's likely ready (or close) by the time the loader releases.
-      if (heroVideo) {
-        heroVideo.preload = 'auto';
-        heroVideo.load();
-      }
-
-      // Start loading work thumbnail metadata during the loading screen
-      // so thumbnails are ready the moment the loader releases.
-      document.querySelectorAll('.work-thumb').forEach(video => {
-        video.preload = 'metadata';
-        video.load();
-      });
-
-      // Fade in loader content on next frame
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        loaderInner.classList.add('visible');
-      }));
-
-      let barDone   = false;
-      let videoDone = false;
-
-      // Called whenever either gate flips — only proceeds when both are true
-      function tryRelease() {
-        if (!barDone || !videoDone) return;
-        loader.classList.add('fade-out');
-        setTimeout(() => {
-          loader.style.display = 'none';
-          document.body.style.overflow = '';
-          document.querySelector('.hero-text')?.classList.add('loaded');
-          if (heroVideo) {
-            if (heroVideo.readyState >= 3) {
-              heroVideo.play().catch(() => {});
-            } else {
-              heroVideo.addEventListener('canplay', () => {
-                heroVideo.play().catch(() => {});
-              }, { once: true });
-            }
-          }
-        }, 780);
-      }
-
-      // Gate 1 — hero video readiness (desktop only; mobile skips straight to done)
-      if (!heroVideo || isMobile) {
-        videoDone = true;
-      } else if (heroVideo.readyState >= 3) {
-        videoDone = true; // already buffered (e.g. cached)
-      } else {
-        // Fallback: if video doesn't load within 5s (e.g. missing file), release anyway
-        const videoTimeout = setTimeout(() => {
-          videoDone = true;
-          tryRelease();
-        }, 5000);
-
-        heroVideo.addEventListener('canplay', () => {
-          clearTimeout(videoTimeout);
-          videoDone = true;
-          tryRelease();
-        }, { once: true });
-
-        heroVideo.addEventListener('error', () => {
-          clearTimeout(videoTimeout);
-          videoDone = true;
-          tryRelease();
-        }, { once: true });
-      }
-
-      // Gate 2 — progress bar animation
-      function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
-      const DURATION = isMobile ? 1800 : 2800;
-      const start    = performance.now();
-
-      function tick(now) {
-        const t     = Math.min((now - start) / DURATION, 1);
-        const eased = easeOutQuart(t);
-        const pct   = Math.round(eased * 100);
-
-        barFill.style.width  = pct + '%';
-        pctLabel.textContent = pct + '%';
-
-        if (t < 1) {
-          requestAnimationFrame(tick);
-        } else {
-          // Hold at 100% until video is also ready
-          setTimeout(() => {
-            barDone = true;
-            tryRelease();
-          }, 220);
-        }
-      }
-
-      requestAnimationFrame(tick);
-    })();
+    // No loading screen — the page renders directly.
 
     // ── Video: seek to thumbnail frame ───────────────────────
     const isMobileDevice = window.matchMedia('(hover: none), (max-width: 960px)').matches;
@@ -1325,10 +1678,6 @@
     }
 
     const workLazyObs = makeLazyLoader('300px 0px');
-    document.querySelectorAll('.work-grid').forEach(g => {
-      g._lazyLoader = workLazyObs;
-      workLazyObs.observe(g);
-    });
 
 
     // ── Frames: hover play + staggered reveal on scroll ─────
@@ -1362,20 +1711,18 @@
     setupHoverPlay('.dc-item');
 
 
-    // ── Featured work grid: hover plays, click opens lightbox ──
-    setupHoverPlay('.work-item');
-
-
-    // ── Staggered scroll reveal for dc/work grids (grid-level) ─
+    // ── Staggered scroll reveal for dc/work/frames grids (grid-level) ─
     const gridRevealObs = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
         const grid = entry.target;
+        const cols  = parseInt(grid.dataset.cols || '3', 10);
+        const mosaic = grid.classList.contains('dg-five'); // spans differ — row/col math doesn't apply
         const items = Array.from(grid.children);
         items.forEach((item, i) => {
-          const row = Math.floor(i / 3);
-          const col = i % 3;
-          const delay = row * 0.12 + col * 0.06;
+          const row = Math.floor(i / cols);
+          const col = i % cols;
+          const delay = mosaic ? i * 0.11 : row * 0.1 + col * 0.05;
           item.style.transitionDelay = delay + 's';
           requestAnimationFrame(() => requestAnimationFrame(() => {
             item.classList.add('revealed');
@@ -1385,7 +1732,7 @@
       });
     }, { threshold: 0.04, rootMargin: '0px 0px -4% 0px' });
 
-    document.querySelectorAll('.dc-grid, .work-grid').forEach(grid => {
+    document.querySelectorAll('.dc-grid').forEach(grid => {
       gridRevealObs.observe(grid);
     });
 
@@ -1417,9 +1764,85 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 
+    // ── Featured Work: project data, grid, and detail overlay ────────────
+    // Each project's cover is a still image; clicking it opens the project
+    // video full-size with a grid of photo frames from that shoot below it.
+    (function initFeaturedWork() {
+      const PROJECTS = [
+        {
+          title: 'WIP Marketplace',
+          slug: 'wip',
+          caption: 'WIP Marketplace',
+          cover: '/public/posters/wip-cover.png',
+          // the card is taller than the tile; the WIP letters sit at 56.5%
+          // of the card's height and the 16:9 tile shows 62% of it, so this
+          // offset lands the letters on the tile's centre line
+          pos: 'center 67%',
+        },
+        {
+          title: 'California',
+          slug: 'california',
+          caption: 'worst day in california',
+          cover: '/public/posters/california-car.jpg',
+        },
+        // Covers pending — drop a 16:9 still at the path and remove null.
+        {
+          title: 'Robin by Salesforce',
+          slug: 'robin',
+          caption: 'Salesforce Case Competition',
+          cover: '/public/posters/robin.jpg',
+          pos: 'center 62%', // 3:2 photo in a 16:9 tile — keep the three of them, trim the screen above
+        },
+        {
+          title: 'Lucky7Collectives',
+          slug: 'lucky7',
+          caption: 'Lucky7Collectives',
+          cover: '/public/posters/lucky7-cover.jpg', // branded 16:9 card (1596×894) — lossless, no crop
+          pos: 'center',
+        },
+      ];
+      const workGrid = document.getElementById('workGrid');
+
+      // Clicking a project opens its own page (same fade-out transition
+      // the Frames tiles use).
+      function goToProject(project) {
+        const url = 'project.html?p=' + encodeURIComponent(project.slug);
+        pageLeave(url);
+      }
+
+      PROJECTS.forEach(function (project) {
+        const item = document.createElement('div');
+        item.className = 'work-item' + (project.card ? ' work-item--card' : '');
+
+        const media = document.createElement('div');
+        media.className = 'work-media';
+
+        const img = document.createElement('img');
+        img.className = 'work-thumb';
+        if (project.pos) img.style.objectPosition = project.pos;
+        img.src = project.cover || ('https://placehold.co/1600x900/1a1917/3a3936?text=' + encodeURIComponent(project.title));
+        img.alt = project.title;
+        img.loading = 'lazy';
+        img.addEventListener('load', function () { img.classList.add('thumb-ready'); });
+        if (img.complete) img.classList.add('thumb-ready');
+
+        media.appendChild(img);
+        item.appendChild(media);
+        if (project.caption) {
+          const cap = document.createElement('p');
+          cap.className = 'work-caption';
+          cap.textContent = project.caption;
+          item.appendChild(cap);
+        }
+        item.addEventListener('click', function () { goToProject(project); });
+        workGrid.appendChild(item);
+      });
+
+      gridRevealObs.observe(workGrid);
+    })();
 
 
-    // ── Generic scroll reveal (contact) ─────────────────────
+    // ── Generic scroll reveal (about, contact) ────────────────
     const revealObs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
@@ -1427,30 +1850,11 @@
     }, { threshold: 0.01, rootMargin: '0px 0px -5% 0px' });
     document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
-    // ── Contact form ─────────────────────────────────────────
-    document.getElementById('contactForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const msg = document.getElementById('contactMsg').value.trim();
-      if (!msg) return;
-      const mailto = 'mailto:maxshenfilm@gmail.com'
-        + '?subject=' + encodeURIComponent('Message from maxshen.mp4')
-        + '&body=' + encodeURIComponent(msg);
-      window.location.href = mailto;
-      document.getElementById('contactMsg').value = '';
-      const confirm = document.getElementById('contactConfirm');
-      confirm.classList.add('visible');
-      setTimeout(() => confirm.classList.remove('visible'), 3500);
-    });
-
-    // ── Page transition to About ─────────────────────────────
-    document.querySelectorAll('a[href="about.html"]').forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        document.body.style.transition = 'opacity 0.55s cubic-bezier(0.4,0,0.2,1)';
-        document.body.style.opacity = '0';
-        setTimeout(() => { window.location.href = 'about.html'; }, 560);
-      });
-    });
+    // header marks (the globe, the laptop) animate only while their section is in view
+    const markObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => e.target.classList.toggle('in-view', e.isIntersecting));
+    }, { threshold: 0 });
+    document.querySelectorAll('.frames-section, .featured-section').forEach(sec => markObs.observe(sec));
 
     // ── Mobile hamburger menu ─────────────────────────────────
     const hamburger  = document.getElementById('navHamburger');
@@ -1469,6 +1873,56 @@
     mobileMenu.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => toggleMenu(false));
     });
+
+    // ── Nav underline: tracks the section currently in view ──
+    (function () {
+      const navEl      = document.getElementById('nav');
+      const underline  = document.getElementById('navUnderline');
+      const sectionIds = ['hero', 'frames', 'work', 'about'];
+      const linkFor    = id => navEl.querySelector('.nav-links a[href="#' + id + '"]');
+
+      let activeId = null;
+
+      function moveUnderlineTo(id) {
+        const link = linkFor(id);
+        if (!link) return;
+        const navRect  = navEl.getBoundingClientRect();
+        const linkRect = link.getBoundingClientRect();
+        underline.style.left    = (linkRect.left - navRect.left) + 'px';
+        underline.style.top     = (linkRect.bottom - navRect.top + 4) + 'px';
+        underline.style.width   = linkRect.width + 'px';
+        underline.style.opacity = '1';
+      }
+
+      // A section "activates" the moment it crosses the vertical center of
+      // the viewport — a thin observation band there reads as one flowing
+      // scrollspy instead of a jumpy per-section on/off toggle.
+      const spy = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          if (entry.target.id === activeId) return;
+          activeId = entry.target.id;
+          moveUnderlineTo(activeId);
+        });
+      }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+
+      sectionIds.forEach(id => {
+        const section = document.getElementById(id);
+        if (section) spy.observe(section);
+      });
+
+      // Default to Home before any section has crossed center (page load,
+      // or a viewport tall enough that hero alone fills it).
+      activeId = 'hero';
+      moveUnderlineTo(activeId);
+      // Re-measure once the webfont swaps in — glyph widths shift slightly
+      // and the bar is sized from the link's exact rendered width.
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => moveUnderlineTo(activeId));
+      }
+
+      window.addEventListener('resize', () => moveUnderlineTo(activeId));
+    })();
 
     // ── Touch: tap to play video in thumbnail ────────────────
     if (isMobileDevice) {
@@ -1496,389 +1950,620 @@
         });
       }, 3000);
     }
-    // ── CHAOS VIDEO STRIP ─────────────────────────────────────────────────
-    (function initChaosStrip() {
-      const R2 = 'https://pub-b51d12263d8f42f88396dcee385d6734.r2.dev/frames/';
+    // ── FRAMES GRID — a 5x4 tile grid of every clip ───────────────────────
+    (function initDestinationsGrid() {
+      // Cover photos are placeholders until the real one is in — swap the
+      // `cover` value in as each place's photo is ready. The place name
+      // stays hidden until hover (tap on touch devices). Clicking a tile
+      // navigates to that destination's own page (destination.html), not
+      // a popup, so the photo layout there has the full page to work with.
+      const SPAIN_COVER = '/public/destinations/spain/cover.jpg';
+      const JAPAN_COVER = '/public/destinations/japan/better1.jpg'; // shrine steps, full frame
+      const ITALY_COVER = '/public/destinations/italy/peaks.jpg';
+      // full-width band cut at the wide tile's own ratio, so the tile
+      // shows the whole frame edge to edge with no further CSS cropping
+      const VAN_COVER = '/public/destinations/vancouver/jump-cover.jpg';
+      const MOROCCO_COVER = '/public/destinations/morocco/riders.jpg';
 
-      const CATALOGUE = [
-        { src: 'boom.mp4',                            label: 'Unknown Beach' },
-        { src: 'brent%20frame.mp4',                   label: 'Whistler, BC' },
-        { src: 'couple.mp4',                          label: 'Morocco' },
-        { src: 'fantastic.mp4',                       label: 'Pier 45, New York' },
-        { src: 'fish.mp4',                            label: 'Central Park, New York' },
-        { src: 'horse.mp4',                           label: 'Dolomites, Italy' },
-        { src: 'morocco%20frames00100956.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'morocco%20frames00102024.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'morocco%20frames00125996.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'morocco%20frames00151768.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'morocco%20frames00157705.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'morocco%20frames00158757.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'morocco%20frames00160627.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'morocco%20frames00164404.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'morocco%20frames00164896.mp4',         label: 'Marrakech, Morocco' },
-        { src: 'pier%2035%20bob.mp4',                 label: 'Pier 35, New York' },
-        { src: 'spikeball.mp4',                       label: 'Lake Cowichan, BC' },
-        { src: 'stanley%20car.mp4',                   label: 'Stanley Park, BC' },
-        { src: 'vancouver%20drive.mp4',               label: 'Vancouver, BC' },
-        { src: 'waterfall.mp4',                       label: 'Dolomites, Italy' },
+      // Order is the mosaic's shape order, not an alphabet: slots 1 and 5
+      // are cinematic wides, 2 and 4 are boxes, 3 is the tall portrait.
+      // Each cover was matched to the shape its subject survives — the
+      // horizontal cove and the row of jumpers take the wides, the wind
+      // chimes (a pattern, croppable anywhere) take the tall column.
+      // Every cover fills its tile. `pos` moves the crop window when the
+      // subject isn't centred — Spain sits on its bottom edge so the
+      // frame keeps beach and water instead of empty sky.
+      const DESTINATIONS = [
+        { name: 'Spain',      slug: 'spain',      cover: SPAIN_COVER, pos: 'center bottom' }, // wide
+        // 57% keeps the figure on the tile's centre line once the box
+        // crop trims the sides; full frame height shows the whole range
+        { name: 'Italy',      slug: 'italy',      cover: ITALY_COVER, pos: '57% center' },    // box
+        // the tall slice is read from the denser right side of the rack
+        { name: 'Japan',      slug: 'japan',      cover: JAPAN_COVER, pos: '54% center' },    // tall — crowd on the steps centred under the gate
+        // window shifts left so the white horse sits on the centre line
+        { name: 'Morocco',    slug: 'morocco',    cover: MOROCCO_COVER, pos: '43% center' },  // box
+        { name: 'Vancouver',  slug: 'vancouver',  cover: VAN_COVER },                         // wide
       ];
 
-      const N_UNIQUE   = CATALOGUE.length;   // 20
-      const REPEATS    = 4;
-      const N          = N_UNIQUE * REPEATS; // 80
-      const BASE_W     = 46;
-      const BASE_H     = 61;
-      const GAP        = 6;
-      const STEP       = BASE_W + GAP;       // 52
-      const TOTAL      = N * STEP;           // 4160
-      const QUALITY    = 5;
-      const RENDER_W   = BASE_W * QUALITY;   // 230
-      const RENDER_H   = BASE_H * QUALITY;   // 305
-      const REST_SCALE = 1 / QUALITY;        // 0.2
-      const FRICTION   = 0.94;
-      const WHEEL_GAIN = 0.6;
-      const AUTO_DRIFT = -0.32;
-      const STAGE_START = 0.3;
-      const STAGE_END   = 0.8;
-      const CURVE_END   = 0.55;
+      const grid = document.getElementById('framesGrid');
+      if (!grid) return;
+      // the packed mosaic only works for exactly five tiles
+      grid.classList.toggle('dg-five', DESTINATIONS.length === 5);
 
-      function hash(n) {
-        const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
-        return x - Math.floor(x);
-      }
-      function halton(idx, base) {
-        let f = 1, r = 0, n = idx + 1;
-        while (n > 0) { f /= base; r += f * (n % base); n = Math.floor(n / base); }
-        return r;
-      }
-      function smoothstep(t) { return t * t * (3 - 2 * t); }
-      function easeOut3(t)   { return 1 - Math.pow(1 - t, 3); }
-      function easeInOut2(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
-
-      const CHAOS = Array.from({ length: N }, (_, i) => ({
-        cx:    halton(i, 2) * 2 - 1,
-        cy:    halton(i, 3) * 2 - 1,
-        rot:   (hash(i * 3 + 3) - 0.5) * 26,
-        scale: 2.4 + hash(i * 5 + 4) * 1.9,
-        yBias: (hash(i * 7 + 9) - 0.5) * 18,
-      }));
-
-      const section = document.getElementById('frames');
-      const stripEl = document.getElementById('fsStrip');
-      const gridSvg = document.getElementById('fsGridSvg');
-
-      let vw    = section.offsetWidth;
-      let vh    = section.offsetHeight;
-      let isMob = vw < 768;
-
-      // Build video cells
-      const cells = [];
-      for (let i = 0; i < N; i++) {
-        const item  = CATALOGUE[i % N_UNIQUE];
-        const outer = document.createElement('div');
-        outer.className = 'fs-cell';
-        outer.style.cssText = [
-          'width:' + RENDER_W + 'px', 'height:' + RENDER_H + 'px',
-          'border-radius:10px', 'overflow:hidden',
-          '-webkit-backface-visibility:hidden', 'backface-visibility:hidden',
-          'transform-origin:center center', 'will-change:transform',
-        ].join(';');
-
-        const inner = document.createElement('div');
-        inner.style.cssText = 'position:absolute;inset:0;transform-style:preserve-3d;will-change:transform;';
-
-        const video = document.createElement('video');
-        video.muted = true; video.playsInline = true; video.loop = true; video.preload = 'none';
-        video.style.cssText = 'width:100%;height:100%;object-fit:cover;transform:scale(1.05);display:block;';
-        const vsrc = document.createElement('source');
-        vsrc.src = R2 + item.src; vsrc.type = 'video/mp4';
-        video.appendChild(vsrc);
-
-        const sheen = document.createElement('div');
-        sheen.style.cssText = 'position:absolute;inset:0;opacity:0;mix-blend-mode:overlay;pointer-events:none;transition:opacity 0.4s ease-out;';
-
-        inner.appendChild(video);
-        inner.appendChild(sheen);
-        outer.appendChild(inner);
-        stripEl.appendChild(outer);
-
-        cells.push({ el: outer, inner, video, sheen, src: R2 + item.src, label: item.label, loaded: false, playing: false });
+      // Matches the fade-then-navigate transition already used for the
+      // About page link, so drilling into a destination feels consistent.
+      function goToDestination(dest) {
+        const url = 'destination.html?place=' + encodeURIComponent(dest.slug);
+        pageLeave(url);
       }
 
-      // Hover tilt (desktop)
-      cells.forEach(function(cell) {
-        if (isMob) return;
-        var el = cell.el, inn = cell.inner, sh = cell.sheen;
-        el.addEventListener('pointerenter', function() {
-          inn.style.transition = 'transform 0.5s cubic-bezier(0.16,1,0.3,1)';
-        });
-        el.addEventListener('pointermove', function(e) {
-          if (e.buttons !== 0) return;
-          var r = el.getBoundingClientRect();
-          var u = (e.clientX - r.left) / r.width  - 0.5;
-          var v = (e.clientY - r.top)  / r.height - 0.5;
-          inn.style.transition = 'transform 0.08s linear';
-          inn.style.transform  = 'perspective(520px) rotateY(' + (u*32) + 'deg) rotateX(' + (-v*32) + 'deg) scale(1.12)';
-          sh.style.opacity     = '1';
-          sh.style.background  = 'radial-gradient(circle at ' + ((u+0.5)*100) + '% ' + ((v+0.5)*100) + '%,rgba(255,255,255,0.55),rgba(255,255,255,0) 55%)';
-        });
-        el.addEventListener('pointerleave', function() {
-          inn.style.transition = 'transform 0.7s cubic-bezier(0.16,1,0.3,1)';
-          inn.style.transform  = '';
-          sh.style.opacity     = '0';
-        });
-      });
+      DESTINATIONS.forEach(function (dest, i) {
+        const place = dest.name;
+        const cell = document.createElement('div');
+        cell.className = 'dest-item';
 
-      // Drag + click discrimination (axis-locked)
-      var scroll        = 0;
-      var vel           = 0;
-      var dragging      = false;
-      var dragAxis      = null; // 'h' or 'v'
-      var dragStartX    = 0;
-      var dragStartY    = 0;
-      var dragLastX     = 0;
-      var dragTotalDist = 0;
-      var dragTarget    = null;
+        const img = document.createElement('img');
+        img.className = 'dest-thumb';
+        if (dest.pos) img.style.objectPosition = dest.pos;
+        // Numbered rather than named, so the placeholder itself doesn't
+        // spoil the hover reveal.
+        img.src = dest.cover || ('https://placehold.co/900x900/1a1917/3a3936?text=' +
+          String(i + 1).padStart(2, '0'));
+        img.alt = place;
+        img.loading = 'lazy';
 
-      section.addEventListener('pointerdown', function(e) {
-        dragging = true;
-        dragAxis = null;
-        dragStartX = dragLastX = e.clientX;
-        dragStartY = e.clientY;
-        dragTotalDist = 0;
-        dragTarget = e.target.closest('.fs-cell');
-        vel = 0;
-      });
-      section.addEventListener('pointermove', function(e) {
-        if (!dragging) return;
-        var totalDx = Math.abs(e.clientX - dragStartX);
-        var totalDy = Math.abs(e.clientY - dragStartY);
-        // Lock axis on first 5px of movement
-        if (dragAxis === null && (totalDx > 5 || totalDy > 5)) {
-          if (totalDx >= totalDy) {
-            dragAxis = 'h';
-            section.setPointerCapture(e.pointerId);
-          } else {
-            dragAxis = 'v';
-            dragging = false;
+        const label = document.createElement('span');
+        label.className = 'dest-label';
+        label.textContent = place;
+
+        cell.appendChild(img);
+        cell.appendChild(label);
+
+        // Desktop: the name is already visible on hover, so a click
+        // navigates straight away. Touch has no hover — the first tap
+        // reveals the name (like hover), and a second tap navigates.
+        cell.addEventListener('click', function () {
+          if (isMobileDevice && !cell.classList.contains('touch-active')) {
+            grid.querySelectorAll('.dest-item.touch-active').forEach(function (other) {
+              other.classList.remove('touch-active');
+            });
+            cell.classList.add('touch-active');
             return;
           }
-        }
-        if (dragAxis !== 'h') return;
-        var dx = e.clientX - dragLastX;
-        var gain = isMob ? 0.3 : 1.45;
-        vel = dx * gain;
-        scroll -= dx;
-        dragLastX = e.clientX;
-        dragTotalDist += Math.abs(dx);
-      });
-      section.addEventListener('pointerup', function() {
-        dragging = false;
-        if (dragTotalDist < 5 && dragTarget) {
-          var cell = cells.find(function(c) { return c.el === dragTarget; });
-          if (cell) openLightbox(cell.src, cell.label);
-        }
-      });
-      section.addEventListener('pointercancel', function() { dragging = false; });
-
-      // Horizontal wheel / trackpad swipe — only intercept when deltaX dominates
-      section.addEventListener('wheel', function(e) {
-        if (Math.abs(e.deltaX) > Math.abs(e.deltaY) * 0.6) {
-          e.preventDefault();
-          vel += e.deltaX * WHEEL_GAIN;
-        }
-      }, { passive: false });
-
-      // Arrow keys while frames panel is in view
-      document.addEventListener('keydown', function(e) {
-        if (e.repeat) return;
-        var rect = section.getBoundingClientRect();
-        if (rect.top < window.innerHeight && rect.bottom > 0) {
-          if (e.key === 'ArrowLeft')  { vel = -10; e.preventDefault(); }
-          if (e.key === 'ArrowRight') { vel =  10; e.preventDefault(); }
-        }
-      });
-
-      // Wireframe grid
-      var lensM = 1;
-      var lastGridBuild = 0;
-      var NS = 'http://www.w3.org/2000/svg';
-
-      function buildGrid(M) {
-        while (gridSvg.firstChild) gridSvg.removeChild(gridSvg.firstChild);
-        var lensCx = vw / 2;
-        var lensCy = isMob ? vh * 0.4 : vh / 2;
-        var lensR  = isMob ? 204 : 336;
-        function mag(d) {
-          if (d >= lensR) return 1;
-          var k = 1 - d / lensR;
-          return 1 + (M - 1) * k * k;
-        }
-        function distort(x, y) {
-          var dx = x - lensCx, dy = y - lensCy;
-          var m  = mag(Math.hypot(dx, dy));
-          return [lensCx + dx * m, lensCy + dy * m];
-        }
-        function addLine(pts) {
-          var pl = document.createElementNS(NS, 'polyline');
-          pl.setAttribute('points', pts.join(' '));
-          pl.setAttribute('fill', 'none');
-          pl.setAttribute('stroke', 'currentColor');
-          pl.setAttribute('stroke-opacity', '0.09');
-          pl.setAttribute('stroke-width', '1');
-          gridSvg.appendChild(pl);
-        }
-        for (var x = 0; x <= vw + BASE_W; x += BASE_W) {
-          var vpts = [];
-          for (var y = 0; y <= vh; y += 6) {
-            var vd = distort(x, y); vpts.push(vd[0].toFixed(1) + ',' + vd[1].toFixed(1));
-          }
-          addLine(vpts);
-        }
-        for (var hy = 0; hy <= vh + BASE_H; hy += BASE_H) {
-          var hpts = [];
-          for (var hx = 0; hx <= vw; hx += 6) {
-            var hd = distort(hx, hy); hpts.push(hd[0].toFixed(1) + ',' + hd[1].toFixed(1));
-          }
-          addLine(hpts);
-        }
-      }
-
-      gridSvg.setAttribute('width', vw);
-      gridSvg.setAttribute('height', vh);
-      buildGrid(1);
-
-      var resizeT;
-      window.addEventListener('resize', function() {
-        clearTimeout(resizeT);
-        resizeT = setTimeout(function() {
-          vw = section.offsetWidth; vh = section.offsetHeight; isMob = vw < 768;
-          gridSvg.setAttribute('width', vw); gridSvg.setAttribute('height', vh);
-          buildGrid(lensM);
-        }, 150);
-      });
-
-      // Entrance timeline
-      var t0         = performance.now();
-      var revealDelay = 400,  revealDur = 1800;
-      var chaosDelay  = 1900, chaosDur  = 1600;
-      var lensDelay   = 1900, lensDur   = 1600;
-      var revealing   = true;
-      var reveal      = 0;
-      var chaosEnable = 0;
-
-      gridSvg.style.webkitMaskImage = 'linear-gradient(to right,black 0%,black 0%,transparent 32%,transparent 100%)';
-      gridSvg.style.maskImage       = 'linear-gradient(to right,black 0%,black 0%,transparent 32%,transparent 100%)';
-
-      function loop(now) {
-        requestAnimationFrame(loop);
-        var elapsed = now - t0;
-
-        // Reveal
-        if (revealing) {
-          var rp = Math.max(0, (elapsed - revealDelay) / revealDur);
-          reveal = easeOut3(Math.min(1, rp));
-          if (rp >= 1) { revealing = false; reveal = 1; }
-        }
-
-        // Chaos enable
-        var cp = Math.max(0, (elapsed - chaosDelay) / chaosDur);
-        chaosEnable = smoothstep(Math.min(1, cp));
-
-        // Lens distortion
-        var lp      = Math.max(0, (elapsed - lensDelay) / lensDur);
-        var newLens = 1 + easeInOut2(Math.min(1, lp)) * 1.4;
-        if (now - lastGridBuild > 50 && Math.abs(newLens - lensM) > 0.02) {
-          lensM = newLens; lastGridBuild = now; buildGrid(lensM);
-        }
-
-        // Grid mask sweep
-        if (elapsed < revealDelay + revealDur + 600) {
-          var sp   = Math.max(0, Math.min(1, (elapsed - (revealDelay - 400)) / revealDur));
-          var edge = easeOut3(sp) * 100;
-          var soft = Math.min(edge + 32, 100);
-          var mask = 'linear-gradient(to right,black 0%,black ' + edge.toFixed(1) + '%,transparent ' + soft.toFixed(1) + '%,transparent 100%)';
-          gridSvg.style.webkitMaskImage = mask;
-          gridSvg.style.maskImage       = mask;
-        } else {
-          gridSvg.style.webkitMaskImage = '';
-          gridSvg.style.maskImage       = '';
-        }
-
-        // Physics
-        if (!dragging) {
-          if (isMob) { vel = Math.max(-7, Math.min(7, vel)); vel *= 0.82; }
-          else { vel *= FRICTION; }
-          scroll += vel + AUTO_DRIFT;
-        }
-        scroll = ((scroll % TOTAL) + TOTAL) % TOTAL;
-
-        var cy = isMob ? vh * 0.4 : vh / 2;
-        var playCount = 0;
-
-        cells.forEach(function(cell, i) {
-          var c = CHAOS[i];
-
-          var x = i * STEP - scroll;
-          x = ((x % TOTAL) + TOTAL) % TOTAL;
-          if (x > vw + STEP) x -= TOTAL;
-
-          var cxNorm = (x + BASE_W / 2) / vw;
-
-          var t = 0;
-          if (chaosEnable > 0 && cxNorm > STAGE_START && cxNorm < STAGE_END) {
-            var p  = (cxNorm - STAGE_START) / (STAGE_END - STAGE_START);
-            var ts = Math.sin(p * Math.PI);
-            t = smoothstep(ts) * chaosEnable;
-          }
-
-          var SX = vw * (isMob ? 0.24 : 0.22);
-          var SY = vh * (isMob ? 0.22 : 0.3);
-          var dx = c.cx * SX * t;
-          var dy = isMob ? (c.cy * 0.6 - 0.45) * SY * t : c.cy * SY * t;
-          var rot   = c.rot * t;
-          var scale = REST_SCALE * (1 + (c.scale - 1) * t);
-
-          var curveLift = isMob ? vh * 0.27 : 220;
-          var lift = 0;
-          if (cxNorm < CURVE_END) {
-            var k = 1 - cxNorm / CURVE_END;
-            lift = -curveLift * smoothstep(k);
-          }
-
-          var tx = x + BASE_W / 2 - RENDER_W / 2 + dx;
-          var ty = cy - RENDER_H / 2 + c.yBias + dy + lift;
-
-          cell.el.style.transform = 'translate3d(' + tx + 'px,' + ty + 'px,0) rotate(' + rot + 'deg) scale(' + scale + ')';
-          cell.el.style.zIndex    = String(1 + Math.round(t * 30));
-
-          if (revealing && elapsed > revealDelay) {
-            var local = (reveal - cxNorm) * 7;
-            cell.el.style.opacity = String(Math.max(0, Math.min(1, local)));
-          } else if (!revealing) {
-            cell.el.style.opacity = '1';
-          }
-
-          var onScreen = cxNorm > -0.1 && cxNorm < 1.1;
-          if (onScreen && !cell.loaded) {
-            cell.video.preload = 'metadata';
-            cell.video.load();
-            cell.loaded = true;
-          }
-
-          if (t > 0.15 && playCount < 6) {
-            if (!cell.playing) { cell.video.play().catch(function(){}); cell.playing = true; }
-            playCount++;
-          } else if (t < 0.05 && cell.playing) {
-            cell.video.pause(); cell.playing = false;
-          }
+          goToDestination(dest);
         });
-      }
 
-      requestAnimationFrame(loop);
+        grid.appendChild(cell);
+      });
+
+      gridRevealObs.observe(grid);
     })();
 
+    // ── Page enter ────────────────────────────────────────────
+    // Arrivals fade in over 0.55s (the exit fade's length), so a fresh
+    // load, a link, and the browser's Back button all feel the same.
+    // On a bfcache restore the exit fade's inline opacity:0 is still on
+    // <body>; restart the fade from there instead of snapping to 1.
+    (function () {
+      const html = document.documentElement, body = document.body;
+      function enter() {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { html.classList.remove('page-enter'); });
+        });
+      }
+      enter();
+      window.addEventListener('pageshow', function (e) {
+        if (!e.persisted) return;
+        body.style.transition = 'none';
+        body.style.opacity = '';
+        html.classList.remove('page-exit');
+        html.classList.add('page-enter');
+        void body.offsetWidth;
+        body.style.transition = '';
+        // if the user left mid-intro, come back to the finished page, not the loader
+        const intro = document.getElementById('siteIntro');
+        if (html.classList.contains('si-lock') || html.classList.contains('si-fade') || intro) {
+          html.classList.remove('si-lock', 'si-fade', 'si-zoom', 'si-zoomout');
+          html.classList.add('si-reveal');
+          if (intro) { intro.querySelectorAll('video').forEach(function (v) { v.pause(); }); intro.remove(); }
+        }
+        enter();
+      });
+    })();
   </script>
 
+  <script>
+    // Cinematic intro driver — the orbit sphere (see the si-* CSS notes).
+    (function () {
+      const html = document.documentElement;
+      const intro = document.getElementById('siteIntro');
+      if (!intro) return;
+
+      const finish = function () {
+        html.classList.add('si-reveal');
+        intro.classList.add('p-out');
+        setTimeout(function () {
+          html.classList.remove('si-lock', 'si-fade', 'si-zoom', 'si-zoomout');
+          intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
+          intro.remove();
+        }, 650);
+      };
+
+      if (html.classList.contains('si-fade')) {
+        try {
+          sessionStorage.setItem('siteIntroPlayed', '1');
+          sessionStorage.setItem('wmIntroPlayed', '1');
+        } catch (e) {}
+        setTimeout(finish, 250);
+        return;
+      }
+      if (!html.classList.contains('si-lock')) { intro.remove(); return; }
+      try {
+        sessionStorage.setItem('siteIntroPlayed', '1');
+        sessionStorage.setItem('wmIntroPlayed', '1');
+      } catch (e) {}
+      html.classList.add('si-zoom'); // hero magnified beneath the wheel
+
+      // blend-mode logo: clone the real wordmark asset
+      const navMark = document.querySelector('.wordmark');
+      if (navMark) {
+        const mark = navMark.cloneNode(true);
+        mark.classList.remove('wordmark', 'wm-intro');
+        mark.classList.add('si-mark');
+        mark.removeAttribute('height');
+        mark.setAttribute('aria-hidden', 'true');
+        intro.appendChild(mark);
+      }
+
+      // clip pool: one persistent playing element per clip
+      const SRC = '/public/loader/';
+      // Ten films, one per ring slot, no mid-spin reel swaps. Sized by
+      // perception research, not ambition: at a readable cruise a ~1.8s
+      // spin can present roughly 8–10 films with real screen presence
+      // (Nielsen's 1s flow / 10s attention limits; abandonment data
+      // puts tolerated branded splashes in the 2–3s band, and this
+      // whole intro now lands ≈2.8s from white to homepage).
+      // slot order maps to the final tableau: FILES[0] rests on the
+      // hero's RIGHT flank, FILES[9] on its LEFT
+      const FILES  = ['fantastic.mp4', 'boom.mp4', 'fish.mp4', 'spikeball.mp4', 'stanley-car.mp4',
+                      'couple.mp4', 'morocco-5.mp4', 'pier.mp4', 'brent.mp4', 'dogs.mp4'];
+      // clips are pre-trimmed to their best beat, so one shared in-point
+      const START = {};
+      const mkVid = function (file) {
+        const v = document.createElement('video');
+        v.muted = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.loop = true;
+        v.preload = 'auto';
+        v.src = SRC + file;
+        // play + pre-seek as soon as THIS clip is ready — all decode work
+        // happens during the preload window, none at spin start
+        v.addEventListener('canplay', function () {
+          v.play().catch(function () {});
+          try { v.currentTime = Math.max(START[file] || 0.3, 0.04); } catch (e) {}
+        }, { once: true });
+        return v;
+      };
+      const pool = FILES.map(mkVid);
+      const preloaded = Promise.race([
+        Promise.all(pool.map(function (v) {
+          return new Promise(function (res) {
+            v.addEventListener('canplay', res, { once: true });
+            v.addEventListener('error', res, { once: true });
+          });
+        })),
+        new Promise(function (res) { setTimeout(res, 3000); }),
+      ]);
+      const whiteHold = new Promise(function (res) { setTimeout(res, 120); });
+
+      Promise.all([preloaded, whiteHold]).then(function () {
+        const EASE = 'cubic-bezier(0.76, 0, 0.24, 1)';
+        const heroEl = document.querySelector('.hero-video') || document.querySelector('.hero-media');
+        const hero = heroEl.getBoundingClientRect();
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const cx = vw / 2, cy = vh / 2;
+        const rad = function (d) { return d * Math.PI / 180; };
+
+        // ── sphere model ──────────────────────────────────────────
+        // A full 360° ring seen head-on, entirely inside the viewport:
+        // a card at ring angle φ sits at depth z = R·cosφ and projects
+        // to x = R·sinφ · K/(K − cosφ), scale = K/(K − cosφ) — true
+        // perspective (K = camera distance in radii). Front cards are
+        // large and bright; a card slides right, dives behind the
+        // sphere's right limb, shrinks, streams leftward across the
+        // BACK behind the front row, and re-emerges on the left.
+        // 8 slots at 45°: 6 clips + the hero window + one empty slot
+        // trailing the hero, so nothing follows it around.
+        // K is the camera distance in sphere radii — the depth dial.
+        // At 1.4 the projection gives a 6:1 near-to-far scale ratio:
+        // the centermost card looms at 3.5×, its immediate neighbors sit
+        // at ~71% of it, the limbs at ~29%, the far back at ~17%. The
+        // scale curve s(φ)=K/(K−cosφ) has ZERO slope at φ=0, so a card
+        // crests smoothly through center — a swell, never a pump.
+        const K = 1.4;
+        const TILT = 46; // deg — cards turn tangent to the sphere at the limbs
+        const W0 = Math.round(vw <= 560 ? Math.min(vw * 0.21, vh * 0.24) : Math.min(vw * 0.115, vh * 0.27));
+        const H0 = Math.round(W0 * 9 / 16);
+        // slots = ten ring cards + the hero, fully populated (a card
+        // rests directly on the hero's left at the end); correct
+        // occlusion against the hero window is handled per-card in
+        // layoutCard, not by thinning the ring
+        const STEP = 360 / (pool.length + 1);
+        // hero starts at the right limb: visible from frame one, it
+        // arcs away around the back and returns to the front — a 270°
+        // journey that parks the ring in the same final tableau
+        const HERO0 = 90;
+        // widest transit at K=1.4 reaches 1.44R (around φ≈42°)
+        const R = Math.max((vw / 2 - 24 - 0.91 * W0) / 1.44, W0);
+
+        // one card element per clip, transform-only from here on
+        const cards = pool.map(function (v) {
+          const el = document.createElement('div');
+          el.className = 'si-card';
+          el.style.left = (cx - W0 / 2) + 'px';
+          el.style.top = (cy - H0 / 2) + 'px';
+          el.style.width = W0 + 'px';
+          el.style.height = H0 + 'px';
+          el.style.transform = 'scale(0)';
+          el.appendChild(v);
+          const veil = document.createElement('div');
+          veil.className = 'si-veil';
+          el.appendChild(veil);
+          intro.appendChild(el);
+          return { el: el, v: v, veil: veil, vo: -1, clip: '', z: -1, pp: 99 };
+        });
+
+        const pTop = intro.querySelector('.si-p-top');
+        const pBottom = intro.querySelector('.si-p-bottom');
+        const pLeft = intro.querySelector('.si-p-left');
+        const pRight = intro.querySelector('.si-p-right');
+
+        // hero window state for this frame (set by layoutHole, read by
+        // layoutCard): screen x relative to center, halfwidth, depth
+        let heroX = 0, heroHW = 0, heroCo = -1;
+
+        function layoutCard(i, rot) {
+          // clips ride one STEP apart ahead of the hero around the ring
+          const t = rad(HERO0 + STEP * (i + 1) + rot);
+          const co = Math.cos(t);
+          const s = K / (K - co);
+          const x = R * Math.sin(t) * s;
+          const c = cards[i];
+          // rotateY(±TILT·sinφ): flat at front/back center, turned at the
+          // limbs with the outer edge receding — tangent to the sphere
+          c.el.style.transform = 'translateX(' + x + 'px) scale(' + s + ') rotateY(' + (TILT * Math.sin(t)) + 'deg)';
+          // inner parallax: the oversized footage pans against the
+          // card's travel, so frame and image move at different rates
+          const pan = -5 * Math.sin(t);
+          if (Math.abs(pan - c.pp) > 0.1) { c.v.style.transform = 'translateX(' + pan.toFixed(2) + '%)'; c.pp = pan; }
+          // depth haze via the opaque veil — the card element itself is
+          // NEVER translucent, so cards can't show through each other
+          const haze = co >= 0 ? 0 : Math.min(-co * 0.32, 0.32);
+          if (Math.abs(haze - c.vo) > 0.004) { c.veil.style.opacity = haze; c.vo = haze; }
+          // TRUE occlusion against the hero window: the window is a hole
+          // in the cover panels, so it always paints deepest — a card
+          // that is FARTHER than the hero yet crosses the window's
+          // screen rect is CLIPPED at the window's edge (a hard cut, as
+          // real occlusion would be), never faded. rotateY maps local
+          // vertical lines to screen-vertical lines, so a horizontal
+          // inset stays a clean vertical cut; fractions are overcut 8%
+          // to absorb the projection's local↔screen nonlinearity.
+          const tiltCos = Math.cos(rad(TILT * Math.sin(t)));
+          const chw = (W0 * s / 2) * tiltCos;
+          let fL = 0, fR = 0;
+          // smooth depth gate: 0 while the card is nearer than the hero,
+          // ramping to 1 as it falls clearly behind — so the clip can
+          // never toggle on/off in a single frame when depths cross.
+          // The 1.12 overcut is proportional (continuous from zero), not
+          // an additive step, absorbing the projection's nonlinearity.
+          const wOcc = Math.max(0, Math.min((heroCo - co) / 0.12, 1));
+          if (wOcc > 0) {
+            const cardL = x - chw, cardR = x + chw;
+            const hL = heroX - heroHW, hR = heroX + heroHW;
+            if (hR > cardL && hL < cardR) {
+              if (hL <= cardL) fL = (Math.min(hR, cardR) - cardL) / (2 * chw) * 1.12 * wOcc;
+              if (hR >= cardR) fR = (cardR - Math.max(hL, cardL)) / (2 * chw) * 1.12 * wOcc;
+              if (hL > cardL && hR < cardR) fR = (cardR - hL) / (2 * chw) * 1.12 * wOcc;
+            }
+          }
+          // a card reduced to a thin sliver reads as an artifact, not an
+          // occlusion — taper the remainder CONTINUOUSLY to nothing
+          // (smoothstep from 45% visible down to 12%), never a snap
+          const vis = 1 - fL - fR;
+          if ((fL > 0 || fR > 0) && vis > 0 && vis < 0.45) {
+            const u = Math.max((vis - 0.12) / 0.33, 0);
+            const target = vis * u * u * (3 - 2 * u);
+            const extra = vis - target;
+            if (fR >= fL) fR += extra; else fL += extra;
+          }
+          const clip = 'inset(0% ' + (Math.min(fR, 1) * 100).toFixed(1) + '% 0% ' + (Math.min(fL, 1) * 100).toFixed(1) + '%)';
+          if (clip !== c.clip) { c.el.style.clipPath = clip; c.clip = clip; }
+          const z = 200 + Math.round(co * 100);
+          if (z !== c.z) { c.el.style.zIndex = z; c.z = z; }
+        }
+
+        // The hero "card" is a hole: the four cover panels leave an
+        // uncovered rect riding the same ring (180° → front center),
+        // revealing the LIVE magnified hero beneath the overlay. It is
+        // the deepest layer, so front cards legitimately pass over it
+        // while it travels the back and comes around the left limb.
+        function layoutHole(rot) {
+          // the hero rides the FULL spin with the swarm (180° + 540° =
+          // 720° ≡ front center at rest) — never parked mid-journey
+          const t = rad(Math.min(HERO0 + rot, HERO0 + ROT_TOTAL));
+          const co = Math.cos(t);
+          const s = K / (K - co);
+          const hx = cx + R * Math.sin(t) * s;
+          const hw = W0 * s, hh = H0 * s;
+          heroX = hx - cx; heroHW = hw / 2; heroCo = co;
+          const L = Math.max(hx - hw / 2, 0), Rr = Math.min(hx + hw / 2, vw);
+          const T = cy - hh / 2, B = cy + hh / 2;
+          pTop.style.transform = 'scaleY(' + (T / vh) + ')';
+          pBottom.style.transform = 'scaleY(' + ((vh - B) / vh) + ')';
+          pLeft.style.transform = 'scaleX(' + (L / vw) + ')';
+          pRight.style.transform = 'scaleX(' + (Math.max(vw - Rr, 0) / vw) + ')';
+        }
+
+        // ── spin profile ──────────────────────────────────────────
+        // One and a HALF revolutions on a single cubic ease-out: the
+        // first full revolution rips past in about half a second — a
+        // swarm of film — then the same curve sheds speed the whole way
+        // down, the swarm resolves, and the hero glides the final
+        // degrees into center. One curve, no seams: the launch and the
+        // landing are two ends of the same motion.
+        const ROT_TOTAL = 270;
+        const T_TOTAL = 1800;                     // ms — whole spin
+        // three-phase velocity, C1-continuous at every joint: a short
+        // quadratic wind-up, then a steady READABLE cruise — no single
+        // blinding peak, so each film holds the front long enough to
+        // register — then a long cubic glide-down to a dead stop on
+        // the hero. Flow without harshness.
+        const A = 0.15, B = 0.30;                 // wind-up and cruise fractions
+        const CDEC = 1 - A - B;                   // glide-down fraction
+        const V = ROT_TOTAL / (A / 2 + B + CDEC / 3); // cruise speed, deg per unit time
+        function rotAt(ms) {
+          const u = Math.min(ms / T_TOTAL, 1);
+          if (u < A) return V * u * u / (2 * A);
+          if (u < A + B) return V * A / 2 + V * (u - A);
+          const w = (1 - u) / CDEC;
+          return V * A / 2 + V * B + V * CDEC / 3 * (1 - w * w * w);
+        }
+
+        const t0 = performance.now();
+        // the wordmark belongs to the FINAL shot only: it fades in over
+        // the hero window as it settles into center, not over the clips
+        let marked = false;
+        function frame(now) {
+          if (!document.body.contains(intro)) return;
+          const ms = now - t0;
+          const rot = Math.min(rotAt(ms), ROT_TOTAL);
+          layoutHole(rot); // first — cards occlusion-test against it
+          for (let i = 0; i < pool.length; i++) layoutCard(i, rot);
+          if (!marked && rot >= ROT_TOTAL - 15) { marked = true; intro.classList.add('p-mark'); }
+          if (ms >= T_TOTAL) { onArrived(); return; }
+          requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+
+        function onArrived() {
+          // the hero window rests at center, full card size. Brief hold,
+          // then: four-corner window expansion + hero zoom-out on the
+          // same clock — one continuous camera pull-back into the page —
+          // while the remaining cards on the right melt away.
+          setTimeout(function () {
+            ['top', 'bottom', 'left', 'right'].forEach(function (side) {
+              intro.querySelector('.si-p-' + side).style.transition = 'transform 0.85s ' + EASE;
+            });
+            pTop.style.transform = 'scaleY(' + (hero.top / vh) + ')';
+            pBottom.style.transform = 'scaleY(' + ((vh - hero.bottom) / vh) + ')';
+            pLeft.style.transform = 'scaleX(' + (hero.left / vw) + ')';
+            pRight.style.transform = 'scaleX(' + ((vw - hero.right) / vw) + ')';
+            html.classList.remove('si-zoom');
+            html.classList.add('si-zoomout');
+            intro.classList.add('p-rise');
+            // dismiss cards deepest-first with a short stagger: by the
+            // time a front card fades, everything it was covering is
+            // already gone — nothing can ever show through a fading card
+            let zMin = Infinity, zMax = -Infinity;
+            cards.forEach(function (c) { zMin = Math.min(zMin, c.z); zMax = Math.max(zMax, c.z); });
+            cards.forEach(function (c) {
+              const front = (c.z - zMin) / Math.max(zMax - zMin, 1); // 0 deepest → 1 front
+              c.el.style.transition = 'opacity 0.12s ease ' + (front * 0.1).toFixed(3) + 's';
+              c.el.style.opacity = '0';
+            });
+            setTimeout(function () { html.classList.add('si-reveal'); }, 350);
+            setTimeout(function () {
+              html.classList.remove('si-lock', 'si-zoomout');
+              intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
+              intro.remove();
+            }, 1400);
+          }, 250);
+        }
+      });
+    })();
+  </script>
+  <script>
+    // Intro gallery lightbox: click a frame and the photo expands from its
+    // own rect to a fitted full-size view; Esc / scrim / × close it, and
+    // arrows step between the four frames.
+    (function () {
+      const frames = Array.from(document.querySelectorAll('.intro-frame'));
+      const lb = document.getElementById('igLightbox');
+      if (!frames.length || !lb) return;
+      const scrim = lb.querySelector('.ig-lb-scrim');
+      const img   = lb.querySelector('.ig-lb-img');
+      const btnX  = lb.querySelector('.ig-lb-close');
+      const btnP  = lb.querySelector('.ig-lb-prev');
+      const btnN  = lb.querySelector('.ig-lb-next');
+      const count = lb.querySelector('.ig-lb-count');
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const OPEN_MS = 800, CLOSE_MS = 600;
+      let idx = -1, busy = false, lastFocus = null, fitted = null;
+
+      frames.forEach((f, i) => {
+        f.setAttribute('role', 'button');
+        f.tabIndex = 0;
+        f.setAttribute('aria-label', 'Expand photo: ' + (f.querySelector('img').alt || ''));
+        f.addEventListener('click', () => open(i));
+        f.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(i); }
+        });
+      });
+
+      // the largest rect with the photo's own aspect that fits the viewport
+      function fitRect(w, h) {
+        const s = Math.min(window.innerWidth * 0.9 / w, window.innerHeight * 0.86 / h);
+        const fw = w * s, fh = h * s;
+        return { w: fw, h: fh, x: (window.innerWidth - fw) / 2, y: (window.innerHeight - fh) / 2 };
+      }
+      function place(i) {
+        const src = frames[i].querySelector('img');
+        const t = fitRect(src.naturalWidth || 4, src.naturalHeight || 3);
+        img.src = src.currentSrc || src.src;
+        img.alt = src.alt || '';
+        img.style.width = t.w + 'px'; img.style.height = t.h + 'px';
+        img.style.left  = t.x + 'px'; img.style.top    = t.y + 'px';
+        count.textContent = (i + 1) + ' / ' + frames.length;
+        fitted = t; idx = i;
+        return t;
+      }
+      // transform that maps the fitted rect onto the frame's on-screen rect
+      function toFrame(i, t) {
+        const f = frames[i].getBoundingClientRect();
+        return 'translate(' + (f.left - t.x) + 'px,' + (f.top - t.y) + 'px) scale(' + (f.width / t.w) + ',' + (f.height / t.h) + ')';
+      }
+
+      function open(i) {
+        if (busy || lb.classList.contains('is-open')) return;
+        busy = true;
+        lastFocus = document.activeElement;
+        const t = place(i);
+        lb.classList.add('is-open');
+        lb.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        if (reduced) {
+          img.style.transform = 'none';
+          img.style.opacity = '0';
+          requestAnimationFrame(() => { lb.classList.add('is-in'); img.style.opacity = '1'; });
+        } else {
+          img.style.transition = 'none';
+          img.style.transform = toFrame(i, t);
+          img.style.opacity = '1';
+          void img.offsetWidth;                    // commit the start state
+          img.style.transition = '';
+          requestAnimationFrame(() => { lb.classList.add('is-in'); img.style.transform = 'none'; });
+        }
+        setTimeout(() => { busy = false; btnX.focus({ preventScroll: true }); }, reduced ? 250 : OPEN_MS * 0.5);
+      }
+
+      function close() {
+        if (!lb.classList.contains('is-open') || busy) return;
+        busy = true;
+        lb.classList.remove('is-in');
+        if (reduced) img.style.opacity = '0';
+        else img.style.transform = toFrame(idx, fitted);
+        setTimeout(() => {
+          lb.classList.remove('is-open');
+          lb.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+          img.removeAttribute('src');
+          busy = false;
+          if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+        }, reduced ? 250 : CLOSE_MS);
+      }
+
+      function step(d) {
+        if (!lb.classList.contains('is-open') || busy) return;
+        const n = (idx + d + frames.length) % frames.length;
+        const next = frames[n].querySelector('img');
+        busy = true;
+        img.style.opacity = '0';
+        const pre = new Image();
+        pre.onload = pre.onerror = () => {
+          setTimeout(() => {
+            img.style.transition = 'opacity 0.25s ease-out';
+            img.style.transform = 'none';
+            place(n);
+            img.style.opacity = '1';
+            setTimeout(() => { img.style.transition = ''; busy = false; }, 260);
+          }, 120);
+        };
+        pre.src = next.currentSrc || next.src;
+      }
+
+      scrim.addEventListener('click', close);
+      img.addEventListener('click', close);
+      btnX.addEventListener('click', close);
+      btnP.addEventListener('click', () => step(-1));
+      btnN.addEventListener('click', () => step(1));
+      document.addEventListener('keydown', (e) => {
+        if (!lb.classList.contains('is-open')) return;
+        if (e.key === 'Escape') { e.preventDefault(); close(); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+        else if (e.key === 'Tab') {
+          // keep focus inside the dialog
+          const order = [btnP, btnN, btnX];
+          const at = order.indexOf(document.activeElement);
+          e.preventDefault();
+          order[(at + (e.shiftKey ? -1 : 1) + order.length) % order.length].focus();
+        }
+      });
+      window.addEventListener('resize', () => {
+        if (lb.classList.contains('is-open') && !busy) { img.style.transform = 'none'; place(idx); }
+      });
+    })();
+  </script>
+  <script>
+    // Wordmark: once-per-session explosion intro, hover boops + boom jolt.
+    (function () {
+      const mark = document.querySelector('.wordmark');
+      if (!mark) return;
+      const letters = mark.querySelectorAll('.wm-l');
+      const boom = mark.querySelector('.wm-boom');
+      if (!sessionStorage.getItem('wmIntroPlayed')) {
+        sessionStorage.setItem('wmIntroPlayed', '1');
+        mark.classList.add('wm-intro');
+        setTimeout(function () { mark.classList.remove('wm-intro'); }, 1700);
+      }
+      letters.forEach(function (l) {
+        l.addEventListener('animationend', function () { l.classList.remove('wm-boop'); });
+        l.addEventListener('mouseenter', function () {
+          if (!mark.classList.contains('wm-intro') && !l.classList.contains('wm-boop')) l.classList.add('wm-boop');
+        });
+      });
+      if (boom) {
+        boom.addEventListener('animationend', function () { boom.classList.remove('wm-jolt'); });
+        mark.addEventListener('mouseenter', function () {
+          if (!mark.classList.contains('wm-intro') && !boom.classList.contains('wm-jolt')) boom.classList.add('wm-jolt');
+        });
+      }
+    })();
+  </script>
+  <script>
+    // Hide the nav while scrolling down, bring it back on scroll-up or near the top,
+    // and never while the mobile menu is open.
+    (function () {
+      const nav = document.querySelector('nav');
+      if (!nav) return;
+      const SHOW_AT = 80, DELTA = 6;
+      let last = window.scrollY, hidden = false, ticking = false;
+      function update() {
+        ticking = false;
+        const y = window.scrollY;
+        const menuOpen = !!document.querySelector('.nav-hamburger.open');
+        let want = hidden;
+        if (menuOpen || y <= SHOW_AT || y < last - DELTA) want = false;
+        else if (y > last + DELTA) want = true;
+        if (want !== hidden) { hidden = want; nav.classList.toggle('nav-hidden', hidden); }
+        last = y;
+      }
+      window.addEventListener('scroll', function () {
+        nav.classList.add('nav-scroll');
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      }, { passive: true });
+    })();
+  </script>
 </body>
 </html>

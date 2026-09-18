@@ -4,27 +4,73 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About — Max Shen</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/public/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+  <!-- Type assets: self-hosted, preload only the two above-the-fold faces.
+       See CLAUDE.md › Typography System. -->
+  <link rel="preload" href="/public/fonts/general-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/public/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    /* ── Type assets ──────────────────────────────────────────────
+       General Sans (Fontshare, ITF-FFL v2.0 — shipped as-is, unsubset)
+       for everything readable; Geist Mono (OFL) for labels only. Each
+       family has a metric-matched local fallback so the swap moves
+       nothing — layout is identical before and after the font lands. */
+    @font-face {
+      font-family: "General Sans";
+      src: url("/public/fonts/general-sans-variable.woff2") format("woff2");
+      font-weight: 200 700; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: "General Sans";
+      src: url("/public/fonts/general-sans-variable-italic.woff2") format("woff2");
+      font-weight: 200 700; font-style: italic; font-display: swap;
+    }
+    @font-face {
+      font-family: "Geist Mono";
+      src: url("/public/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+      font-weight: 100 900; font-style: normal; font-display: swap;
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    @font-face {
+      font-family: "General Sans Fallback";
+      src: local("Arial"), local("Helvetica");
+      size-adjust: 108.73%; ascent-override: 92.89%; descent-override: 22.07%; line-gap-override: 9.2%;
+    }
+    @font-face {
+      font-family: "Geist Mono Fallback";
+      src: local("Menlo"), local("Courier New");
+      size-adjust: 99.66%; ascent-override: 100.84%; descent-override: 29.6%; line-gap-override: 0%;
+    }
+    :root {
+      --font-sans: "General Sans", "General Sans Fallback", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, Menlo, Consolas, monospace;
+      --tracking-caps: 0.1em;
+      --label-muted: #6b6a67; /* 4.9:1 on white — the floor for 12px labels */
+    }
+    html { -webkit-text-size-adjust: 100%; font-synthesis: none; hanging-punctuation: first last; }
+    input, textarea { hanging-punctuation: none; }
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-optical-sizing: auto; }
+  </style>
   <style>
 
     /* ── Tokens ───────────────────────────────────────────────── */
     :root {
-      --bg:    #090807;
-      --text:  #f0ece2;
-      --muted: rgba(240, 236, 226, 0.36);
-      --dim:   rgba(240, 236, 226, 0.08);
-      --nav-h: 58px;
+      --bg:    #ffffff;
+      --text:  #1a1917;
+      --muted: rgba(26, 25, 23, 0.55);
+      --dim:   rgba(26, 25, 23, 0.10);
+      --nav-h: 76px;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       background: var(--bg);
       color: var(--text);
-      font-weight: 300;
+      font-weight: 400;
       line-height: 1;
       overflow-x: hidden;
       opacity: 0;
@@ -62,28 +108,56 @@
       align-items: center;
       justify-content: space-between;
     }
-    .nav-name {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 0.06em;
-      color: var(--text);
-      text-decoration: none;
-      text-shadow: 0 1px 14px rgba(0,0,0,0.4);
+    /* nav steps out of the way: hides on scroll-down, returns on scroll-up, always present near the top.
+       The transition only arms after the first scroll so the page's own nav reveal keeps its timing. */
+    nav.nav-scroll {
+      transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .nav-name .ext { color: var(--muted); }
+    nav.nav-hidden { opacity: 0; transform: translateY(-14px); pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) {
+      nav.nav-scroll { transition: opacity 0.25s ease-out; }
+      nav.nav-hidden { transform: none; }
+    }
+    /* Page transitions — arrival and exit mirror each other. Arriving: the content rises
+       into place from 18px below while fading in (0.7s expo-out). Leaving: it lifts away
+       18px while fading out (0.55s page-transition curve). The fixed nav only fades. */
+    body { transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+    body > section, body > main, body > .contact-section {
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    html.page-enter body { opacity: 0; transition: none; }
+    html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section {
+      transform: translateY(18px); transition: none;
+    }
+    html.page-exit body { opacity: 0; transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1); }
+    html.page-exit body > section, html.page-exit body > main, html.page-exit body > .contact-section {
+      transform: translateY(-18px); transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section,
+      html.page-exit body > section, html.page-exit body > main, html.page-exit body > .contact-section { transform: none; }
+    }
+    .nav-name {
+      font-family: var(--font-sans);
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: #000;
+      text-decoration: none;
+    }
     .nav-back {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 10px;
-      font-weight: 300;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      color: #000;
       text-decoration: none;
       opacity: 1;
-      transition: opacity 0.2s;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .nav-back:hover { opacity: 0.7; }
+    .nav-back:hover { opacity: 0.55; }
 
     /* ── Fade-up animation ────────────────────────────────────── */
     .fade-up {
@@ -99,55 +173,95 @@
     .d4 { transition-delay: 0.58s; }
     .d5 { transition-delay: 0.74s; }
 
-    /* ── Page wrapper — everything centered ───────────────────── */
+    /* ── Page wrapper — photos left, text right ─────────────────── */
     .about-page {
       min-height: 100vh;
-      padding: calc(var(--nav-h) + 72px) 40px 80px;
+      padding: calc(var(--nav-h) + 56px) 48px 80px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
+      align-items: flex-start;
+      gap: 56px;
+    }
+
+    /* ── Left column — photos ────────────────────────────────────── */
+    .about-photos-col {
+      flex: 2.2 1 0;
+      min-width: 0;
+    }
+
+    /* ── Right column — text, aligned left ───────────────────────── */
+    .about-text-col {
+      flex: 1 1 0;
+      min-width: 0;
+      text-align: left;
+      padding-top: 8px;
     }
 
     /* ── Section label ────────────────────────────────────────── */
     .section-label {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 400;
-      letter-spacing: 0.3em;
+      line-height: 1.2;
+      letter-spacing: var(--tracking-caps);
       text-transform: uppercase;
-      color: var(--text);
-      margin-bottom: 52px;
+      font-feature-settings: "case", "tnum";
+      color: #000;
+      margin-bottom: 28px;
     }
 
-    /* ── Photo ────────────────────────────────────────────────── */
-    .about-photo-wrap {
-      width: 340px;
-      aspect-ratio: 3 / 4;
-      overflow: hidden;
-      margin-bottom: 44px;
+    /* ── Photos — masonry wall, full uncropped frames ───────────── */
+    /* Each frame's aspect-ratio matches its source photo exactly, so
+       object-fit: contain never letterboxes — the whole image always
+       shows. Columns are NOT height-matched (align-items: flex-start,
+       no forced stretch); they're left to their natural total height,
+       which reads as an intentional gallery-wall composition rather
+       than a rigid grid. */
+    .about-photos {
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
     }
+    /* column widths are inverse to their stacked height-per-width
+       (b: two 4:3 = 1.5, c: 3:4 + 3:2 = 2.0) so both columns end flush */
+    .about-photo-col-b { flex: 1.333 1 0; }
+    .about-photo-col-c { flex: 1 1 0; }
+    .about-photo-col-b,
+    .about-photo-col-c {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .about-photo-frame {
+      overflow: hidden;
+      background: #f4f3f0;
+      box-shadow:
+        0 30px 60px -32px rgba(26, 25, 23, 0.26),
+        0 10px 20px -10px rgba(26, 25, 23, 0.14);
+    }
+    .about-photo-2x3 { aspect-ratio: 2 / 3; }
+    .about-photo-3x4 { aspect-ratio: 3 / 4; }
+    .about-photo-4x3 { aspect-ratio: 4 / 3; }
+    .about-photo-3x2 { aspect-ratio: 3 / 2; }
     .about-photo {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      object-position: center top;
-      filter: brightness(0.88) saturate(0.72);
+      object-fit: contain;
       display: block;
       transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .about-photo-wrap:hover .about-photo { transform: scale(1.03); }
+    .about-photo-frame:hover .about-photo { transform: scale(1.035); }
 
     /* ── Heading ──────────────────────────────────────────────── */
     .about-heading {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       font-style: italic;
       font-weight: 300;
-      font-size: clamp(40px, 4.8vw, 70px);
-      line-height: 1.06;
+      font-size: clamp(34px, 3.6vw, 60px);
+      line-height: 1.08;
       letter-spacing: -0.02em;
       color: var(--text);
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
     .about-heading em {
       font-style: italic;
@@ -156,161 +270,69 @@
 
     /* ── Body copy ────────────────────────────────────────────── */
     .about-body {
-      max-width: 420px;
+      max-width: 440px;
     }
     .about-body p {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 300;
-      line-height: 2.0;
+      line-height: 1.85;
       color: var(--text);
     }
+    .about-body p + p {
+      margin-top: 20px;
+    }
 
-    /* ── Tags ─────────────────────────────────────────────────── */
-    .about-tags {
+    /* ── Contact — icon row + handle, footer-style ──────────────── */
+    .contact-section {
+      padding: 0 40px 80px;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 7px;
-      margin-top: 32px;
-    }
-    .about-tag {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 8px;
-      font-weight: 300;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      border: 1px solid var(--dim);
-      padding: 6px 12px;
-    }
-
-    /* ── Contact CTA ──────────────────────────────────────────── */
-    .contact-cta {
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 300;
-      font-size: clamp(36px, 4.2vw, 60px);
-      line-height: 1.06;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      margin-top: 72px;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
-      width: 100%;
     }
-    .contact-cta em {
-      font-style: italic;
-      color: var(--muted);
-    }
-
-    /* ── Contact icons ────────────────────────────────────────── */
     .contact-icons {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 28px;
-      margin-top: 24px;
+      gap: 26px;
     }
     .contact-icon {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: rgba(240, 236, 226, 0.6);
+      color: var(--text);
       text-decoration: none;
       transition: color 0.22s, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .contact-icon:hover {
-      color: var(--text);
-      transform: scale(1.16);
+      color: var(--muted);
+      transform: scale(1.12);
     }
     .contact-icon:active { transform: scale(0.94); }
     .contact-icon svg {
-      width: 44px;
-      height: 44px;
+      width: 22px;
+      height: 22px;
       stroke: currentColor;
       fill: none;
-      stroke-width: 1.3;
+      stroke-width: 1.5;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
-
-    /* ── Contact form ─────────────────────────────────────────── */
-    .contact-form {
-      margin-top: 44px;
-      width: 100%;
-      max-width: 520px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .contact-form textarea {
-      width: 100%;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid rgba(240, 236, 226, 0.18);
-      padding: 0 0 8px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 11px;
-      font-weight: 300;
-      letter-spacing: 0.06em;
-      color: var(--text);
-      resize: none;
-      outline: none;
-      line-height: 1.6;
-      min-height: 28px;
-      transition: border-color 0.25s;
-    }
-    .contact-form textarea::placeholder {
-      color: rgba(240, 236, 226, 0.24);
-      letter-spacing: 0.1em;
-    }
-    .contact-form textarea:focus {
-      border-bottom-color: rgba(240, 236, 226, 0.55);
-    }
-    .contact-form-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .contact-form-hint {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 300;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(240, 236, 226, 0.2);
-    }
-    .contact-send {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 9px;
+    .contact-handle {
+      font-family: var(--font-sans);
+      font-size: 15px;
       font-weight: 400;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(240, 236, 226, 0.5);
-      background: none;
-      border: 1px solid rgba(240, 236, 226, 0.22);
-      padding: 8px 20px;
-      cursor: pointer;
-      transition: color 0.22s, border-color 0.22s, background 0.22s;
+      color: var(--muted);
+      margin-top: 20px;
     }
-    .contact-send:hover {
-      color: #000;
-      background: var(--text);
-      border-color: var(--text);
+    .contact-copy {
+      margin: 10px 0 0;
+      font-family: var(--font-sans); /* same voice as the email line above it */
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--muted);
     }
-    .contact-send:active { transform: scale(0.97); }
-    .contact-confirm {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 9px;
-      font-weight: 300;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(240, 236, 226, 0.38);
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      text-align: center;
-      margin-top: 4px;
-    }
-    .contact-confirm.visible { opacity: 1; }
 
     /* ── Footer ───────────────────────────────────────────────── */
     footer {
@@ -321,7 +343,7 @@
     }
     .footer-copy,
     .footer-handle {
-      font-family: 'Montserrat', sans-serif;
+      font-family: var(--font-sans);
       font-size: 10px;
       font-weight: 300;
       letter-spacing: 0.12em;
@@ -334,11 +356,146 @@
     /* ── Responsive ───────────────────────────────────────────── */
     @media (max-width: 960px) {
       nav { padding: 0 24px; }
-      .about-page { padding: calc(var(--nav-h) + 48px) 24px 64px; }
       footer { padding: 20px 24px; }
     }
 
+    /* Below 900px the two-column (photos left, text right) layout gets
+       cramped — revert to the original stacked, centered composition. */
+    @media (max-width: 900px) {
+      .about-page {
+        flex-direction: column;
+        align-items: center;
+        gap: 48px;
+        padding: calc(var(--nav-h) + 48px) 24px 64px;
+      }
+      .about-photos-col { width: 100%; }
+      .about-photos { max-width: 640px; margin: 0 auto; }
+      .about-text-col {
+        text-align: center;
+        padding-top: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .contact-section { padding: 0 24px 64px; }
+    }
+
+    @media (max-width: 640px) {
+      .about-photos {
+        flex-direction: column;
+        max-width: 460px;
+      }
+    }
+
+      .nav-name:focus-visible { outline: 2px solid #000; outline-offset: 6px; border-radius: 4px; }
+    .nav-name svg { display: block; overflow: visible; }
+
+    /* Bubbly animated wordmark — MAX SHEN framed by a comic "boom" burst
+       outline. Intro (once per session): a starburst + radial light rays
+       detonate at the name's center, the letters are thrown outward through
+       the blast — materializing from flash-amber to black with squash
+       landings — then the jagged boom outline snaps in around the name and
+       a shockwave echo expands off it. Hovering a letter boops it; hovering
+       the mark jolts the boom outline. */
+    .wm-l { transform-box: fill-box; transform-origin: 50% 100%; }
+    .wm-l path { fill: none; stroke: #000; stroke-linecap: round; stroke-linejoin: round; }
+    .wm-l .wm-shine { stroke: #fff; opacity: 0.85; }
+    .wm-l .wm-hit { fill: transparent; stroke: none; }
+
+    /* boom outline: persistent part of the lockup */
+    .wm-boom { transform-box: fill-box; transform-origin: 50% 50%; }
+    .wm-shock { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-flash { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-rays { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-rays-a, .wm-rays-b { transform-box: fill-box; transform-origin: 50% 50%; }
+
+    /* ── intro: detonation ── */
+    .wm-intro .wm-flash { animation: wm-flash 0.5s ease-out both; }
+    @keyframes wm-flash {
+      0%   { opacity: 0; transform: scale(0) rotate(-20deg); }
+      22%  { opacity: 1; transform: scale(1.7) rotate(-6deg); }
+      55%  { opacity: 1; transform: scale(2.1) rotate(2deg); }
+      100% { opacity: 0; transform: scale(2.6) rotate(8deg); }
+    }
+    .wm-intro .wm-rays { animation: rays-burst 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both; }
+    .wm-intro .wm-rays-a { animation: rays-spin-a 0.8s linear 0.04s both; }
+    .wm-intro .wm-rays-b { animation: rays-spin-b 0.8s linear 0.04s both; }
+    @keyframes rays-burst {
+      0%   { opacity: 0; transform: scale(0.1); }
+      18%  { opacity: 1; transform: scale(0.9); }
+      55%  { opacity: 0.85; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(1.16); }
+    }
+    @keyframes rays-spin-a { from { transform: rotate(-5deg); } to { transform: rotate(4deg); } }
+    @keyframes rays-spin-b { from { transform: rotate(5deg); } to { transform: rotate(-4deg); } }
+
+    .wm-intro .wm-l { animation: wm-eject 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+                      animation-delay: calc(0.12s + var(--d)); }
+    .wm-intro .wm-l .wm-ink { animation: wm-materialize 0.7s ease-out both;
+                              animation-delay: calc(0.12s + var(--d)); }
+    @keyframes wm-materialize {
+      0%   { stroke: #ffd76a; }
+      40%  { stroke: #c98a2c; }
+      75%  { stroke: #000; }
+      100% { stroke: #000; }
+    }
+    @keyframes wm-eject {
+      0%   { opacity: 0; transform: translate(var(--ex), 24px) rotate(var(--er)) scale(0.1); }
+      55%  { opacity: 1; transform: translate(calc(var(--ex) * -0.05), -12px) rotate(calc(var(--er) * -0.25)) scale(1.15, 0.85); }
+      78%  { transform: translate(0, 4px) rotate(0deg) scale(0.94, 1.06); }
+      100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+    }
+
+    /* boom outline snaps in around the landed name, then the shockwave echoes */
+    .wm-intro .wm-boom { animation: boom-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.72s both; }
+    @keyframes boom-in {
+      0%   { opacity: 0; transform: scale(0.55) rotate(-3deg); }
+      45%  { opacity: 1; transform: scale(1.09, 0.93) rotate(1.2deg); }
+      70%  { transform: scale(0.97, 1.04) rotate(-0.6deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .wm-intro .wm-shock { animation: shock-out 0.6s ease-out 0.86s both; }
+    @keyframes shock-out {
+      0%   { opacity: 0.6; transform: scale(0.98); }
+      100% { opacity: 0; transform: scale(1.3); }
+    }
+
+    /* ── hover: letter boops + outline jolt ── */
+    .wm-l.wm-boop { animation: wm-boop 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes wm-boop {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.12, 0.88); }
+      45%  { transform: scale(0.92, 1.08); }
+      62%  { transform: scale(1.06, 0.94); }
+      78%  { transform: scale(0.98, 1.02); }
+      100% { transform: scale(1); }
+    }
+    .wm-boom.wm-jolt { animation: boom-jolt 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes boom-jolt {
+      0%   { transform: scale(1) rotate(0deg); }
+      30%  { transform: scale(1.05, 0.96) rotate(1.2deg); }
+      55%  { transform: scale(0.97, 1.03) rotate(-0.8deg); }
+      78%  { transform: scale(1.02, 0.99) rotate(0.4deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wm-intro .wm-l, .wm-intro .wm-boom { animation: wm-fade 0.3s ease-out both; }
+      .wm-intro .wm-flash, .wm-intro .wm-rays, .wm-intro .wm-rays-a, .wm-intro .wm-rays-b,
+      .wm-intro .wm-shock, .wm-intro .wm-l .wm-ink, .wm-boom.wm-jolt, .wm-l.wm-boop { animation: none; }
+    }
+    @keyframes wm-fade { from { opacity: 0; } to { opacity: 1; } }
   </style>
+  <script>
+    // page-enter: hold the body at opacity 0 until the first frame, then fade in (see the end of <body>)
+    document.documentElement.classList.add('page-enter');
+    // leave the page with the exit choreography, then navigate (matches the enter fade)
+    window.pageLeave = function (url) {
+      var h = document.documentElement;
+      h.classList.remove('page-enter'); h.classList.add('page-exit');
+      setTimeout(function () { window.location.href = url; }, 560);
+    };
+  </script>
 </head>
 <body>
 
@@ -346,61 +503,170 @@
 
   <!-- ── Nav ──────────────────────────────────────────────────── -->
   <nav>
-    <a href="index.html" class="nav-name" id="home-link">maxshen<span class="ext">.mp4</span></a>
+    <a href="index.html" class="nav-name" id="home-link" aria-label="Max Shen — home">
+      <svg class="wordmark" viewBox="-80 -72 800 258" height="40" role="img" aria-label="MAX SHEN">
+    <defs>
+      <linearGradient id="wmray" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffd76a" stop-opacity="0.95"/>
+        <stop offset="0.65" stop-color="#ffe9ae" stop-opacity="0.45"/>
+        <stop offset="1" stop-color="#fff3cf" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="wmglow">
+        <stop offset="0" stop-color="#fff6d8" stop-opacity="0.95"/>
+        <stop offset="0.55" stop-color="#ffd76a" stop-opacity="0.5"/>
+        <stop offset="1" stop-color="#ffd76a" stop-opacity="0"/>
+      </radialGradient>
+      <path id="wmboomp" d="M -5.4 -47.6 L 36.7 -16.9 L 97.3 -61.8 L 138.6 -15.4 L 193.7 -56.9 L 251.1 -15.4 L 316.7 -65.9 L 353.3 -17.7 L 408.8 -54.9 L 463.2 -16.2 L 535.3 -46.7 L 574.7 -17.3 L 676.1 1.9 L 643.4 21.3 L 693.3 60.1 L 646.6 89.7 L 631.4 158.7 L 588.7 127.2 L 521.8 165.0 L 483.4 128.3 L 408.2 156.6 L 364.4 132.0 L 317.0 168.1 L 258.9 129.7 L 196.1 160.0 L 146.8 131.6 L 87.5 162.7 L 50.1 130.9 L -65.0 122.4 L -25.7 93.8 L -71.2 62.1 L -22.9 22.0 Z"/>
+    </defs>
+
+    <!-- explosion rays (intro only), radiating from the name's center -->
+    <g transform="translate(309,57)"><g class="wm-rays" fill="url(#wmray)">
+      <circle r="52" fill="url(#wmglow)"/>
+      <g class="wm-rays-a">
+        <path transform="rotate(4)" d="M 0 0 L 330 -15 L 330 15 Z"/>
+        <path transform="rotate(176)" d="M 0 0 L 330 -15 L 330 15 Z"/>
+        <path transform="rotate(24)" d="M 0 0 L 240 -12 L 240 12 Z"/>
+        <path transform="rotate(156)" d="M 0 0 L 240 -12 L 240 12 Z"/>
+        <path transform="rotate(266)" d="M 0 0 L 100 -9 L 100 9 Z"/>
+      </g>
+      <g class="wm-rays-b">
+        <path transform="rotate(-14)" d="M 0 0 L 290 -12 L 290 12 Z"/>
+        <path transform="rotate(194)" d="M 0 0 L 290 -12 L 290 12 Z"/>
+        <path transform="rotate(60)" d="M 0 0 L 110 -9 L 110 9 Z"/>
+        <path transform="rotate(120)" d="M 0 0 L 110 -9 L 110 9 Z"/>
+        <path transform="rotate(288)" d="M 0 0 L 95 -8 L 95 8 Z"/>
+        <path transform="rotate(252)" d="M 0 0 L 95 -8 L 95 8 Z"/>
+      </g>
+    </g></g>
+
+    <!-- shockwave echo (intro only) + persistent boom outline -->
+    <use class="wm-shock" href="#wmboomp" fill="none" stroke="#e0a93c" stroke-width="4" stroke-linejoin="round"/>
+    <use class="wm-boom" href="#wmboomp" fill="none" stroke="#000" stroke-width="9" stroke-linejoin="round"/>
+
+    <!-- explosion core starburst (intro only) -->
+    <g transform="translate(309,57)"><g class="wm-flash">
+      <path fill="#ffd76a" stroke="#000" stroke-width="5" stroke-linejoin="round"
+        d="M 34 0 L 12.9 5.4 L 24 24 L 5.4 12.9 L 0 34 L -5.4 12.9 L -24 24 L -12.9 5.4 L -34 0 L -12.9 -5.4 L -24 -24 L -5.4 -12.9 L 0 -34 L 5.4 -12.9 L 24 -24 L 12.9 -5.4 Z"/>
+      <circle r="9" fill="#fff" stroke="#000" stroke-width="4"/>
+    </g></g>
+
+    <!-- letters -->
+    <g transform="translate(0,0) rotate(-2.5 46 60)"><g class="wm-l" style="--ex:264px; --er:-26deg; --d:0.15s">
+      <rect class="wm-hit" x="2" y="6" width="86" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 98 C 12 72 12 46 18 22 L 46 62 L 74 22 C 80 46 80 72 75 98"/>
+      <path class="wm-shine" stroke-width="9" d="M 17 34 L 17 45"/>
+    </g></g>
+    <g transform="translate(96,0) rotate(2 42 60)"><g class="wm-l" style="--ex:171px; --er:20deg; --d:0.10s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 13 98 C 20 72 30 46 42 22 C 54 46 64 72 71 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 27 73 L 57 73"/>
+      <path class="wm-shine" stroke-width="9" d="M 31 43 L 36 31"/>
+    </g></g>
+    <g transform="translate(180,0) rotate(-1.5 40 60)"><g class="wm-l" style="--ex:89px; --er:-16deg; --d:0.05s">
+      <rect class="wm-hit" x="2" y="6" width="76" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 14 22 C 30 46 48 72 66 98"/>
+      <path class="wm-ink" stroke-width="28" d="M 66 22 C 50 46 32 72 14 98"/>
+      <path class="wm-shine" stroke-width="9" d="M 20 32 L 28 42"/>
+    </g></g>
+    <g transform="translate(296,0) rotate(2.5 39 60)"><g class="wm-l" style="--ex:-26px; --er:14deg; --d:0s">
+      <rect class="wm-hit" x="2" y="6" width="76" height="106"/>
+      <path class="wm-ink" stroke-width="26" d="M 65 31 C 59 15 17 13 15 36 C 13 58 65 55 65 79 C 64 104 18 104 12 85"/>
+      <path class="wm-shine" stroke-width="9" d="M 39 24 L 49 25"/>
+    </g></g>
+    <g transform="translate(378,0) rotate(-2 42 60)"><g class="wm-l" style="--ex:-111px; --er:-20deg; --d:0.05s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 22 C 12 46 12 72 17 98"/>
+      <path class="wm-ink" stroke-width="28" d="M 67 22 C 72 46 72 72 67 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 17 60 L 67 60"/>
+      <path class="wm-shine" stroke-width="9" d="M 16 34 L 16 45"/>
+    </g></g>
+    <g transform="translate(464,0) rotate(1.5 40 60)"><g class="wm-l" style="--ex:-191px; --er:22deg; --d:0.10s">
+      <rect class="wm-hit" x="2" y="6" width="72" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 19 22 C 14 46 14 72 19 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 25 L 61 25"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 60 L 53 60"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 95 L 61 95"/>
+      <path class="wm-shine" stroke-width="9" d="M 18 36 L 18 47"/>
+    </g></g>
+    <g transform="translate(532,0) rotate(-2.5 42 60)"><g class="wm-l" style="--ex:-265px; --er:-24deg; --d:0.15s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 98 C 12 72 12 46 17 22 L 67 98 C 72 72 72 46 67 22"/>
+      <path class="wm-shine" stroke-width="9" d="M 16 34 L 16 45"/>
+    </g></g>
+  </svg>
+    </a>
     <a href="index.html" class="nav-back" id="back-link">← Back</a>
   </nav>
 
   <!-- ── About content ────────────────────────────────────────── -->
   <main class="about-page">
 
-    <p class="section-label fade-up">About</p>
-
-    <div class="about-photo-wrap fade-up d1">
-      <img src="maxfilmphoto.jpg" class="about-photo" alt="Max Shen">
-    </div>
-
-    <h1 class="about-heading fade-up d2">
-      a visual <em>memoir</em>
-    </h1>
-
-    <div class="about-body fade-up d3">
-      <p>
-        From Vancouver, student in New York City.<br>
-        Capturing moments and frames to look back on.<br>
-        Always exploring.
-      </p>
-      <div class="about-tags">
-        <span class="about-tag">Premiere Pro</span>
-        <span class="about-tag">DaVinci Resolve</span>
-        <span class="about-tag">After Effects</span>
-        <span class="about-tag">Nikon Z6III</span>
-        <span class="about-tag">Osmo Pocket 3</span>
+    <div class="about-photos-col">
+      <div class="about-photos fade-up d1">
+        <div class="about-photo-col-b">
+          <div class="about-photo-frame about-photo-4x3">
+            <img src="maxshen1.JPG" class="about-photo" alt="Max Shen at dusk by the ocean">
+          </div>
+          <div class="about-photo-frame about-photo-4x3">
+            <img src="maxshen2.JPG" class="about-photo" alt="Max Shen photographing by a canal">
+          </div>
+        </div>
+        <div class="about-photo-col-c">
+          <div class="about-photo-frame about-photo-3x4">
+            <img src="maxshen5.jpeg" class="about-photo" alt="Max Shen photographing a sunset over the water">
+          </div>
+          <div class="about-photo-frame about-photo-3x2">
+            <img src="lapa.JPG" class="about-photo" alt="Max Shen with two friends at dinner">
+          </div>
+        </div>
       </div>
     </div>
 
-    <h2 class="contact-cta fade-up d4">Let's create <em>something.</em></h2>
+    <div class="about-text-col">
+      <p class="section-label fade-up">About</p>
 
-    <div class="contact-icons fade-up d5">
-      <!-- Email -->
-      <a href="mailto:maxshenfilm@gmail.com" class="contact-icon" aria-label="Email">
-        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-      </a>
+      <h1 class="about-heading fade-up d2">
+        Hi, I'm Max Shen,
+      </h1>
+
+      <div class="about-body fade-up d3">
+        <p>
+          a student from Vancouver, Canada studying Business and
+          Technology Management at New York University.
+        </p>
+        <p>
+          I'm passionate about creation and the process of building
+          something from the ground up. For me, that mostly happens
+          through my camera. My work is drawn to color and how it
+          dictates the mood of an image. Moments that feel universal,
+          even to someone who wasn't there. Looking forward, I want to
+          build a career where that same instinct for creativity meets
+          business, tech, and product.
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Contact — icon row + handle, footer-style ──────────────── -->
+  <div class="contact-section">
+    <div class="contact-icons fade-up d4">
       <!-- Instagram -->
       <a href="https://instagram.com/maxshen.mp4" target="_blank" rel="noopener" class="contact-icon" aria-label="Instagram">
         <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
       </a>
+      <!-- LinkedIn -->
+      <a href="https://www.linkedin.com/in/max-shen-18555321a/" target="_blank" rel="noopener" class="contact-icon" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><line x1="7" y1="10" x2="7" y2="17"/><circle cx="7" cy="6.7" r="1" fill="currentColor" stroke="none"/><line x1="11.5" y1="17" x2="11.5" y2="10"/><path d="M11.5 13c0-1.8 1.2-3 3-3s3 1.2 3 3v4"/></svg>
+      </a>
+      <!-- Email -->
+      <a href="mailto:maxshenfilm@gmail.com" class="contact-icon" aria-label="Email">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+      </a>
     </div>
-
-    <form class="contact-form fade-up d5" id="contactForm" novalidate>
-      <textarea id="contactMsg" rows="1" placeholder="write a message…" maxlength="1000"></textarea>
-      <div class="contact-form-row">
-        <span class="contact-form-hint">maxshenfilm@gmail.com</span>
-        <button type="submit" class="contact-send">Send</button>
-      </div>
-      <p class="contact-confirm" id="contactConfirm">message sent —</p>
-    </form>
-
-  </main>
+    <p class="contact-handle fade-up d5">maxshenfilm@gmail.com</p>
+    <p class="contact-copy fade-up d5">© 2026 Max Shen</p>
+  </div>
 
 
   <script>
@@ -411,32 +677,91 @@
       }));
     });
 
-    document.getElementById('contactForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const msg = document.getElementById('contactMsg').value.trim();
-      if (!msg) return;
-      const mailto = 'mailto:maxshenfilm@gmail.com'
-        + '?subject=' + encodeURIComponent('Message from maxshen.mp4')
-        + '&body=' + encodeURIComponent(msg);
-      window.location.href = mailto;
-      document.getElementById('contactMsg').value = '';
-      const confirm = document.getElementById('contactConfirm');
-      confirm.classList.add('visible');
-      setTimeout(() => confirm.classList.remove('visible'), 3500);
-    });
-
     ['home-link', 'back-link'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('click', e => {
         e.preventDefault();
         const dest = el.getAttribute('href');
-        document.body.style.transition = 'opacity 0.55s cubic-bezier(0.4,0,0.2,1)';
-        document.body.style.opacity = '0';
-        setTimeout(() => { window.location.href = dest; }, 560);
+        pageLeave(dest);
       });
     });
+
+    // ── Page enter ────────────────────────────────────────────
+    // Arrivals fade in over 0.55s (the exit fade's length), so a fresh
+    // load, a link, and the browser's Back button all feel the same.
+    // On a bfcache restore the exit fade's inline opacity:0 is still on
+    // <body>; restart the fade from there instead of snapping to 1.
+    (function () {
+      const html = document.documentElement, body = document.body;
+      function enter() {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { html.classList.remove('page-enter'); });
+        });
+      }
+      enter();
+      window.addEventListener('pageshow', function (e) {
+        if (!e.persisted) return;
+        body.style.transition = 'none';
+        body.style.opacity = '';
+        html.classList.remove('page-exit');
+        html.classList.add('page-enter');
+        void body.offsetWidth;
+        body.style.transition = '';
+        enter();
+      });
+    })();
   </script>
 
+  <script>
+    // Wordmark: once-per-session explosion intro, hover boops + boom jolt.
+    (function () {
+      const mark = document.querySelector('.wordmark');
+      if (!mark) return;
+      const letters = mark.querySelectorAll('.wm-l');
+      const boom = mark.querySelector('.wm-boom');
+      if (!sessionStorage.getItem('wmIntroPlayed')) {
+        sessionStorage.setItem('wmIntroPlayed', '1');
+        mark.classList.add('wm-intro');
+        setTimeout(function () { mark.classList.remove('wm-intro'); }, 1700);
+      }
+      letters.forEach(function (l) {
+        l.addEventListener('animationend', function () { l.classList.remove('wm-boop'); });
+        l.addEventListener('mouseenter', function () {
+          if (!mark.classList.contains('wm-intro') && !l.classList.contains('wm-boop')) l.classList.add('wm-boop');
+        });
+      });
+      if (boom) {
+        boom.addEventListener('animationend', function () { boom.classList.remove('wm-jolt'); });
+        mark.addEventListener('mouseenter', function () {
+          if (!mark.classList.contains('wm-intro') && !boom.classList.contains('wm-jolt')) boom.classList.add('wm-jolt');
+        });
+      }
+    })();
+  </script>
+  <script>
+    // Hide the nav while scrolling down, bring it back on scroll-up or near the top,
+    // and never while the mobile menu is open.
+    (function () {
+      const nav = document.querySelector('nav');
+      if (!nav) return;
+      const SHOW_AT = 80, DELTA = 6;
+      let last = window.scrollY, hidden = false, ticking = false;
+      function update() {
+        ticking = false;
+        const y = window.scrollY;
+        const menuOpen = !!document.querySelector('.nav-hamburger.open');
+        let want = hidden;
+        if (menuOpen || y <= SHOW_AT || y < last - DELTA) want = false;
+        else if (y > last + DELTA) want = true;
+        if (want !== hidden) { hidden = want; nav.classList.toggle('nav-hidden', hidden); }
+        last = y;
+      }
+      window.addEventListener('scroll', function () {
+        nav.classList.add('nav-scroll');
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      }, { passive: true });
+    })();
+  </script>
 </body>
 </html>

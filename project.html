@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project — Max Shen</title>
+  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/public/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+  <!-- Type assets: self-hosted, preload only the two above-the-fold faces.
+       See CLAUDE.md › Typography System. -->
+  <link rel="preload" href="/public/fonts/general-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/public/fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    /* ── Type assets ──────────────────────────────────────────────
+       General Sans (Fontshare, ITF-FFL v2.0 — shipped as-is, unsubset)
+       for everything readable; Geist Mono (OFL) for labels only. Each
+       family has a metric-matched local fallback so the swap moves
+       nothing — layout is identical before and after the font lands. */
+    @font-face {
+      font-family: "General Sans";
+      src: url("/public/fonts/general-sans-variable.woff2") format("woff2");
+      font-weight: 200 700; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: "General Sans";
+      src: url("/public/fonts/general-sans-variable-italic.woff2") format("woff2");
+      font-weight: 200 700; font-style: italic; font-display: swap;
+    }
+    @font-face {
+      font-family: "Geist Mono";
+      src: url("/public/fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
+      font-weight: 100 900; font-style: normal; font-display: swap;
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    @font-face {
+      font-family: "General Sans Fallback";
+      src: local("Arial"), local("Helvetica");
+      size-adjust: 108.73%; ascent-override: 92.89%; descent-override: 22.07%; line-gap-override: 9.2%;
+    }
+    @font-face {
+      font-family: "Geist Mono Fallback";
+      src: local("Menlo"), local("Courier New");
+      size-adjust: 99.66%; ascent-override: 100.84%; descent-override: 29.6%; line-gap-override: 0%;
+    }
+    :root {
+      --font-sans: "General Sans", "General Sans Fallback", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, Menlo, Consolas, monospace;
+      --tracking-caps: 0.1em;
+      --label-muted: #6b6a67; /* 4.9:1 on white — the floor for 12px labels */
+    }
+    html { -webkit-text-size-adjust: 100%; font-synthesis: none; hanging-punctuation: first last; }
+    input, textarea { hanging-punctuation: none; }
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; font-optical-sizing: auto; }
+  </style>
+  <style>
+
+    /* ── Tokens ───────────────────────────────────────────────── */
+    :root {
+      --bg:    #ffffff;
+      --text:  #1a1917;
+      --muted: rgba(26, 25, 23, 0.55);
+      --dim:   rgba(26, 25, 23, 0.10);
+      --nav-h: 76px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 400;
+      line-height: 1;
+      overflow-x: hidden;
+      opacity: 0;
+      transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    body.ready { opacity: 1; }
+
+    /* ── Film grain ───────────────────────────────────────────── */
+    #grain {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      pointer-events: none;
+      opacity: 0.042;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px;
+      mix-blend-mode: screen;
+      animation: grain 0.12s steps(1) infinite;
+    }
+    @keyframes grain {
+      0%  { transform: translate(0,0); }
+      25% { transform: translate(-5px, 3px); }
+      50% { transform: translate(4px, -4px); }
+      75% { transform: translate(-3px, 5px); }
+    }
+
+    /* ── Nav ──────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      height: var(--nav-h);
+      padding: 0 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    /* nav steps out of the way: hides on scroll-down, returns on scroll-up, always present near the top.
+       The transition only arms after the first scroll so the page's own nav reveal keeps its timing. */
+    nav.nav-scroll {
+      transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    nav.nav-hidden { opacity: 0; transform: translateY(-14px); pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) {
+      nav.nav-scroll { transition: opacity 0.25s ease-out; }
+      nav.nav-hidden { transform: none; }
+    }
+    /* Page transitions — arrival and exit mirror each other. Arriving: the content rises
+       into place from 18px below while fading in (0.7s expo-out). Leaving: it lifts away
+       18px while fading out (0.55s page-transition curve). The fixed nav only fades. */
+    body { transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+    body > section, body > main, body > .contact-section {
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    html.page-enter body { opacity: 0; transition: none; }
+    html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section {
+      transform: translateY(18px); transition: none;
+    }
+    html.page-exit body { opacity: 0; transition: opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1); }
+    html.page-exit body > section, html.page-exit body > main, html.page-exit body > .contact-section {
+      transform: translateY(-18px); transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section,
+      html.page-exit body > section, html.page-exit body > main, html.page-exit body > .contact-section { transform: none; }
+    }
+    .nav-name {
+      font-family: var(--font-sans);
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: #000;
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      list-style: none;
+    }
+    /* Nav: 14px / 500 / sentence case / 0 tracking — the body family, one
+       tier quieter than the wordmark. Hover idiom of the tier: siblings
+       recede, the hovered link holds. */
+    .nav-links a {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      line-height: 1;
+      color: #000;
+      text-decoration: none;
+      opacity: 1;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nav-links:hover a:not(:hover) { opacity: 0.45; }
+
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      z-index: 600;
+      position: relative;
+    }
+    .nav-hamburger span {
+      display: block;
+      width: 22px;
+      height: 1px;
+      background: rgba(26,25,23,0.85);
+      transition: transform 0.32s cubic-bezier(0.16,1,0.3,1),
+                  opacity 0.22s ease, background 0.3s;
+      transform-origin: center;
+    }
+    .nav-hamburger.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .nav-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .nav-hamburger.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    #mobileMenu {
+      position: fixed;
+      inset: 0;
+      z-index: 490;
+      background: rgba(255,255,255,0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.38s cubic-bezier(0.22,0.61,0.36,1);
+    }
+    #mobileMenu.open { opacity: 1; pointer-events: all; }
+    #mobileMenu ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+    }
+    #mobileMenu a {
+      font-family: var(--font-sans);
+      font-size: 24px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      text-transform: none;
+      color: #000;
+      text-decoration: none;
+      transition: color 0.22s;
+    }
+    #mobileMenu a:active { color: #000; }
+
+    /* ── Fade-up animation ────────────────────────────────────── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .fade-up.in { opacity: 1; transform: translateY(0); }
+
+    /* ── Page ─────────────────────────────────────────────────── */
+    .dest-page {
+      max-width: 1700px;
+      margin: 0 auto;
+      padding: calc(var(--nav-h) + 28px) 64px 100px;
+    }
+
+    .dest-page-title {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: clamp(36px, 6vw, 68px);
+      letter-spacing: -0.01em;
+      color: #000;
+      text-align: center;
+      margin: 0 0 20px;
+    }
+
+    .dest-page-caption {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: var(--muted);
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 48px;
+    }
+
+    /* ── Project page: intentional load choreography — the media
+       unmasks first (clip-path + settle, expo-out), the title rises
+       after it on the same ready trigger. ── */
+    .proj-page {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: calc(var(--nav-h) + 28px) 64px 40px;
+    }
+    .proj-page .dest-page-title {
+      transition-delay: 0.4s;
+      margin-bottom: 36px;
+    }
+    /* Subtitle: same voice as the destination captions — black held back
+       to 78% so it reads as body copy under the 700-weight title. Enters
+       one beat after the title in the load choreography. */
+    .proj-page-caption {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: rgba(0, 0, 0, 0.78);
+      text-align: center;
+      text-wrap: pretty;
+      max-width: 640px;
+      margin: -8px auto 40px;
+      transition-delay: 0.55s;
+    }
+    .proj-page-caption p + p { margin-top: 14px; }
+    .proj-page-note { margin: 40px auto 0; transition-delay: 0.7s; }
+    /* a paragraph given as { heading } — the title's voice, one tier smaller */
+    .proj-copy-heading {
+      font-weight: 700;
+      font-size: clamp(22px, 2.6vw, 32px);
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      color: #000;
+      text-wrap: balance;
+    }
+    .proj-page-caption a {
+      color: #000;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .proj-page-caption a:hover { opacity: 0.55; }
+    .proj-page-caption a:focus-visible { outline: 2px solid #000; outline-offset: 3px; border-radius: 2px; }
+    .proj-media {
+      max-width: 972px;
+      margin: 0 auto;
+      clip-path: inset(7% 5% 7% 5%);
+      transform: scale(1.045);
+      transition: clip-path 1.15s cubic-bezier(0.16, 1, 0.3, 1) 0.1s,
+                  transform 1.15s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+    }
+    body.media-ready .proj-media { clip-path: inset(0% 0% 0% 0%); transform: scale(1); }
+    /* borderless: the element takes the video's own aspect ratio */
+    .proj-media video,
+    .proj-media img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 78vh;
+      margin: 0 auto;
+    }
+    @media (max-width: 560px) {
+      .proj-page { padding: calc(var(--nav-h) + 20px) 20px 24px; }
+      .proj-media video { max-height: 64vh; }
+      .proj-page-caption { font-size: 14px; margin-bottom: 32px; }
+    }
+
+    #projFrames { margin-top: 48px; }
+    /* frames rise in as you scroll — one-shot, staggered per row */
+    .proj-page .m-item {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .proj-page .m-item.in { opacity: 1; transform: none; }
+    /* ── Frame rows — matched pairs share a row (walk1+walk2, …);
+       flex-grow = each frame's aspect ratio, so everything in a row
+       renders at exactly the same height. Unmatched singles sit in
+       their own block after a visual breather. ── */
+    .pf-row { display: flex; gap: 18px; margin-top: 18px; }
+    .pf-row:first-child { margin-top: 0; }
+    /* white behind every frame: the dark box the mosaic uses shows as a
+       hairline along a screenshot's edge when the row height is fractional */
+    .pf-row .m-item { min-width: 0; margin: 0; background: #fff; }
+    .pf-frame { overflow: hidden; }
+    .pf-frame img { width: 100%; height: 100%; object-fit: cover; }
+    /* optional caption under a frame — quiet, left-aligned, 4.5:1 on white */
+    /* a live site in a frame box: hairline edge so the white page inside reads as a screen */
+    .pf-frame--embed { border: 1px solid rgba(0, 0, 0, 0.12); background: #fff; }
+    .pf-frame--embed iframe { display: block; width: 100%; height: 100%; border: 0; }
+    .pf-cap--embed a { color: #000; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .pf-cap--embed a:hover { opacity: 0.6; }
+    .pf-cap {
+      margin: 10px 0 0;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--label-muted, #6b6a67);
+      text-wrap: pretty;
+    }
+    .pf-row--break { margin-top: 72px; }
+    .pf-row--solo { justify-content: center; }
+    .pf-row--solo .m-item { flex: 0 1 auto; width: min(560px, 62%); }
+    /* a single frame given the whole width — a held beat in the edit */
+    .pf-row--full .m-item { flex: 1 1 auto; width: 100%; } /* spans the same edges as the pair rows */
+    @media (max-width: 960px) {
+      .pf-row { gap: 14px; margin-top: 14px; }
+      .pf-row--break { margin-top: 52px; }
+    }
+    @media (max-width: 560px) {
+      .pf-row { flex-direction: column; gap: 10px; margin-top: 10px; }
+      /* verticals stay side by side — three portraits stack too tall */
+      .pf-row--trio { flex-direction: row; gap: 8px; }
+      .pf-row--break { margin-top: 40px; }
+      .pf-row--solo .m-item { width: 100%; }
+    }
+    .m-item {
+      overflow: hidden;
+      background: #0d0c0b;
+    }
+    .m-item img {
+      display: block;
+      width: 100%;
+      height: auto;
+      filter: brightness(1.04) saturate(1.18);
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .m-item:hover img {
+      transform: scale(1.035);
+    }
+
+    /* ── Contact — icon row + handle, footer-style ──────────────── */
+    .contact-section {
+      padding: 96px 40px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .contact-icons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+    }
+    .contact-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.22s, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .contact-icon:hover {
+      color: var(--muted);
+      transform: scale(1.12);
+    }
+    .contact-icon:active { transform: scale(0.94); }
+    .contact-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .contact-handle {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+    .contact-copy {
+      margin: 10px 0 0;
+      font-family: var(--font-sans); /* same voice as the email line above it */
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 960px) {
+      nav { padding: 0 24px; }
+      .nav-links { display: none; }
+      .nav-hamburger { display: flex; }
+      .dest-page { padding: calc(var(--nav-h) + 24px) 24px 80px; }
+      .mosaic { gap: 10px; }
+      .mosaic-col { gap: 10px; }
+    }
+
+    @media (max-width: 560px) {
+      .dest-page-title { margin-bottom: 32px; }
+      .mosaic { gap: 14px; }
+      .mosaic-col { gap: 14px; }
+      .contact-section { padding: 64px 24px 32px; }
+    }
+
+      .nav-name:focus-visible { outline: 2px solid #000; outline-offset: 6px; border-radius: 4px; }
+    .nav-name svg { display: block; overflow: visible; }
+
+    /* Bubbly animated wordmark — MAX SHEN framed by a comic "boom" burst
+       outline. Intro (once per session): a starburst + radial light rays
+       detonate at the name's center, the letters are thrown outward through
+       the blast — materializing from flash-amber to black with squash
+       landings — then the jagged boom outline snaps in around the name and
+       a shockwave echo expands off it. Hovering a letter boops it; hovering
+       the mark jolts the boom outline. */
+    .wm-l { transform-box: fill-box; transform-origin: 50% 100%; }
+    .wm-l path { fill: none; stroke: #000; stroke-linecap: round; stroke-linejoin: round; }
+    .wm-l .wm-shine { stroke: #fff; opacity: 0.85; }
+    .wm-l .wm-hit { fill: transparent; stroke: none; }
+
+    /* boom outline: persistent part of the lockup */
+    .wm-boom { transform-box: fill-box; transform-origin: 50% 50%; }
+    .wm-shock { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-flash { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-rays { transform-box: fill-box; transform-origin: 50% 50%; opacity: 0; }
+    .wm-rays-a, .wm-rays-b { transform-box: fill-box; transform-origin: 50% 50%; }
+
+    /* ── intro: detonation ── */
+    .wm-intro .wm-flash { animation: wm-flash 0.5s ease-out both; }
+    @keyframes wm-flash {
+      0%   { opacity: 0; transform: scale(0) rotate(-20deg); }
+      22%  { opacity: 1; transform: scale(1.7) rotate(-6deg); }
+      55%  { opacity: 1; transform: scale(2.1) rotate(2deg); }
+      100% { opacity: 0; transform: scale(2.6) rotate(8deg); }
+    }
+    .wm-intro .wm-rays { animation: rays-burst 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both; }
+    .wm-intro .wm-rays-a { animation: rays-spin-a 0.8s linear 0.04s both; }
+    .wm-intro .wm-rays-b { animation: rays-spin-b 0.8s linear 0.04s both; }
+    @keyframes rays-burst {
+      0%   { opacity: 0; transform: scale(0.1); }
+      18%  { opacity: 1; transform: scale(0.9); }
+      55%  { opacity: 0.85; transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(1.16); }
+    }
+    @keyframes rays-spin-a { from { transform: rotate(-5deg); } to { transform: rotate(4deg); } }
+    @keyframes rays-spin-b { from { transform: rotate(5deg); } to { transform: rotate(-4deg); } }
+
+    .wm-intro .wm-l { animation: wm-eject 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+                      animation-delay: calc(0.12s + var(--d)); }
+    .wm-intro .wm-l .wm-ink { animation: wm-materialize 0.7s ease-out both;
+                              animation-delay: calc(0.12s + var(--d)); }
+    @keyframes wm-materialize {
+      0%   { stroke: #ffd76a; }
+      40%  { stroke: #c98a2c; }
+      75%  { stroke: #000; }
+      100% { stroke: #000; }
+    }
+    @keyframes wm-eject {
+      0%   { opacity: 0; transform: translate(var(--ex), 24px) rotate(var(--er)) scale(0.1); }
+      55%  { opacity: 1; transform: translate(calc(var(--ex) * -0.05), -12px) rotate(calc(var(--er) * -0.25)) scale(1.15, 0.85); }
+      78%  { transform: translate(0, 4px) rotate(0deg) scale(0.94, 1.06); }
+      100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+    }
+
+    /* boom outline snaps in around the landed name, then the shockwave echoes */
+    .wm-intro .wm-boom { animation: boom-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.72s both; }
+    @keyframes boom-in {
+      0%   { opacity: 0; transform: scale(0.55) rotate(-3deg); }
+      45%  { opacity: 1; transform: scale(1.09, 0.93) rotate(1.2deg); }
+      70%  { transform: scale(0.97, 1.04) rotate(-0.6deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .wm-intro .wm-shock { animation: shock-out 0.6s ease-out 0.86s both; }
+    @keyframes shock-out {
+      0%   { opacity: 0.6; transform: scale(0.98); }
+      100% { opacity: 0; transform: scale(1.3); }
+    }
+
+    /* ── hover: letter boops + outline jolt ── */
+    .wm-l.wm-boop { animation: wm-boop 0.65s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes wm-boop {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.12, 0.88); }
+      45%  { transform: scale(0.92, 1.08); }
+      62%  { transform: scale(1.06, 0.94); }
+      78%  { transform: scale(0.98, 1.02); }
+      100% { transform: scale(1); }
+    }
+    .wm-boom.wm-jolt { animation: boom-jolt 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+    @keyframes boom-jolt {
+      0%   { transform: scale(1) rotate(0deg); }
+      30%  { transform: scale(1.05, 0.96) rotate(1.2deg); }
+      55%  { transform: scale(0.97, 1.03) rotate(-0.8deg); }
+      78%  { transform: scale(1.02, 0.99) rotate(0.4deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .wm-intro .wm-l, .wm-intro .wm-boom { animation: wm-fade 0.3s ease-out both; }
+      .wm-intro .wm-flash, .wm-intro .wm-rays, .wm-intro .wm-rays-a, .wm-intro .wm-rays-b,
+      .wm-intro .wm-shock, .wm-intro .wm-l .wm-ink, .wm-boom.wm-jolt, .wm-l.wm-boop { animation: none; }
+    }
+    @keyframes wm-fade { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+  <script>
+    // page-enter: hold the body at opacity 0 until the first frame, then fade in (see the end of <body>)
+    document.documentElement.classList.add('page-enter');
+    // leave the page with the exit choreography, then navigate (matches the enter fade)
+    window.pageLeave = function (url) {
+      var h = document.documentElement;
+      h.classList.remove('page-enter'); h.classList.add('page-exit');
+      setTimeout(function () { window.location.href = url; }, 560);
+    };
+  </script>
+</head>
+<body>
+
+  <div id="grain" aria-hidden="true"></div>
+
+  <!-- ── Nav ──────────────────────────────────────────────────── -->
+  <nav>
+    <a href="index.html" class="nav-name" id="home-link" aria-label="Max Shen — home">
+      <svg class="wordmark" viewBox="-80 -72 800 258" height="40" role="img" aria-label="MAX SHEN">
+    <defs>
+      <linearGradient id="wmray" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffd76a" stop-opacity="0.95"/>
+        <stop offset="0.65" stop-color="#ffe9ae" stop-opacity="0.45"/>
+        <stop offset="1" stop-color="#fff3cf" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="wmglow">
+        <stop offset="0" stop-color="#fff6d8" stop-opacity="0.95"/>
+        <stop offset="0.55" stop-color="#ffd76a" stop-opacity="0.5"/>
+        <stop offset="1" stop-color="#ffd76a" stop-opacity="0"/>
+      </radialGradient>
+      <path id="wmboomp" d="M -5.4 -47.6 L 36.7 -16.9 L 97.3 -61.8 L 138.6 -15.4 L 193.7 -56.9 L 251.1 -15.4 L 316.7 -65.9 L 353.3 -17.7 L 408.8 -54.9 L 463.2 -16.2 L 535.3 -46.7 L 574.7 -17.3 L 676.1 1.9 L 643.4 21.3 L 693.3 60.1 L 646.6 89.7 L 631.4 158.7 L 588.7 127.2 L 521.8 165.0 L 483.4 128.3 L 408.2 156.6 L 364.4 132.0 L 317.0 168.1 L 258.9 129.7 L 196.1 160.0 L 146.8 131.6 L 87.5 162.7 L 50.1 130.9 L -65.0 122.4 L -25.7 93.8 L -71.2 62.1 L -22.9 22.0 Z"/>
+    </defs>
+
+    <!-- explosion rays (intro only), radiating from the name's center -->
+    <g transform="translate(309,57)"><g class="wm-rays" fill="url(#wmray)">
+      <circle r="52" fill="url(#wmglow)"/>
+      <g class="wm-rays-a">
+        <path transform="rotate(4)" d="M 0 0 L 330 -15 L 330 15 Z"/>
+        <path transform="rotate(176)" d="M 0 0 L 330 -15 L 330 15 Z"/>
+        <path transform="rotate(24)" d="M 0 0 L 240 -12 L 240 12 Z"/>
+        <path transform="rotate(156)" d="M 0 0 L 240 -12 L 240 12 Z"/>
+        <path transform="rotate(266)" d="M 0 0 L 100 -9 L 100 9 Z"/>
+      </g>
+      <g class="wm-rays-b">
+        <path transform="rotate(-14)" d="M 0 0 L 290 -12 L 290 12 Z"/>
+        <path transform="rotate(194)" d="M 0 0 L 290 -12 L 290 12 Z"/>
+        <path transform="rotate(60)" d="M 0 0 L 110 -9 L 110 9 Z"/>
+        <path transform="rotate(120)" d="M 0 0 L 110 -9 L 110 9 Z"/>
+        <path transform="rotate(288)" d="M 0 0 L 95 -8 L 95 8 Z"/>
+        <path transform="rotate(252)" d="M 0 0 L 95 -8 L 95 8 Z"/>
+      </g>
+    </g></g>
+
+    <!-- shockwave echo (intro only) + persistent boom outline -->
+    <use class="wm-shock" href="#wmboomp" fill="none" stroke="#e0a93c" stroke-width="4" stroke-linejoin="round"/>
+    <use class="wm-boom" href="#wmboomp" fill="none" stroke="#000" stroke-width="9" stroke-linejoin="round"/>
+
+    <!-- explosion core starburst (intro only) -->
+    <g transform="translate(309,57)"><g class="wm-flash">
+      <path fill="#ffd76a" stroke="#000" stroke-width="5" stroke-linejoin="round"
+        d="M 34 0 L 12.9 5.4 L 24 24 L 5.4 12.9 L 0 34 L -5.4 12.9 L -24 24 L -12.9 5.4 L -34 0 L -12.9 -5.4 L -24 -24 L -5.4 -12.9 L 0 -34 L 5.4 -12.9 L 24 -24 L 12.9 -5.4 Z"/>
+      <circle r="9" fill="#fff" stroke="#000" stroke-width="4"/>
+    </g></g>
+
+    <!-- letters -->
+    <g transform="translate(0,0) rotate(-2.5 46 60)"><g class="wm-l" style="--ex:264px; --er:-26deg; --d:0.15s">
+      <rect class="wm-hit" x="2" y="6" width="86" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 98 C 12 72 12 46 18 22 L 46 62 L 74 22 C 80 46 80 72 75 98"/>
+      <path class="wm-shine" stroke-width="9" d="M 17 34 L 17 45"/>
+    </g></g>
+    <g transform="translate(96,0) rotate(2 42 60)"><g class="wm-l" style="--ex:171px; --er:20deg; --d:0.10s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 13 98 C 20 72 30 46 42 22 C 54 46 64 72 71 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 27 73 L 57 73"/>
+      <path class="wm-shine" stroke-width="9" d="M 31 43 L 36 31"/>
+    </g></g>
+    <g transform="translate(180,0) rotate(-1.5 40 60)"><g class="wm-l" style="--ex:89px; --er:-16deg; --d:0.05s">
+      <rect class="wm-hit" x="2" y="6" width="76" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 14 22 C 30 46 48 72 66 98"/>
+      <path class="wm-ink" stroke-width="28" d="M 66 22 C 50 46 32 72 14 98"/>
+      <path class="wm-shine" stroke-width="9" d="M 20 32 L 28 42"/>
+    </g></g>
+    <g transform="translate(296,0) rotate(2.5 39 60)"><g class="wm-l" style="--ex:-26px; --er:14deg; --d:0s">
+      <rect class="wm-hit" x="2" y="6" width="76" height="106"/>
+      <path class="wm-ink" stroke-width="26" d="M 65 31 C 59 15 17 13 15 36 C 13 58 65 55 65 79 C 64 104 18 104 12 85"/>
+      <path class="wm-shine" stroke-width="9" d="M 39 24 L 49 25"/>
+    </g></g>
+    <g transform="translate(378,0) rotate(-2 42 60)"><g class="wm-l" style="--ex:-111px; --er:-20deg; --d:0.05s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 22 C 12 46 12 72 17 98"/>
+      <path class="wm-ink" stroke-width="28" d="M 67 22 C 72 46 72 72 67 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 17 60 L 67 60"/>
+      <path class="wm-shine" stroke-width="9" d="M 16 34 L 16 45"/>
+    </g></g>
+    <g transform="translate(464,0) rotate(1.5 40 60)"><g class="wm-l" style="--ex:-191px; --er:22deg; --d:0.10s">
+      <rect class="wm-hit" x="2" y="6" width="72" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 19 22 C 14 46 14 72 19 98"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 25 L 61 25"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 60 L 53 60"/>
+      <path class="wm-ink" stroke-width="24" d="M 19 95 L 61 95"/>
+      <path class="wm-shine" stroke-width="9" d="M 18 36 L 18 47"/>
+    </g></g>
+    <g transform="translate(532,0) rotate(-2.5 42 60)"><g class="wm-l" style="--ex:-265px; --er:-24deg; --d:0.15s">
+      <rect class="wm-hit" x="2" y="6" width="80" height="106"/>
+      <path class="wm-ink" stroke-width="28" d="M 17 98 C 12 72 12 46 17 22 L 67 98 C 72 72 72 46 67 22"/>
+      <path class="wm-shine" stroke-width="9" d="M 16 34 L 16 45"/>
+    </g></g>
+  </svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html#hero">Home</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#frames">Frames</a></li>
+      <li><a href="index.html#work">Projects</a></li>
+    </ul>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div id="mobileMenu" aria-hidden="true">
+    <ul>
+      <li><a href="index.html#hero">Home</a></li>
+      <li><a href="index.html#about">About</a></li>
+      <li><a href="index.html#frames">Frames</a></li>
+      <li><a href="index.html#work">Projects</a></li>
+    </ul>
+  </div>
+
+  <!-- ── Destination content ──────────────────────────────────── -->
+  <main class="proj-page">
+    <h1 id="projPageTitle" class="dest-page-title fade-up"></h1>
+    <div id="projPageCaption" class="proj-page-caption fade-up"></div>
+    <div class="proj-media">
+      <video id="projVideo" controls playsinline preload="metadata"></video>
+    </div>
+    <div id="projPageNote" class="proj-page-caption proj-page-note fade-up"></div>
+    <div id="projFrames"></div>
+  </main>
+
+  <!-- ── Contact — icon row + handle, footer-style ──────────────── -->
+  <div class="contact-section">
+    <div class="contact-icons fade-up">
+      <!-- Instagram -->
+      <a href="https://instagram.com/maxshen.mp4" target="_blank" rel="noopener" class="contact-icon" aria-label="Instagram">
+        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+      <!-- LinkedIn -->
+      <a href="https://www.linkedin.com/in/max-shen-18555321a/" target="_blank" rel="noopener" class="contact-icon" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><line x1="7" y1="10" x2="7" y2="17"/><circle cx="7" cy="6.7" r="1" fill="currentColor" stroke="none"/><line x1="11.5" y1="17" x2="11.5" y2="10"/><path d="M11.5 13c0-1.8 1.2-3 3-3s3 1.2 3 3v4"/></svg>
+      </a>
+      <!-- Email -->
+      <a href="mailto:maxshenfilm@gmail.com" class="contact-icon" aria-label="Email">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+      </a>
+    </div>
+    <p class="contact-handle fade-up">maxshenfilm@gmail.com</p>
+    <p class="contact-copy fade-up">© 2026 Max Shen</p>
+  </div>
+
+
+  <script>
+    // ── Per-project data ──────────────────────────────────────
+    // Paste the full YouTube URL here; while it's empty the caption's last
+    // line renders as plain text rather than a dead link.
+    const CALIFORNIA_YOUTUBE_URL = 'https://www.youtube.com/watch?v=JbRsOZo8NM4';
+
+    const PROJECTS = {
+      california: { title: 'Youtube Project', video: '/public/videos/california.mp4',
+        caption: [
+          'A personal video project I made while visiting a friend in California. I shot and edited everything myself, documenting the trip as it happened. No plan, a camera, and some friends trying to have a good time.',
+          // a paragraph can be a list of segments; a segment with an href becomes a link
+          [ 'Watch the full video on ', { text: 'YouTube', href: CALIFORNIA_YOUTUBE_URL }, '.' ],
+        ] },
+      wip:        { title: 'WIP Marketplace', video: '/public/videos/wip.mp4',
+        caption: [
+          'WIP Marketplace is a campus-focused, student-only mobile app designed for college students to buy, sell, sublease, and find services within their school community.',
+        ],
+        // `note` renders beneath the film, before the frames
+        note: [
+          'As Product & Growth Lead, I worked on WIP for two months, producing and editing an advertising campaign while leading on-campus growth efforts at New York University. My role combined creative production, product marketing, and student outreach to help introduce WIP to the NYU community.',
+        ] },
+      // Assets pending: add `video` (mp4) or `image` (still) when ready;
+      // until then the page shows title + copy and skips the media block.
+      robin: { title: 'Robin by Salesforce',
+        image: '/public/projects/robin/team.jpg',
+        caption: [
+          'Robin is a Salesforce agent my team and I developed for a case competition to reduce context switching between tools like Salesforce, Slack, and Gmail. It automatically detects what a user is working on and surfaces relevant client context (contacts, deals, activity, connected data) without requiring them to open another dashboard.',
+          'Our goal was simple: make Salesforce indispensable by making it invisible.',
+          // labelled by what each site actually is (checked their <title>s):
+          // robinslidedeck.vercel.app is the deck, salesforceapp.vercel.app the working app
+        ] },
+      lucky7: {
+        title: 'Lucky7Collectives',
+        caption: [ 'I co-founded a Pokémon Card business in highschool along side my friend Brent.' ],
+        image: '/public/posters/lucky7-cover.jpg',
+        // the story sits under the cover
+        note: [
+          'What started as getting back into a childhood hobby turned into Lucky7Collectives, a Pokémon card and collectibles business I ran with my friend Brent. Pokemon cards were starting to make a comeback, and we got in at the perfect time. We started buying cards on Whatnot streams for as little as a dollar. If it looked cool, we bought it.',
+          'Before long, we had boxes of cards sitting around our houses. We started attending card shows, built up our inventory, and eventually became vendors ourselves. Over time, we sold to 200+ customers, attended 15+ card shows, and built a community of 1,000+ collectors on Instagram, connecting with buyers and sellers around the world. I handled operations, marketing, and sales negotiations.',
+          'Today, Lucky7Collectives is still going, now with a focus on graded cards as the Pokémon card industry continues to reach new highs.',
+        ],
+      },
+    };
+    const params = new URLSearchParams(window.location.search);
+    const proj = PROJECTS[params.get('p')] || PROJECTS.california;
+    document.title = proj.title + ' — Max Shen';
+    document.getElementById('projPageTitle').textContent = proj.title;
+    // Copy slots: `caption` sits under the title, `note` under the film.
+    // One <p> per paragraph; a paragraph may be a list of segments where a
+    // segment with an href becomes a link (only once a real URL is set).
+    // Pages without copy for a slot drop that element entirely.
+    function renderCopy(id, paras) {
+      const el = document.getElementById(id);
+      if (!paras || !paras.length) { el.remove(); return; }
+      paras.forEach(function (para) {
+        const p = document.createElement('p');
+        if (para && para.heading) {           // { heading: '…' } → bold display line
+          p.className = 'proj-copy-heading';
+          p.textContent = para.heading;
+          el.appendChild(p);
+          return;
+        }
+        (Array.isArray(para) ? para : [para]).forEach(function (seg) {
+          if (typeof seg === 'string') { p.appendChild(document.createTextNode(seg)); return; }
+          if (seg.href) {
+            const a = document.createElement('a');
+            a.href = seg.href; a.target = '_blank'; a.rel = 'noopener';
+            a.textContent = seg.text;
+            p.appendChild(a);
+          } else {
+            p.appendChild(document.createTextNode(seg.text));
+          }
+        });
+        el.appendChild(p);
+      });
+    }
+    renderCopy('projPageCaption', proj.caption);
+    renderCopy('projPageNote', proj.note);
+    // Not autoplayed — the film has real sound, and browsers block
+    // unmuted autoplay outside a user gesture. Native controls only.
+    // media: a film, a still, or nothing yet
+    const mediaEl = document.querySelector('.proj-media');
+    const videoEl = document.getElementById('projVideo');
+    // The reveal (clip-path opening) waits until the media can actually paint —
+    // a decoded still or a video with its first frame — so it never opens on an
+    // empty box. Capped at 1.6s so a slow network can't hold the page hostage.
+    let mediaReady = Promise.resolve();
+    const cap = (p) => Promise.race([p, new Promise(r => setTimeout(r, 1600))]);
+    if (proj.video) {
+      videoEl.src = proj.video;
+      mediaReady = cap(new Promise(r => {
+        if (videoEl.readyState >= 2) r(); else videoEl.addEventListener('loadeddata', r, { once: true });
+      }));
+    } else if (proj.image) {
+      const still = document.createElement('img');
+      still.src = proj.image; still.alt = proj.title;
+      still.decoding = 'async'; still.fetchPriority = 'high';
+      videoEl.replaceWith(still);
+      mediaReady = cap(still.decode().catch(function () {}));
+    } else {
+      mediaEl.remove();
+    }
+
+    // ── Frames from the shoot — matched pairs share a row, the
+    //    unmatched singles get their own block after a breather ─────
+    const WIPBASE = '/public/projects/wip/';
+    const WIP_ROWS = [
+      { items: [ ['subway1.jpg', 3840, 2160], ['subway2.jpg', 3840, 2160] ] },
+      { items: [ ['street1.jpg', 3840, 2160], ['street2.jpg', 3840, 2160] ] },
+      { items: [ ['clothing1.jpg', 3840, 2160], ['clothing2.jpg', 3840, 2160] ] },
+      { items: [ ['mirror1.jpg', 3840, 2160], ['mirror2.jpg', 3840, 2160] ] },
+      { items: [ ['walk1.jpg', 3840, 2160], ['walk2.jpg', 3840, 2160] ] },
+      { cls: 'pf-row--break pf-row--trio',
+        items: [ ['noti.jpg', 1080, 1920], ['wip.jpg', 1080, 1920], ['sad.png', 1044, 1882] ] },
+      { cls: 'pf-row--solo', items: [ ['meetup-crop.png', 1160, 980] ] },
+    ];
+    // California — the trip told in order: Rodeo Drive, the drive, the
+    // people, the water, the sunset, the canyon, the game on the sand.
+    // Row shapes carry the pacing — pairs for the beats you linger on,
+    // trios for the quick details, one full-width frame for the sunset.
+    const CALIFORNIA_ROWS = [
+      // opener: one frame alone on the top row
+      { cls: 'pf-row--full', items: [ ['welcome2.jpg', 3840, 2160] ] },
+      // Beverly Hills
+      { cls: 'pf-row--break', items: [ ['top1.jpg', 3840, 2160], ['aura.jpg', 3840, 2160] ] },
+      { items: [ ['maxface.jpg', 2252, 1689], ['pixel.jpg', 2256, 1692] ] },
+      { items: [ ['kris.jpg', 3840, 2160], ['dorian.jpg', 3840, 2160] ] },
+      { cls: 'pf-row--full', items: [ ['top2.jpg', 3840, 2160] ] },
+      // the drive down — both cut to one frame size so the burned-in
+      // captions render at one scale
+      { cls: 'pf-row--break', items: [ ['drive-sd.jpg', 1595, 1094], ['ucla.jpg', 1595, 1094] ] },
+      // the water
+      { cls: 'pf-row--break', items: [ ['max.jpg', 3840, 2160], ['kris2.jpg', 3840, 2160] ] },
+      { items: [ ['ocean.jpg', 2880, 2160], ['tree.jpg', 2880, 2160] ] }, // tree cut to 4:3 so the gutter lines up
+      { items: [ ['car.jpg', 3840, 2160], ['sand.jpg', 3840, 2160] ] },
+      // held beat: the sun going down (pinned to its own width)
+      { cls: 'pf-row--break pf-row--full', items: [ ['sunset.jpg', 3840, 2160] ] },
+      // the canyon
+      { cls: 'pf-row--break', items: [ ['grass-trail.jpg', 3840, 2160], ['canyon-hike.jpg', 3840, 2160] ] },
+      { items: [ ['canyon-walls.jpg', 2880, 2160], ['cliff-path.jpg', 2880, 2160] ] },
+      { items: [ ['paraglide.jpg', 3840, 2160], ['shout.jpg', 3840, 2160] ] },
+      // the game on the sand, back in the water, and out at dusk
+      { cls: 'pf-row--break', items: [ ['four-guys.jpg', 2880, 2160], ['football.jpg', 2880, 2160] ] },
+      // last frame: in the water, full width
+      { cls: 'pf-row--full', items: [ ['zoom.jpg', 1400, 788] ] },
+    ];
+
+    // each project's frames live in their own folder
+    // Robin — the team photo leads as the still; product, then the deck,
+    // closing on the title card as the sign-off
+    const LUCKY7_ROWS = [
+      // three portraits from the shows: our table, the three of us, the graded case
+      { cls: 'pf-row--trio', items: [ ['vendor-table.jpg', 1206, 1566], ['team.jpg', 1656, 2208, 'Me and Brent in 2024 with Mark, owner of Royal Card Shop.'], ['graded-case.jpg', 2400, 3200] ] },
+      // the display case laid out on the table — a held beat
+      { cls: 'pf-row--break pf-row--full', items: [ ['show-table.jpg', 2250, 1688, 'First time vending setup!'] ] },
+    ];
+
+    // Robin's demo and deck are live: the rows embed the actual sites, so the page
+    // is as good as clicking the links. An item given as { embed, w, h, label, href }
+    // renders an iframe in the same frame box, with a caption and an open-in-new-tab link.
+    const ROBIN_ROWS = [
+      { cls: 'pf-row--full', items: [ { embed: 'https://salesforceapp.vercel.app/', w: 16, h: 10, label: 'Live demo' } ] },
+      { cls: 'pf-row--break pf-row--full', items: [ { embed: 'https://robinslidedeck.vercel.app/', w: 16, h: 9, label: 'Slide deck', keys: true } ] },
+    ];
+
+    const PROJECT_FRAMES = {
+      robin:      { base: '/public/projects/robin/',      rows: ROBIN_ROWS },
+      wip:        { base: '/public/projects/wip/',        rows: WIP_ROWS },
+      california: { base: '/public/projects/california/', rows: CALIFORNIA_ROWS },
+      lucky7:     { base: '/public/projects/lucky7/',     rows: LUCKY7_ROWS },
+    };
+
+    // one-shot scroll reveal, staggered by position within its row
+    const frameRevealObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('in');
+        frameRevealObs.unobserve(e.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+
+    const frameSet = PROJECT_FRAMES[params.get('p')] || { base: '', rows: [] };
+    const frameRows = frameSet.rows;
+    const framesWrap = document.getElementById('projFrames');
+    if (!frameRows.length) {
+      framesWrap.remove();
+    } else {
+      frameRows.forEach(function (row) {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'pf-row' + (row.cls ? ' ' + row.cls : '');
+        row.items.forEach(function (it, i) {
+          const cell = document.createElement('figure');
+          cell.className = 'm-item';
+          const w = Array.isArray(it) ? it[1] : it.w, h = Array.isArray(it) ? it[2] : it.h;
+          // flex-grow = aspect ratio → every frame in the row shares one height
+          if (row.items.length > 1) cell.style.flex = (w / h) + ' 1 0';
+          cell.style.transitionDelay = (i * 0.09) + 's';
+          const frame = document.createElement('div');
+          frame.className = 'pf-frame';
+          frame.style.aspectRatio = w + ' / ' + h;
+          if (!Array.isArray(it) && it.embed) {           // live site in the frame box
+            frame.classList.add('pf-frame--embed');
+            const ifr = document.createElement('iframe');
+            ifr.src = it.embed;
+            ifr.title = it.label || proj.title;
+            ifr.loading = 'lazy';
+            ifr.allow = 'fullscreen';
+            ifr.referrerPolicy = 'no-referrer-when-downgrade';
+            frame.appendChild(ifr);
+            cell.appendChild(frame);
+            if (it.keys) {
+              // keyboard-driven embed (the deck): give it focus as soon as it is mostly on
+              // screen so ← → work without a click, and hand focus back when it scrolls away
+              new IntersectionObserver(function (entries) {
+                entries.forEach(function (en) {
+                  if (en.isIntersecting) { ifr.focus({ preventScroll: true }); }
+                  else if (document.activeElement === ifr) { ifr.blur(); }
+                });
+              }, { threshold: 0.6 }).observe(ifr);
+            }
+            const cap = document.createElement('figcaption');
+            cap.className = 'pf-cap pf-cap--embed';
+            cap.appendChild(document.createTextNode((it.label || '') + '  ·  '));
+            const a = document.createElement('a');
+            a.href = it.embed; a.target = '_blank'; a.rel = 'noopener';
+            a.textContent = 'Open in a new tab \u2197';
+            cap.appendChild(a);
+            cell.appendChild(cap);
+            rowEl.appendChild(cell);
+            frameRevealObs.observe(cell);
+            return;
+          }
+          const img = document.createElement('img');
+          img.src = frameSet.base + it[0];
+          img.alt = it[3] || (proj.title + ' — ' + it[0].replace(/\.[a-z]+$/, ''));
+          img.loading = 'lazy';
+          frame.appendChild(img);
+          cell.appendChild(frame);
+          if (it[3]) {                       // optional 4th entry: a caption
+            const cap = document.createElement('figcaption');
+            cap.className = 'pf-cap';
+            cap.textContent = it[3];
+            cell.appendChild(cap);
+          }
+          rowEl.appendChild(cell);
+          frameRevealObs.observe(cell);
+        });
+        framesWrap.appendChild(rowEl);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.body.classList.add('ready');
+        document.querySelectorAll('.fade-up').forEach(el => el.classList.add('in'));
+        mediaReady.then(() => document.body.classList.add('media-ready'));
+      }));
+    });
+
+    // ── Mobile hamburger menu ─────────────────────────────────
+    const hamburger  = document.getElementById('navHamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    function toggleMenu(force) {
+      const open = typeof force === 'boolean' ? force : !hamburger.classList.contains('open');
+      hamburger.classList.toggle('open', open);
+      mobileMenu.classList.toggle('open', open);
+      mobileMenu.setAttribute('aria-hidden', String(!open));
+      document.body.style.overflow = open ? 'hidden' : '';
+    }
+
+    hamburger.addEventListener('click', () => toggleMenu());
+
+    // Fade to black before leaving — every nav link here goes back to
+    // index.html, there's nowhere on this page itself to navigate to.
+    document.querySelectorAll('#home-link, .nav-links a, #mobileMenu a').forEach(el => {
+      el.addEventListener('click', e => {
+        e.preventDefault();
+        toggleMenu(false);
+        const dest = el.getAttribute('href');
+        pageLeave(dest);
+      });
+    });
+
+    // ── Page enter ────────────────────────────────────────────
+    // Arrivals fade in over 0.55s (the exit fade's length), so a fresh
+    // load, a link, and the browser's Back button all feel the same.
+    // On a bfcache restore the exit fade's inline opacity:0 is still on
+    // <body>; restart the fade from there instead of snapping to 1.
+    (function () {
+      const html = document.documentElement, body = document.body;
+      function enter() {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { html.classList.remove('page-enter'); });
+        });
+      }
+      enter();
+      window.addEventListener('pageshow', function (e) {
+        if (!e.persisted) return;
+        body.style.transition = 'none';
+        body.style.opacity = '';
+        html.classList.remove('page-exit');
+        html.classList.add('page-enter');
+        void body.offsetWidth;
+        body.style.transition = '';
+        enter();
+      });
+    })();
+  </script>
+
+  <script>
+    // Wordmark: once-per-session explosion intro, hover boops + boom jolt.
+    (function () {
+      const mark = document.querySelector('.wordmark');
+      if (!mark) return;
+      const letters = mark.querySelectorAll('.wm-l');
+      const boom = mark.querySelector('.wm-boom');
+      if (!sessionStorage.getItem('wmIntroPlayed')) {
+        sessionStorage.setItem('wmIntroPlayed', '1');
+        mark.classList.add('wm-intro');
+        setTimeout(function () { mark.classList.remove('wm-intro'); }, 1700);
+      }
+      letters.forEach(function (l) {
+        l.addEventListener('animationend', function () { l.classList.remove('wm-boop'); });
+        l.addEventListener('mouseenter', function () {
+          if (!mark.classList.contains('wm-intro') && !l.classList.contains('wm-boop')) l.classList.add('wm-boop');
+        });
+      });
+      if (boom) {
+        boom.addEventListener('animationend', function () { boom.classList.remove('wm-jolt'); });
+        mark.addEventListener('mouseenter', function () {
+          if (!mark.classList.contains('wm-intro') && !boom.classList.contains('wm-jolt')) boom.classList.add('wm-jolt');
+        });
+      }
+    })();
+  </script>
+  <script>
+    // Hide the nav while scrolling down, bring it back on scroll-up or near the top,
+    // and never while the mobile menu is open.
+    (function () {
+      const nav = document.querySelector('nav');
+      if (!nav) return;
+      const SHOW_AT = 80, DELTA = 6;
+      let last = window.scrollY, hidden = false, ticking = false;
+      function update() {
+        ticking = false;
+        const y = window.scrollY;
+        const menuOpen = !!document.querySelector('.nav-hamburger.open');
+        let want = hidden;
+        if (menuOpen || y <= SHOW_AT || y < last - DELTA) want = false;
+        else if (y > last + DELTA) want = true;
+        if (want !== hidden) { hidden = want; nav.classList.toggle('nav-hidden', hidden); }
+        last = y;
+      }
+      window.addEventListener('scroll', function () {
+        nav.classList.add('nav-scroll');
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      }, { passive: true });
+    })();
+  </script>
+</body>
+</html>

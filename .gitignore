@@ -13,3 +13,23 @@ components/
 www.dongwon.com_en (1).png
 hero-section.png
 featuredwork.png
+
+# ── scratch & tooling (not part of the site) ──
+.agents/
+.claude/
+agent/
+skills-lock.json
+*.mov
+/bottomref.png
+/lcd-*.png
+/montserrat-*.png
+/order-check-hero.png
+/portal-*.png
+/portfolio-bottom*.png
+/maxshen3.JPG
+/maxshen4.jpg
+
+# ── unreferenced heavy assets ──
+public/models/
+public/videos/portfolio-intro.mp4
+public/destinations/japan/Timeline*
