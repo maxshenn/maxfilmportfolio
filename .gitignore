@@ -33,3 +33,7 @@ skills-lock.json
 public/models/
 public/videos/portfolio-intro.mp4
 public/destinations/japan/Timeline*
+
+# local symlinks to folders outside the repo (broke the Pages build)
+/frames
+/complete-projects
