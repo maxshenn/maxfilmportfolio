@@ -73,7 +73,10 @@
       font-weight: 400;
       line-height: 1;
       overflow-x: hidden;
-      opacity: 0;
+      /* 0.01, not 0: Safari/WebKit won't paint a new page (it keeps the previous one on screen and
+         runs no animation frames) until <body> has NON-ZERO opacity — at exactly 0 it waits for every
+         image and video to finish loading before showing anything. 0.01 is invisible but lets it paint. */
+      opacity: 0.01;
       transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
     body.ready { opacity: 1; }
@@ -126,7 +129,7 @@
     body > section, body > main, body > .contact-section {
       transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    html.page-enter body { opacity: 0; transition: none; }
+    html.page-enter body { opacity: 0.01; transition: none; } /* non-zero: WebKit will not paint a page whose <body> is at opacity 0 */
     html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section {
       transform: translateY(18px); transition: none;
     }
@@ -348,7 +351,21 @@
     @media (max-width: 560px) {
       .proj-page { padding: calc(var(--nav-h) + 20px) 20px 24px; }
       .proj-media video { width: min(100%, calc(64vh * var(--ar, 1.7778))); }
-      .proj-page-caption { font-size: 14px; margin-bottom: 32px; }
+      /* Title: fluid 28 → 36px so the longest single word ("Lucky7Collectives", 8.9× the
+         font size wide) always fits the 280px column of a 320px phone; if a title does
+         wrap, the lines get real leading and balance. break-word is only a last resort. */
+      .proj-page .dest-page-title {
+        font-size: clamp(1.75rem, 0.5rem + 6.5vw, 2.25rem);
+        line-height: 1.08;
+        margin-bottom: 24px;
+        text-wrap: balance;
+        overflow-wrap: break-word;
+      }
+      /* Copy: 16px on phones, on the 8/16/24/40 scale — title 24 dek 40 media 40 note 40 frames */
+      .proj-page-caption { font-size: 16px; line-height: 1.65; margin: 0 auto 40px; }
+      /* the long-form slot under the media reads as body copy: ragged-right, not a
+         centred block of nine-line paragraphs */
+      .proj-page-note { margin: 40px auto 0; text-align: left; }
     }
 
     #projFrames { margin-top: 48px; }
@@ -378,8 +395,163 @@
     /* a live site in a frame box: hairline edge so the white page inside reads as a screen */
     .pf-frame--embed { border: 1px solid rgba(0, 0, 0, 0.12); background: #fff; }
     .pf-frame--embed iframe { display: block; width: 100%; height: 100%; border: 0; }
+    /* ── Enlarge: the same iframe (no reload, state kept) pops into a full-screen landscape
+       overlay. On a portrait phone the frame is rotated 90°, so you turn the phone sideways. ── */
+    .pf-cap--embed { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .pf-enlarge {
+      display: none;
+      align-items: center; gap: 8px;
+      height: 40px; padding: 0 16px;
+      border: 0; border-radius: 999px;
+      background: #000; color: #fff;
+      font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1;
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.625, 0.05, 0, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .pf-enlarge svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .pf-enlarge:hover { transform: scale(0.95); }
+    .pf-enlarge:active { transform: scale(0.9); }
+    .pf-enlarge:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+    @media (max-width: 960px), (pointer: coarse) { .pf-enlarge { display: inline-flex; } }
+
+    html.embed-open, html.embed-open body { overflow: hidden; }
+    /* position: fixed needs an untransformed ancestor chain to mean "the viewport" */
+    html.embed-open .proj-page, html.embed-open .m-item { transform: none !important; transition: none !important; opacity: 1 !important; }
+    .embed-scrim {
+      position: fixed; inset: 0; z-index: 6990;
+      background: #0d0c0b;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    html.embed-open .embed-scrim { opacity: 1; pointer-events: auto; }
+    .pf-frame--embed.is-enlarged {
+      position: fixed; z-index: 7000;
+      top: 50%; left: 50%;
+      width: 100vw; height: 100vh; height: 100dvh;
+      aspect-ratio: auto !important;
+      border: 0;
+      overflow: hidden;
+      transform: translate(-50%, -50%);
+      animation: embed-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @media (orientation: portrait) {
+      .pf-frame--embed.is-enlarged {
+        width: 100vh; width: 100dvh;
+        height: 100vw;
+        transform: translate(-50%, -50%) rotate(90deg);
+        animation-name: embed-pop-rotated;
+      }
+    }
+    @keyframes embed-pop {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes embed-pop-rotated {
+      from { opacity: 0; transform: translate(-50%, -50%) rotate(90deg) scale(0.9); }
+      to   { opacity: 1; transform: translate(-50%, -50%) rotate(90deg) scale(1); }
+    }
+    .pf-embed-close, .pf-embed-hint { display: none; }
+    .is-enlarged .pf-embed-close {
+      display: inline-flex; align-items: center; gap: 6px;
+      position: absolute; left: 12px; bottom: 12px; z-index: 2;
+      height: 36px; padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 999px;
+      background: rgba(13, 12, 11, 0.72); color: #fff;
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+      cursor: pointer;
+    }
+    .is-enlarged .pf-embed-hint {
+      display: block;
+      position: absolute; left: 50%; top: 14px; z-index: 2;
+      transform: translateX(-50%);
+      padding: 8px 14px; border-radius: 999px;
+      background: rgba(13, 12, 11, 0.78); color: #fff;
+      font-family: var(--font-sans); font-size: 13px; font-weight: 500; white-space: nowrap;
+      pointer-events: none;
+      animation: embed-hint 2.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @media (orientation: landscape) { .is-enlarged .pf-embed-hint { display: none; } }
+    @keyframes embed-hint { 0% { opacity: 0; } 12%, 70% { opacity: 1; } 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .pf-frame--embed.is-enlarged { animation-duration: 0.01s; }
+    }
     .pf-cap--embed a { color: #000; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
     .pf-cap--embed a:hover { opacity: 0.6; }
+    /* ── Embed preview (≤960px: every phone, both orientations, and small tablets) ──
+       Both sites are desktop products: the demo's own narrow layout clips its tab bar and the
+       deck is a fixed 16:9 canvas with no phone layout at all. So on small screens the frame
+       keeps its desktop ratio and shows the site laid out at desktop width, scaled down to the
+       column (wireEnlarge › layout). That rendering is a picture, not a UI: the iframe takes no
+       touches (it can't trap the page's scroll) and the whole frame is one button that opens the
+       full-screen overlay, where the site is live. */
+    @media (max-width: 960px) {
+      /* :not(.is-enlarged) — same specificity as the overlay's position: fixed, and later in the sheet */
+      .pf-frame--embed.is-preview:not(.is-enlarged) { position: relative; }
+      .pf-frame--embed.is-preview iframe { max-width: none; }
+      .pf-frame--embed.is-preview:not(.is-enlarged) iframe { pointer-events: none; }
+      .pf-embed-open {
+        position: absolute; inset: 0; z-index: 1;
+        display: flex; align-items: flex-end; justify-content: center;
+        padding: 12px;
+        border: 0; color: inherit;
+        /* a white veil rises under the pill: the rendering fades out instead of colliding
+           with it, which also says "preview" rather than "tiny live page" */
+        background: linear-gradient(to top, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 22%, rgba(255, 255, 255, 0) 48%);
+        cursor: pointer; -webkit-tap-highlight-color: transparent;
+      }
+      .pf-embed-open__pill {
+        display: inline-flex; align-items: center; gap: 8px;
+        height: 36px; padding: 0 14px 0 12px;
+        border-radius: 999px;
+        background: #000; color: #fff;
+        font-family: var(--font-sans); font-size: 13px; font-weight: 500; line-height: 1;
+        box-shadow: 0 1px 2px rgba(13, 12, 11, 0.2), 0 10px 24px -8px rgba(13, 12, 11, 0.35);
+        transition: transform 0.3s cubic-bezier(0.625, 0.05, 0, 1);
+      }
+      .pf-embed-open__pill svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .pf-embed-open:active .pf-embed-open__pill { transform: scale(0.9); }
+      .pf-embed-open:focus-visible { outline: 2px solid #000; outline-offset: -4px; }
+      .pf-frame--embed.is-enlarged .pf-embed-open { display: none; }
+      /* the frame is the button now — the caption keeps the label and the new-tab link,
+         with the link's hit area opened up to 44px */
+      .pf-frame--embed.is-preview + .pf-cap--embed .pf-enlarge { display: none; }
+      .pf-frame--embed.is-preview + .pf-cap--embed { margin-top: 0; min-height: 44px; }
+      .pf-frame--embed.is-preview + .pf-cap--embed a { display: inline-flex; align-items: center; min-height: 44px; }
+    }
+    @media (max-width: 960px) and (hover: hover) {
+      .pf-embed-open:hover .pf-embed-open__pill { transform: scale(0.95); }
+    }
+    @media (min-width: 961px) { .pf-embed-open { display: none; } }
+    /* a phone held sideways is ~390px tall: keep the whole preview on screen */
+    @media (max-width: 960px) and (orientation: landscape) and (max-height: 560px) {
+      /* .pf-row.pf-row--full: has to outrank `.pf-row--full .m-item`, which comes later in the sheet */
+      .pf-row.pf-row--full .m-item--embed { flex: 0 1 auto; width: min(100%, calc(80vh * var(--ar-num, 1.6))); margin-left: auto; margin-right: auto; }
+    }
+    /* ── Overlay on touch screens: a 44px Close pill kept clear of the notch / home indicator
+       (the frame is rotated in portrait, so its left/bottom are the screen's top/left), the
+       hint moved off the demo's tab bar to the middle of the screen, and a dark page behind
+       it so iOS never shows white in the safe-area gutters or on overscroll. ── */
+    @media (max-width: 960px), (pointer: coarse) {
+      html.embed-open { overscroll-behavior: none; }
+      html.embed-open, html.embed-open body { background: #0d0c0b; }
+      .embed-scrim { touch-action: none; }
+      .is-enlarged .pf-embed-close {
+        height: 44px; padding: 0 18px; font-size: 14px;
+        left: max(12px, env(safe-area-inset-left, 0px));
+        bottom: max(12px, env(safe-area-inset-bottom, 0px));
+        transition: transform 0.3s cubic-bezier(0.625, 0.05, 0, 1);
+      }
+      .is-enlarged .pf-embed-close:active { transform: scale(0.9); }
+      .is-enlarged .pf-embed-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+      .is-enlarged .pf-embed-hint { top: 50%; transform: translate(-50%, -50%); padding: 12px 18px; font-size: 14px; background: rgba(13, 12, 11, 0.94); }
+    }
+    @media (max-width: 960px) and (orientation: portrait), (pointer: coarse) and (orientation: portrait) {
+      .is-enlarged .pf-embed-close {
+        left: max(12px, env(safe-area-inset-top, 0px));
+        bottom: max(12px, env(safe-area-inset-left, 0px));
+      }
+    }
     .pf-cap {
       margin: 10px 0 0;
       font-family: var(--font-sans);
@@ -403,10 +575,23 @@
       .pf-row { gap: 8px; margin-top: 8px; }
       .pf-row--break { margin-top: 40px; }
       .pf-row--solo .m-item { width: 100%; }
-      .pf-cap { font-size: 12px; margin-top: 8px; }
-      /* live embeds get a tall frame so the sites' own mobile layouts show in full */
-      .pf-frame--embed { aspect-ratio: var(--ar-phone, 9 / 16) !important; }
+      .pf-cap { margin-top: 8px; }
+      #projFrames { margin-top: 40px; }
+      /* A caption under one frame of a pair/trio would be set in a ~100px column (four
+         two-word lines). On phones it moves under the whole row instead, aligned to the
+         frame it belongs to (data-at), and fades in with the row. */
+      .pf-row.has-rowcap { flex-wrap: wrap; }
+      .pf-row.has-rowcap .m-item .pf-cap { display: none; }
+      .proj-page .pf-cap--row {
+        flex: 0 0 100%; margin: 0;
+        opacity: 0;
+        transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.18s;
+      }
+      .proj-page .pf-cap--row.in { opacity: 1; }
+      .pf-cap--row[data-at="center"] { text-align: center; }
+      .pf-cap--row[data-at="end"] { text-align: right; }
     }
+    @media (min-width: 561px) { .pf-cap--row { display: none; } }
     .m-item {
       overflow: hidden;
       background: #0d0c0b;
@@ -488,6 +673,64 @@
       .mosaic { gap: 14px; }
       .mosaic-col { gap: 14px; }
       .contact-section { padding: 64px 24px 32px; }
+      /* the wordmark, the hamburger and the content column share one 20px gutter (as on the homepage) */
+      nav { padding: 0 20px; }
+    }
+
+    /* ── Touch ergonomics (small / touch screens only) ────────────
+       44px hit areas without moving anything: each box grows around the
+       same centre and the spacing beside it shrinks by the same amount. */
+    @media (max-width: 960px) {
+      /* The nav comes back over the content on scroll-up. Same frosted backing as the homepage
+         and the destination pages (JS adds .nav-solid once the page has moved), so the hollow
+         wordmark and the 1px burger lines never sit on a busy frame. */
+      nav::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: rgba(255, 255, 255, 0.9);
+        -webkit-backdrop-filter: saturate(1.6) blur(16px);
+        backdrop-filter: saturate(1.6) blur(16px);
+        opacity: 0;
+        transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: none;
+      }
+      nav.nav-solid::before { opacity: 1; }
+      /* opaque sheet — at 0.97 the page title ghosted through behind the links */
+      #mobileMenu { background: #fff; }
+      .nav-hamburger { width: 44px; height: 44px; padding: 0; align-items: center; margin: 0 -3px; }
+      #mobileMenu ul { gap: 16px; }
+      #mobileMenu a { display: block; padding: 10px 24px; }
+      #mobileMenu a:focus-visible, .nav-hamburger:focus-visible { outline: 2px solid #000; outline-offset: 2px; border-radius: 4px; }
+    }
+    @media (max-width: 960px), (pointer: coarse) {
+      .contact-icons { gap: 4px; }
+      .contact-icon { width: 44px; height: 44px; }
+      /* inline link: vertical padding widens the hit area and moves no text */
+      .proj-page-caption a { padding-top: 13px; padding-bottom: 13px; }
+    }
+    /* No hover on a touch screen: iOS leaves :hover stuck on the last thing tapped (a photo
+       stays zoomed, an icon stays grey). Hover styles are dropped; :active carries the feedback. */
+    @media (hover: none) {
+      .m-item:hover img { transform: none; }
+      .contact-icon:hover { color: var(--text); transform: none; }
+      .contact-icon:active { color: var(--muted); transform: scale(0.94); }
+      .pf-enlarge:hover { transform: none; }
+      .pf-enlarge:active { transform: scale(0.9); }
+      .proj-page-caption a:hover, .pf-cap--embed a:hover { opacity: 1; }
+      .proj-page-caption a:active, .pf-cap--embed a:active { opacity: 0.55; }
+    }
+    /* Reduce Motion (iOS: Settings › Accessibility › Motion): every entrance on this page
+       becomes a short opacity fade — nothing slides, nothing is left hidden. */
+    @media (prefers-reduced-motion: reduce) and (max-width: 960px), (prefers-reduced-motion: reduce) and (pointer: coarse) {
+      .fade-up, .proj-media,
+      .proj-page .m-item, .proj-page .m-item.from-top {
+        transform: none;
+        transition-property: opacity; transition-duration: 0.25s; transition-timing-function: ease-out;
+      }
+      .m-item img { transition: none; }
+      #grain { animation: none; }
     }
 
       .nav-name:focus-visible { outline: 2px solid #000; outline-offset: 6px; border-radius: 4px; }
@@ -830,6 +1073,22 @@
     }
     renderCopy('projPageCaption', proj.caption);
     renderCopy('projPageNote', proj.note);
+
+    // ── Lighter media on small screens ─────────────────────────
+    // The frames are 3–4 MB 4K stills (California: 52 MB a visit). At ≤960px every image under
+    // public/projects/ is requested from the m/ folder beside it instead — same base name, always
+    // .jpg, long edge 1400px (public/projects/x/top1.jpg → public/projects/x/m/top1.jpg).
+    // Desktop asks for exactly the files it always has. A missing variant falls back to the original.
+    const SMALL_SCREEN = window.matchMedia('(max-width: 960px)').matches;
+    function setSrc(img, src) {
+      let light = src;
+      if (SMALL_SCREEN && src.indexOf('public/projects/') === 0) {
+        const cut = src.lastIndexOf('/') + 1;
+        light = src.slice(0, cut) + 'm/' + src.slice(cut).replace(/\.[a-z0-9]+$/i, '.jpg');
+        img.addEventListener('error', function () { img.src = src; }, { once: true });
+      }
+      img.src = light;
+    }
     // Not autoplayed — the film has real sound, and browsers block
     // unmuted autoplay outside a user gesture. Native controls only.
     // media: a film, a still, or nothing yet
@@ -853,11 +1112,22 @@
           if (videoEl.readyState >= 2) r(); else videoEl.addEventListener('loadeddata', r, { once: true });
         }));
       }
-      videoEl.src = proj.video;
+      // WebKit keeps `load` open until a <video>'s metadata has arrived, and holds the first animation
+      // frame — which this page's entrance waits on — until `load`. For a 33 MB film on a phone
+      // connection that is seconds of blank page. So small screens give the player its film once the
+      // page has loaded: the poster is already up, the box is already reserved, nothing moves.
+      if (SMALL_SCREEN && proj.poster) {
+        const arm = function () { if (!videoEl.hasAttribute('src')) videoEl.src = proj.video; };
+        if (document.readyState === 'complete') arm();
+        else { window.addEventListener('load', arm, { once: true }); setTimeout(arm, 2500); }
+      } else {
+        videoEl.src = proj.video;
+      }
     } else if (proj.image) {
       const still = document.createElement('img');
-      still.src = proj.image; still.alt = proj.title;
+      still.alt = proj.title;
       still.decoding = 'async'; still.fetchPriority = 'high';
+      setSrc(still, proj.image);
       videoEl.replaceWith(still);
       mediaReady = cap(still.decode().catch(function () {}));
     } else {
@@ -921,9 +1191,12 @@
     // Robin's demo and deck are live: the rows embed the actual sites, so the page
     // is as good as clicking the links. An item given as { embed, w, h, label, href }
     // renders an iframe in the same frame box, with a caption and an open-in-new-tab link.
+    // `virtualWidth`: lay the site out at this desktop width and scale it to fit — in the
+    // full-screen overlay and in the small-screen preview. `previewWidth`: the same, preview only
+    // (the deck is a fluid 16:9 canvas, so full screen it simply fills the turned phone).
     const ROBIN_ROWS = [
-      { cls: 'pf-row--full', items: [ { embed: 'https://salesforceapp.vercel.app/', w: 16, h: 10, phone: [9, 16], label: 'Live demo' } ] },
-      { cls: 'pf-row--break pf-row--full', items: [ { embed: 'https://robinslidedeck.vercel.app/', w: 16, h: 9, phone: [2, 3], label: 'Slide deck', keys: true } ] },
+      { cls: 'pf-row--full', items: [ { embed: 'https://salesforceapp.vercel.app/', w: 16, h: 10, label: 'Live demo', virtualWidth: 1180 } ] },
+      { cls: 'pf-row--break pf-row--full', items: [ { embed: 'https://robinslidedeck.vercel.app/', w: 16, h: 9, label: 'Slide deck', previewWidth: 1180, keys: true } ] },
     ];
 
     const PROJECT_FRAMES = {
@@ -949,6 +1222,110 @@
       });
     }, { threshold: 0 });
 
+    // ── Enlarge an embed: pop the SAME iframe into a full-screen landscape overlay ─────
+    // Nothing is reloaded, so the deck keeps its slide and the demo keeps its state.
+    // `it.virtualWidth` lays the site out at a desktop width and scales it to fit, so the
+    // whole desktop UI is visible (and still tappable) on a phone turned sideways.
+    const htmlEl = document.documentElement;
+    const embedScrim = document.createElement('div');
+    embedScrim.className = 'embed-scrim';
+    document.body.appendChild(embedScrim);
+    let openEmbedState = null;
+    // \u2264960px the embeds are scaled desktop previews that open the overlay on tap (see the CSS)
+    const previewMQ = window.matchMedia('(max-width: 960px)');
+    function wireEnlarge(frame, ifr, it) {
+      const origin = new URL(it.embed).origin;
+      const post = (type, extra) => { try { ifr.contentWindow.postMessage(Object.assign({ source: 'robin-host', type: type }, extra || {}), origin); } catch (e) {} };
+      const touchLike = () => window.matchMedia('(max-width: 960px), (pointer: coarse)').matches;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button'; closeBtn.className = 'pf-embed-close'; closeBtn.textContent = '\u2715  Close';
+      const hint = document.createElement('div');
+      hint.className = 'pf-embed-hint'; hint.textContent = 'Turn your phone sideways';
+      frame.appendChild(closeBtn); frame.appendChild(hint);
+      let opener = null;                                       // the whole-frame "Open \u2026" button, small screens only
+
+      function layout() {
+        const enlarged = frame.classList.contains('is-enlarged');
+        const vw = enlarged ? it.virtualWidth : (previewMQ.matches ? (it.previewWidth || it.virtualWidth) : 0);
+        const L = frame.clientWidth, S = frame.clientHeight;   // layout box inside the hairline, unaffected by the rotation
+        if (vw && L && L < vw) {
+          const k = L / vw;
+          ifr.style.width = vw + 'px'; ifr.style.height = (S / k) + 'px';
+          ifr.style.transformOrigin = '0 0'; ifr.style.transform = 'scale(' + k + ')';
+        } else { ifr.style.width = ifr.style.height = ifr.style.transform = ifr.style.transformOrigin = ''; }
+      }
+      // Small screens: the frame becomes one button over a scaled, untouchable rendering.
+      // Built on demand, so a desktop load adds nothing to the page.
+      function syncPreview() {
+        const on = previewMQ.matches;
+        frame.classList.toggle('is-preview', on);
+        if (on && !opener) {
+          const name = it.label || 'embed';
+          opener = document.createElement('button');
+          opener.type = 'button'; opener.className = 'pf-embed-open';
+          opener.setAttribute('aria-label', 'Open ' + name + ' full screen');
+          const pill = document.createElement('span');
+          pill.className = 'pf-embed-open__pill';
+          pill.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+          pill.appendChild(document.createTextNode('Open ' + name.toLowerCase()));
+          opener.appendChild(pill);
+          opener.addEventListener('click', function () { open(false); });
+          frame.appendChild(opener);
+        }
+        // a preview is a picture: out of the tab order and hidden from assistive tech until opened
+        ifr.toggleAttribute('inert', on && !frame.classList.contains('is-enlarged'));
+        layout();
+      }
+      function open(fromEmbed) {
+        if (openEmbedState) return;
+        const cell = frame.parentElement;
+        cell.style.minHeight = cell.offsetHeight + 'px';       // hold the page's layout while the frame is out of flow
+        openEmbedState = { close: close, y: window.scrollY };
+        hint.textContent = Math.min(window.innerWidth, window.innerHeight) >= 600 ? 'Turn your tablet sideways' : 'Turn your phone sideways';
+        htmlEl.classList.add('embed-open'); frame.classList.add('is-enlarged');
+        ifr.removeAttribute('inert');
+        layout();
+        if (!fromEmbed) post('enter-fullscreen');
+        history.pushState({ embedOpen: true }, '');            // the phone's Back gesture closes it
+        closeBtn.focus({ preventScroll: true });
+      }
+      function close(fromPop, fromEmbed) {
+        if (!openEmbedState) return;
+        const y = openEmbedState.y; openEmbedState = null;
+        frame.classList.remove('is-enlarged'); htmlEl.classList.remove('embed-open');
+        syncPreview();                                         // back to the scaled preview (or to a plain frame on a wide screen)
+        frame.parentElement.style.minHeight = '';
+        window.scrollTo(0, y);
+        if (!fromEmbed) post('exit-fullscreen');
+        if (!fromPop && history.state && history.state.embedOpen) history.back();
+        const back = opener && previewMQ.matches ? opener : btn;
+        if (back && back.offsetParent) back.focus({ preventScroll: true });
+      }
+      syncPreview();
+      if (previewMQ.addEventListener) previewMQ.addEventListener('change', syncPreview); else previewMQ.addListener(syncPreview);
+      // the preview's scale follows the column: first layout, rotation, a resized window
+      if (window.ResizeObserver) new ResizeObserver(layout).observe(frame);
+      closeBtn.addEventListener('click', function () { close(false, false); });
+      window.addEventListener('resize', function () { if (openEmbedState && frame.classList.contains('is-enlarged')) layout(); });
+      window.addEventListener('popstate', function () { if (openEmbedState && frame.classList.contains('is-enlarged')) close(true, false); });
+      // the deck speaks a small protocol: it announces itself, and its own enlarge button
+      // asks us to take the frame full screen (iPhones have no Fullscreen API for pages)
+      window.addEventListener('message', function (e) {
+        if (e.origin !== origin || e.source !== ifr.contentWindow || !e.data || e.data.source !== 'robin-deck') return;
+        if (e.data.type === 'ready') post('hello', { manageFullscreen: touchLike() });
+        if (e.data.type === 'fullscreen') { if (e.data.on) open(true); else close(false, true); }
+      });
+      ifr.addEventListener('load', function () { post('hello', { manageFullscreen: touchLike() }); });
+
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'pf-enlarge';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>Enlarge';
+      btn.setAttribute('aria-label', 'Enlarge ' + (it.label || 'embed') + ' to full screen');
+      btn.addEventListener('click', function () { open(false); });
+      return btn;
+    }
+
     const frameSet = PROJECT_FRAMES[params.get('p')] || { base: '', rows: [] };
     const frameRows = frameSet.rows;
     const framesWrap = document.getElementById('projFrames');
@@ -958,6 +1335,7 @@
       frameRows.forEach(function (row) {
         const rowEl = document.createElement('div');
         rowEl.className = 'pf-row' + (row.cls ? ' ' + row.cls : '');
+        const rowCaps = [];
         row.items.forEach(function (it, i) {
           const cell = document.createElement('figure');
           cell.className = 'm-item';
@@ -970,7 +1348,8 @@
           frame.style.aspectRatio = w + ' / ' + h;
           if (!Array.isArray(it) && it.embed) {           // live site in the frame box
             frame.classList.add('pf-frame--embed');
-            if (it.phone) frame.style.setProperty('--ar-phone', it.phone[0] + ' / ' + it.phone[1]);
+            cell.classList.add('m-item--embed');
+            cell.style.setProperty('--ar-num', (w / h).toFixed(4));   // lets CSS cap the preview's height on a phone held sideways
             const ifr = document.createElement('iframe');
             ifr.src = it.embed;
             ifr.title = it.label || proj.title;
@@ -984,27 +1363,30 @@
               // screen so ← → work without a click, and hand focus back when it scrolls away
               new IntersectionObserver(function (entries) {
                 entries.forEach(function (en) {
-                  if (en.isIntersecting) { ifr.focus({ preventScroll: true }); }
+                  if (en.isIntersecting) { if (!previewMQ.matches) ifr.focus({ preventScroll: true }); }   // a preview takes no input
                   else if (document.activeElement === ifr) { ifr.blur(); }
                 });
               }, { threshold: 0.6 }).observe(ifr);
             }
             const cap = document.createElement('figcaption');
             cap.className = 'pf-cap pf-cap--embed';
-            cap.appendChild(document.createTextNode((it.label || '') + '  ·  '));
+            const capText = document.createElement('span');
+            capText.appendChild(document.createTextNode((it.label || '') + '  ·  '));
             const a = document.createElement('a');
             a.href = it.embed; a.target = '_blank'; a.rel = 'noopener';
             a.textContent = 'Open in a new tab \u2197';
-            cap.appendChild(a);
+            capText.appendChild(a);
+            cap.appendChild(capText);
+            cap.appendChild(wireEnlarge(frame, ifr, it));
             cell.appendChild(cap);
             rowEl.appendChild(cell);
             frameRevealObs.observe(cell); frameResetObs.observe(cell);
             return;
           }
           const img = document.createElement('img');
-          img.src = frameSet.base + it[0];
           img.alt = it[3] || (proj.title + ' — ' + it[0].replace(/\.[a-z]+$/, ''));
           img.loading = 'lazy';
+          setSrc(img, frameSet.base + it[0]);
           frame.appendChild(img);
           cell.appendChild(frame);
           if (it[3]) {                       // optional 4th entry: a caption
@@ -1012,20 +1394,42 @@
             cap.className = 'pf-cap';
             cap.textContent = it[3];
             cell.appendChild(cap);
+            // shared row on a small screen: the caption is also set under the whole row
+            // (CSS swaps the two at ≤560px — a ~100px column is no place for a sentence)
+            if (SMALL_SCREEN && row.items.length > 1) {
+              rowCaps.push({ text: it[3], at: i === 0 ? 'start' : (i === row.items.length - 1 ? 'end' : 'center') });
+            }
           }
           rowEl.appendChild(cell);
           frameRevealObs.observe(cell); frameResetObs.observe(cell);
+        });
+        rowCaps.forEach(function (c) {
+          const p = document.createElement('p');
+          p.className = 'pf-cap pf-cap--row';
+          p.dataset.at = c.at;
+          p.textContent = c.text;
+          rowEl.classList.add('has-rowcap');
+          rowEl.appendChild(p);
+          frameRevealObs.observe(p); frameResetObs.observe(p);
         });
         framesWrap.appendChild(rowEl);
       });
     }
 
+    // On touch / small screens the entrance never depends on an animation frame alone: WebKit can
+    // hold the first frame until `load`, which would leave the page at opacity 0. A timer backs it up.
+    const TOUCH_LIKE = window.matchMedia('(max-width: 960px), (pointer: coarse)').matches;
     document.addEventListener('DOMContentLoaded', () => {
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      let revealed = false;
+      const reveal = () => {
+        if (revealed) return;
+        revealed = true;
         document.body.classList.add('ready');
         document.querySelectorAll('.fade-up').forEach(el => el.classList.add('in'));
         mediaReady.then(() => document.body.classList.add('media-ready'));
-      }));
+      };
+      requestAnimationFrame(() => requestAnimationFrame(reveal));
+      if (TOUCH_LIKE) setTimeout(reveal, 160);
     });
 
     // ── Mobile hamburger menu ─────────────────────────────────
@@ -1037,6 +1441,8 @@
       hamburger.classList.toggle('open', open);
       mobileMenu.classList.toggle('open', open);
       mobileMenu.setAttribute('aria-hidden', String(!open));
+      hamburger.setAttribute('aria-expanded', String(open));
+      hamburger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
       document.body.style.overflow = open ? 'hidden' : '';
     }
 
@@ -1064,6 +1470,8 @@
         requestAnimationFrame(function () {
           requestAnimationFrame(function () { html.classList.remove('page-enter'); });
         });
+        // touch / small screens: same timer backstop as the reveal above (removing the class twice is harmless)
+        if (TOUCH_LIKE) setTimeout(function () { html.classList.remove('page-enter'); }, 160);
       }
       enter();
       window.addEventListener('pageshow', function (e) {
@@ -1113,9 +1521,18 @@
       if (!nav) return;
       const SHOW_AT = 80, DELTA = 6;
       let last = window.scrollY, hidden = false, ticking = false;
+      const small = window.matchMedia('(max-width: 960px)');
       function update() {
         ticking = false;
-        const y = window.scrollY;
+        let y = window.scrollY;
+        if (small.matches) {
+          // iOS rubber-banding reports scroll positions past both ends; read them as the ends,
+          // or the bounce at the foot of the page counts as a scroll-up and pops the nav in
+          y = Math.max(0, Math.min(y, document.documentElement.scrollHeight - window.innerHeight));
+          // backing behind the nav whenever it can sit over content (see nav::before) —
+          // the same treatment as the homepage and the destination pages
+          nav.classList.toggle('nav-solid', y > 8);
+        }
         const menuOpen = !!document.querySelector('.nav-hamburger.open');
         let want = hidden;
         if (menuOpen || y <= SHOW_AT || y < last - DELTA) want = false;

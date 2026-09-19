@@ -73,7 +73,10 @@
       font-weight: 400;
       line-height: 1;
       overflow-x: hidden;
-      opacity: 0;
+      /* 0.01, not 0: Safari/WebKit won't paint a new page (it keeps the previous one on screen and
+         runs no animation frames) until <body> has NON-ZERO opacity — at exactly 0 it waits for every
+         image and video to finish loading before showing anything. 0.01 is invisible but lets it paint. */
+      opacity: 0.01;
       transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
     body.ready { opacity: 1; }
@@ -126,7 +129,7 @@
     body > section, body > main, body > .contact-section {
       transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    html.page-enter body { opacity: 0; transition: none; }
+    html.page-enter body { opacity: 0.01; transition: none; } /* non-zero: WebKit will not paint a page whose <body> is at opacity 0 */
     html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section {
       transform: translateY(18px); transition: none;
     }
@@ -367,6 +370,127 @@
       .mosaic { gap: 14px; }
       .mosaic-col { gap: 14px; }
       .contact-section { padding: 64px 24px 32px; }
+    }
+
+    /* ── Touch screens, tablets and phones ─────────────────────────
+       Everything from here to the wordmark block sits inside a
+       max-width / hover:none query — none of it reaches the desktop. */
+    @media (max-width: 960px) {
+      a, button { -webkit-tap-highlight-color: transparent; }
+
+      /* The nav comes back over the photos on scroll-up. Give it a backing
+         there (JS adds .nav-solid once the page has moved) so the hollow
+         wordmark and the 1px burger lines never sit on a busy frame. */
+      nav::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: rgba(255, 255, 255, 0.9);
+        -webkit-backdrop-filter: saturate(1.6) blur(16px);
+        backdrop-filter: saturate(1.6) blur(16px);
+        opacity: 0;
+        transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      nav.nav-solid::before { opacity: 1; }
+
+      /* wordmark link: 40px mark, 44px target */
+      .nav-name { display: block; padding: 2px 0; }
+
+      /* burger: a 44px target whose lines end on the same 24px gutter as the photos */
+      .nav-hamburger {
+        width: 44px;
+        height: 44px;
+        padding: 0 11px;
+        margin-right: -11px;
+        transition: transform 0.4s cubic-bezier(0.625, 0.05, 0, 1);
+      }
+      .nav-hamburger:active { transform: scale(0.9); }
+      .nav-hamburger:focus-visible { outline: 2px solid #000; outline-offset: 2px; border-radius: 4px; }
+
+      /* menu: an opaque sheet (photos used to ghost through it), out of the
+         tab order while closed, links on 56px targets that rise in one after another */
+      #mobileMenu {
+        background: #fff;
+        visibility: hidden;
+        overscroll-behavior: contain;
+        touch-action: none;
+        transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.4s;
+      }
+      #mobileMenu.open {
+        visibility: visible;
+        transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s;
+      }
+      #mobileMenu ul { gap: 8px; }
+      #mobileMenu li {
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #mobileMenu.open li {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #mobileMenu.open li:nth-child(1) { transition-delay: 0.06s; }
+      #mobileMenu.open li:nth-child(2) { transition-delay: 0.12s; }
+      #mobileMenu.open li:nth-child(3) { transition-delay: 0.18s; }
+      #mobileMenu.open li:nth-child(4) { transition-delay: 0.24s; }
+      #mobileMenu a {
+        display: block;
+        padding: 14px 32px;
+        font-size: 28px;
+        line-height: 1;
+        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #mobileMenu a:active { opacity: 0.45; }
+      #mobileMenu a:focus-visible { outline: 2px solid #000; outline-offset: -4px; border-radius: 4px; }
+
+      /* title wraps on phones: even lines, a little air between them */
+      .dest-page-title { line-height: 1.05; text-wrap: balance; }
+      .dest-page-caption { text-wrap: balance; }
+
+      /* photos arrive as a fade on a pale plate, not a pop-in on a black box */
+      .m-item { background: #f1f0ed; }
+      .m-item img {
+        opacity: 0;
+        transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .m-item img.is-in { opacity: 1; }
+
+      /* footer: 44px icon targets on the same 48px pitch, text at 4.5:1 */
+      .contact-icons { gap: 4px; }
+      .contact-icon { width: 44px; height: 44px; }
+      .contact-handle { margin-top: 8px; }
+      .contact-handle, .contact-copy { color: var(--label-muted); }
+    }
+
+    @media (max-width: 960px) and (prefers-reduced-motion: reduce) {
+      #mobileMenu li, #mobileMenu.open li { transform: none; transition: opacity 0.25s ease-out; transition-delay: 0s; }
+      .nav-hamburger, .nav-hamburger:active { transform: none; transition: none; }
+      .m-item img { transition: opacity 0.25s ease-out; }
+      #grain { animation: none; } /* the texture stays, the perpetual jitter stops */
+      .fade-up, .fade-up.in { transform: none; transition: opacity 0.25s ease-out; }
+    }
+
+    /* Phones: the mosaic becomes a rhythm of rows — one full-width frame, then a
+       pair sized so both photos share a height (JS sets each cell's flex-grow to
+       its aspect ratio). Rows are flush by construction: no ragged column ends. */
+    @media (max-width: 560px) {
+      .dest-page { padding-top: calc(var(--nav-h) + 16px); padding-bottom: 64px; }
+      .dest-page-title { margin-bottom: 16px; }
+      .dest-page-caption { margin-bottom: 40px; }
+      .mosaic { flex-direction: column; gap: 8px; }
+      .mosaic-row { display: flex; align-items: flex-start; gap: 8px; }
+      .mosaic-row .m-item { min-width: 0; }
+      .mosaic-row .m-item img { height: 100%; object-fit: cover; }
+    }
+
+    /* Touch: :hover sticks after a tap, so the hover dressing stays off */
+    @media (hover: none) {
+      .m-item:hover img { transform: none; }
+      .contact-icon:hover { color: var(--text); transform: none; }
+      .contact-icon:active { color: var(--muted); transform: scale(0.94); }
     }
 
       .nav-name:focus-visible { outline: 2px solid #000; outline-offset: 6px; border-radius: 4px; }
@@ -797,8 +921,15 @@
     const slug   = params.get('place') || 'spain';
     const place  = PLACES[slug] || PLACES.spain;
 
+    // Phones and tablets (≤960px) get the lighter m/ photo variants, the row
+    // layout and the touch niceties below. Desktop takes none of these branches.
+    const SMALL_SCREEN = window.matchMedia('(max-width: 960px)');
+
     document.title = place.title + ' — Max Shen';
-    document.getElementById('destPageTitle').textContent = place.title;
+    // where the title wraps, the ampersand travels with the word after it
+    // ("MALLORCA / & IBIZA", never "MALLORCA & / IBIZA")
+    document.getElementById('destPageTitle').textContent =
+      SMALL_SCREEN.matches ? place.title.replace(/& /g, '& ') : place.title;
 
     const captionEl = document.getElementById('destPageCaption');
     if (place.caption) {
@@ -820,9 +951,108 @@
       return 3;
     }
 
+    // public/destinations/<place>/<name>.<ext> → public/destinations/<place>/m/<name>.jpg
+    // (long edge 1400px, ~150–250 KB where the originals run 3–6 MB).
+    function phoneSrc(src) {
+      if (src.indexOf('public/destinations/') !== 0) return src;
+      const cut = src.lastIndexOf('/');
+      return src.slice(0, cut) + '/m/' + src.slice(cut + 1).replace(/\.[^.]+$/, '') + '.jpg';
+    }
+
+    // One photo cell. The cell's aspect-ratio reserves the space, so nothing
+    // moves when the image lands. `small` = phone/tablet: m/ variant (falling
+    // back to the original if a variant is ever missing), first screen eager,
+    // async decode, fade in on load.
+    function makeCell(p, i, small, eager) {
+      const w = p.w || 4, h = p.h || 3;
+      const cell = document.createElement('div');
+      cell.className = 'm-item';
+      cell.style.aspectRatio = w + ' / ' + h;
+      const img = document.createElement('img');
+      if (small) {
+        const lite = phoneSrc(p.src);
+        const show = function () { img.classList.add('is-in'); };
+        img.decoding = 'async';
+        img.loading = eager ? 'eager' : 'lazy';
+        if (eager && i === 0) img.fetchPriority = 'high';
+        img.addEventListener('load', show);
+        img.addEventListener('error', function () {
+          if (lite !== p.src && img.getAttribute('src') === lite) img.src = p.src;
+          else show();
+        });
+        img.alt = place.title + ' — photo ' + (i + 1);
+        img.src = lite;
+        if (img.complete && img.naturalWidth) show();
+      } else {
+        img.src = p.src;
+        img.alt = place.title + ' — photo ' + (i + 1);
+        img.loading = 'lazy';
+      }
+      cell.appendChild(img);
+      return cell;
+    }
+
+    // Phones: rows instead of columns — a full-width frame, then a pair, in the
+    // photos' own order. In a pair each cell's flex-grow is its aspect ratio, so
+    // the two widths come out proportional and both photos share one height.
+    function buildRows() {
+      let i = 0, single = true;
+      while (i < photos.length) {
+        const take = (single || i === photos.length - 1) ? 1 : 2;
+        const row = document.createElement('div');
+        row.className = 'mosaic-row';
+        for (let k = i; k < i + take; k++) {
+          const cell = makeCell(photos[k], k, true, k < 4);
+          cell.style.flex = ((photos[k].w || 4) / (photos[k].h || 3)) + ' 1 0';
+          row.appendChild(cell);
+        }
+        mosaic.appendChild(row);
+        i += take;
+        single = !single;
+      }
+    }
+
+    // Two columns (tablets, phones held sideways): greedy alone can leave one
+    // column most of a photo short (Spain: 166px), more than the gap-stretch in
+    // balanceMosaicBottoms() can hide. With ≤22 photos every split is cheap to
+    // try (2^(n-2), the top row stays put), so take the split whose two heights
+    // are closest — and among equals, the one that moves the fewest photos off
+    // their greedy column, which keeps the reading order. What is left is a few
+    // px for the gap-stretch. Heights are in units of column width;
+    // gapRatio = row gap / column width.
+    function refineTwoColumns(assign, gapRatio) {
+      const n = photos.length;
+      if (n < 4 || n > 22) return;
+      const r = photos.map(function (p) { return (p.h || 3) / (p.w || 4); });
+      const greedy = assign.slice(), cur = assign.slice();
+      const TIE = 0.025; // ≈9px at these column widths: within that the gap-stretch is invisible, so it's a tie
+      let bestDiff = Infinity, bestMoves = Infinity, best = null;
+      function walk(i, diff, inFirst, moves) {
+        if (i === n) {
+          const d = Math.floor(Math.abs(diff + (2 * inFirst - n) * gapRatio) / TIE);
+          if (d < bestDiff || (d === bestDiff && moves < bestMoves)) { bestDiff = d; bestMoves = moves; best = cur.slice(); }
+          return;
+        }
+        for (let c = 0; c < 2; c++) {
+          cur[i] = c;
+          walk(i + 1, diff + (c === 0 ? r[i] : -r[i]), inFirst + (c === 0 ? 1 : 0), moves + (c === greedy[i] ? 0 : 1));
+        }
+      }
+      let diff0 = 0, first0 = 0;
+      for (let i = 0; i < 2; i++) { diff0 += greedy[i] === 0 ? r[i] : -r[i]; if (greedy[i] === 0) first0++; }
+      walk(2, diff0, first0, 0);
+      if (best) best.forEach(function (c, i) { assign[i] = c; });
+    }
+
     function buildMosaic() {
       const colCount = colCountForWidth(window.innerWidth);
+      const small = SMALL_SCREEN.matches;
       mosaic.innerHTML = '';
+
+      if (colCount === 1) {
+        buildRows();
+        return colCount;
+      }
 
       const cols = [];
       for (let c = 0; c < colCount; c++) {
@@ -832,23 +1062,25 @@
         cols.push({ el: col, ratioSum: 0 });
       }
 
-      photos.forEach(function (p, i) {
-        let target = cols[0];
+      // shortest-column-first, exactly as before; the column index is noted per
+      // photo so the two-column case can be refined before any cell is built
+      const assign = photos.map(function (p) {
+        let target = 0;
         for (let c = 1; c < cols.length; c++) {
-          if (cols[c].ratioSum < target.ratioSum) target = cols[c];
+          if (cols[c].ratioSum < cols[target].ratioSum) target = c;
         }
-        const w = p.w || 4, h = p.h || 3;
-        target.ratioSum += h / w;
+        cols[target].ratioSum += (p.h || 3) / (p.w || 4);
+        return target;
+      });
 
-        const cell = document.createElement('div');
-        cell.className = 'm-item';
-        cell.style.aspectRatio = w + ' / ' + h;
-        const img = document.createElement('img');
-        img.src = p.src;
-        img.alt = place.title + ' — photo ' + (i + 1);
-        img.loading = 'lazy';
-        cell.appendChild(img);
-        target.el.appendChild(cell);
+      if (colCount === 2) {
+        const gap = parseFloat(getComputedStyle(cols[0].el).rowGap) || 10;
+        const colWidth = cols[0].el.getBoundingClientRect().width || 1;
+        refineTwoColumns(assign, gap / colWidth);
+      }
+
+      photos.forEach(function (p, i) {
+        cols[assign[i]].el.appendChild(makeCell(p, i, small, small && i < 4));
       });
 
       balanceMosaicBottoms();
@@ -867,6 +1099,7 @@
       const KEEP = 2; // number of leading gaps locked to the base value
       const colEls = Array.prototype.slice.call(mosaic.children);
       if (colEls.length < 2) return;
+      if (!colEls[0].classList.contains('mosaic-col')) return; // phone rows: flush by construction
       colEls.forEach(function (el) {
         Array.prototype.forEach.call(el.children, function (cell) { cell.style.marginTop = ''; });
       });
@@ -924,6 +1157,8 @@
       hamburger.classList.toggle('open', open);
       mobileMenu.classList.toggle('open', open);
       mobileMenu.setAttribute('aria-hidden', String(!open));
+      hamburger.setAttribute('aria-expanded', String(open));
+      hamburger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
       document.body.style.overflow = open ? 'hidden' : '';
     }
 
@@ -1000,9 +1235,17 @@
       if (!nav) return;
       const SHOW_AT = 80, DELTA = 6;
       let last = window.scrollY, hidden = false, ticking = false;
+      const small = window.matchMedia('(max-width: 960px)');
       function update() {
         ticking = false;
-        const y = window.scrollY;
+        let y = window.scrollY;
+        if (small.matches) {
+          // iOS rubber-banding reports scroll positions past both ends; read them as the
+          // ends, or the bounce at the foot of the page counts as a scroll-up and pops the nav in
+          y = Math.max(0, Math.min(y, document.documentElement.scrollHeight - window.innerHeight));
+          // backing behind the nav whenever it can sit over content (see nav::before)
+          nav.classList.toggle('nav-solid', y > 8);
+        }
         const menuOpen = !!document.querySelector('.nav-hamburger.open');
         let want = hidden;
         if (menuOpen || y <= SHOW_AT || y < last - DELTA) want = false;
@@ -1014,6 +1257,7 @@
         nav.classList.add('nav-scroll');
         if (!ticking) { ticking = true; requestAnimationFrame(update); }
       }, { passive: true });
+      if (small.matches) update(); // a reload restored mid-page still gets the backing
     })();
   </script>
 </body>

@@ -73,7 +73,10 @@
       font-weight: 400;
       line-height: 1;
       overflow-x: hidden;
-      opacity: 0;
+      /* 0.01, not 0: Safari/WebKit won't paint a new page (it keeps the previous one on screen and
+         runs no animation frames) until <body> has NON-ZERO opacity — at exactly 0 it waits for every
+         image and video to finish loading before showing anything. 0.01 is invisible but lets it paint. */
+      opacity: 0.01;
       transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
     }
     body.ready { opacity: 1; }
@@ -126,7 +129,7 @@
     body > section, body > main, body > .contact-section {
       transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    html.page-enter body { opacity: 0; transition: none; }
+    html.page-enter body { opacity: 0.01; transition: none; } /* non-zero: WebKit will not paint a page whose <body> is at opacity 0 */
     html.page-enter body > section, html.page-enter body > main, html.page-enter body > .contact-section {
       transform: translateY(18px); transition: none;
     }
@@ -388,6 +391,92 @@
       .about-photo-frame { box-shadow: 0 10px 22px -14px rgba(26, 25, 23, 0.28); }
     }
 
+    /* ── Touch screens, tablets and phones ─────────────────────────
+       Everything from here to the wordmark block sits inside a
+       max-width / hover:none query — none of it reaches the desktop. */
+    @media (max-width: 960px) {
+      a { -webkit-tap-highlight-color: transparent; }
+
+      /* the nav comes back over the photos on scroll-up: give it a backing there
+         (JS adds .nav-solid once the page has moved) so the hollow wordmark never
+         sits on a busy frame */
+      nav::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: rgba(255, 255, 255, 0.9);
+        -webkit-backdrop-filter: saturate(1.6) blur(16px);
+        backdrop-filter: saturate(1.6) blur(16px);
+        opacity: 0;
+        transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      nav.nav-solid::before { opacity: 1; }
+
+      /* wordmark link: 40px mark, 44px target */
+      .nav-name { display: block; padding: 2px 0; }
+
+      /* Back: a 44px target (it was 50×14) whose text still ends on the 24px gutter */
+      .nav-back {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 12px;
+        margin-right: -12px;
+      }
+      .nav-back:active { opacity: 0.55; }
+      .nav-back:focus-visible { outline: 2px solid #000; outline-offset: -2px; border-radius: 4px; }
+
+      /* footer: 44px icon targets on the same 48px pitch, text at 4.5:1 */
+      .contact-icons { gap: 4px; }
+      .contact-icon { width: 44px; height: 44px; }
+      .contact-handle { margin-top: 8px; }
+      .contact-handle, .contact-copy { color: var(--label-muted); }
+    }
+
+    /* Stacked layout (photos, then text). The copy reads as copy: 16px / 400 on a
+       65ch measure, flush-left on the photo block's own left edge — a centred
+       13px / 300 paragraph is the first thing that reads as unfinished on a phone. */
+    @media (max-width: 900px) {
+      .about-page {
+        min-height: 100svh; /* iOS: the small viewport, not the toolbar-less 100vh */
+        gap: 40px;
+        padding-top: calc(var(--nav-h) + 24px);
+      }
+      .about-text-col {
+        width: 100%;
+        max-width: 640px; /* = .about-photos */
+        text-align: left;
+        align-items: flex-start;
+      }
+      .section-label { margin-bottom: 24px; }
+      .about-heading { margin-bottom: 16px; text-wrap: balance; }
+      .about-body { max-width: 65ch; }
+      .about-body p {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.65;
+        text-wrap: pretty;
+      }
+      .about-body p + p { margin-top: 16px; }
+    }
+    @media (max-width: 640px) {
+      .about-text-col { max-width: 460px; } /* = .about-photos at this size */
+    }
+    @media (max-width: 960px) and (prefers-reduced-motion: reduce) {
+      #grain { animation: none; } /* the texture stays, the perpetual jitter stops */
+      .fade-up, .fade-up.in { transform: none; transition: opacity 0.25s ease-out; }
+    }
+
+    /* Touch: :hover sticks after a tap, so the hover dressing stays off */
+    @media (hover: none) {
+      .nav-back:hover { opacity: 1; }
+      .nav-back:active { opacity: 0.55; }
+      .about-photo-frame:hover .about-photo { transform: none; }
+      .contact-icon:hover { color: var(--text); transform: none; }
+      .contact-icon:active { color: var(--muted); transform: scale(0.94); }
+    }
+
       .nav-name:focus-visible { outline: 2px solid #000; outline-offset: 6px; border-radius: 4px; }
     .nav-name svg { display: block; overflow: visible; }
 
@@ -606,18 +695,21 @@
       <div class="about-photos fade-up d1">
         <div class="about-photo-col-b">
           <div class="about-photo-frame about-photo-4x3">
-            <img src="maxshen1.JPG" class="about-photo" alt="Max Shen at dusk by the ocean">
+            <!-- srcset + sizes: ≤960px the slot is declared at its real phone/tablet size, so the
+                 1400px m/ variant (139 KB, not 5.8 MB) is chosen; above that the slot is declared
+                 at the original's own width, so desktop keeps requesting the original file -->
+            <img src="maxshen1.JPG" srcset="public/about/m/maxshen1.jpg 1400w, maxshen1.JPG 3648w" sizes="(max-width: 960px) 366px, 3648px" class="about-photo" alt="Max Shen at dusk by the ocean">
           </div>
           <div class="about-photo-frame about-photo-4x3">
-            <img src="maxshen2.JPG" class="about-photo" alt="Max Shen photographing by a canal">
+            <img src="maxshen2.JPG" srcset="public/about/m/maxshen2.jpg 1400w, maxshen2.JPG 3648w" sizes="(max-width: 960px) 366px, 3648px" class="about-photo" alt="Max Shen photographing by a canal">
           </div>
         </div>
         <div class="about-photo-col-c">
           <div class="about-photo-frame about-photo-3x4">
-            <img src="maxshen5.jpeg" class="about-photo" alt="Max Shen photographing a sunset over the water">
+            <img src="maxshen5.jpeg" srcset="public/about/m/maxshen5.jpg 1050w, maxshen5.jpeg 4103w" sizes="(max-width: 960px) 274px, 4103px" class="about-photo" alt="Max Shen photographing a sunset over the water">
           </div>
           <div class="about-photo-frame about-photo-3x2">
-            <img src="lapa.JPG" class="about-photo" alt="Max Shen with two friends at dinner">
+            <img src="lapa.JPG" srcset="public/about/m/lapa.jpg 1400w, lapa.JPG 3000w" sizes="(max-width: 960px) 274px, 3000px" class="about-photo" alt="Max Shen with two friends at dinner">
           </div>
         </div>
       </div>
@@ -748,9 +840,17 @@
       if (!nav) return;
       const SHOW_AT = 80, DELTA = 6;
       let last = window.scrollY, hidden = false, ticking = false;
+      const small = window.matchMedia('(max-width: 960px)');
       function update() {
         ticking = false;
-        const y = window.scrollY;
+        let y = window.scrollY;
+        if (small.matches) {
+          // iOS rubber-banding reports scroll positions past both ends; read them as the
+          // ends, or the bounce at the foot of the page counts as a scroll-up and pops the nav in
+          y = Math.max(0, Math.min(y, document.documentElement.scrollHeight - window.innerHeight));
+          // backing behind the nav whenever it can sit over content (see nav::before)
+          nav.classList.toggle('nav-solid', y > 8);
+        }
         const menuOpen = !!document.querySelector('.nav-hamburger.open');
         let want = hidden;
         if (menuOpen || y <= SHOW_AT || y < last - DELTA) want = false;
@@ -762,6 +862,7 @@
         nav.classList.add('nav-scroll');
         if (!ticking) { ticking = true; requestAnimationFrame(update); }
       }, { passive: true });
+      if (small.matches) update(); // a reload restored mid-page still gets the backing
     })();
   </script>
 </body>
