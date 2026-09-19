@@ -2535,7 +2535,10 @@
         // width — where the sideways ring could only be a thin band of overlapping thumbnails.
         // Cards rise through the front, so the hero arrives from below and keeps rising into
         // its place at the top of the page: one direction, start to finish.
-        const VERT = SMALL && vh > vw;
+        // DESKTOP uses the same upright ring (Max's call: the web splash should be composed like
+        // the phone one). Only the layout switches — desktop still runs live video cards, its own
+        // preload, timing and handoff. A phone held sideways keeps the sideways ring.
+        const VERT = SMALL ? vh > vw : true;
         const FRONT = K / (K - 1);                 // a card's scale at front-centre (3.5×)
         // SMALL cards are laid out at their FRONT size and only ever scaled DOWN, so the still
         // is sharp where it is biggest; desktop keeps BASE = 1 (s / 1 === s, left / top unchanged).
@@ -2543,10 +2546,40 @@
         // the hero's true resting box — measured before the frame is carried under the window
         if (SMALL) window.scrollTo(0, 0);
         const heroBox = SMALL ? document.querySelector('.hero-media').getBoundingClientRect() : null;
-        const frontW = VERT ? Math.min(heroBox.width * 0.92, vw - 40, vh * 0.30 * 16 / 9) : 0;
+        // DESKTOP upright ring — keep the hero window inside the hero. The window is a hole onto
+        // the live page. On a phone the hero's frame is carried under it; on desktop the hero
+        // simply sits where it sits (vertically centred in its 100vh section, up to 1300px wide),
+        // so wherever the window travels it must still be over the hero — anywhere else it would
+        // show blank page, or the About copy, instead of footage.
+        // Its travel is lopsided: it starts at the top of the column, TOP_U card-heights above
+        // the ring's centre (φ = 90°: offset R, scale 1), goes round the back, and comes up from
+        // below — reaching `reachU` card-heights under the centre, which is also how far the
+        // cards themselves reach either way. So: cap the card size so that whole span fits the
+        // hero's height (and the column fits the screen), then put the centre where it fits —
+        // dead mid-screen whenever that already works (it does at 1440×900).
+        let ringCY = cy, frontCap = Infinity, reachU = 0, heroFrame = null;
+        const TOP_U = 2.4 + 0.5, AIR = 24, EDGE = 6;
+        if (VERT && !SMALL) {
+          for (let d = 0; d < 360; d += 1) {
+            const sd = K / (K - Math.cos(rad(d)));
+            reachU = Math.max(reachU, Math.abs(2.4 * Math.sin(rad(d)) * sd) + sd / 2);   // R = 2.4·H0
+          }
+          heroFrame = document.querySelector('.hero-media').getBoundingClientRect();
+          const fitHero = (heroFrame.height - 2 * EDGE) / (TOP_U + reachU);                  // window stays on the hero
+          const fitScreen = (Math.min(heroFrame.bottom - EDGE, vh - AIR) - AIR) / (2 * reachU); // column stays on screen
+          frontCap = Math.min(fitHero, fitScreen) * FRONT * 16 / 9;
+        }
+        // (heroBox is only measured on SMALL; on desktop the height and fit terms are the binding ones)
+        const frontW = VERT ? Math.min((heroBox ? heroBox.width : hero.width) * 0.92, vw - 40, vh * 0.30 * 16 / 9, frontCap) : 0;
         const W0 = VERT ? frontW / FRONT
           : Math.round(vw <= 560 ? Math.min(vw * 0.21, vh * 0.24) : Math.min(vw * 0.115, vh * 0.27));
         const H0 = VERT ? W0 * 9 / 16 : Math.round(W0 * 9 / 16);
+        if (VERT && !SMALL) {
+          const lo = Math.max(heroFrame.top + EDGE + TOP_U * H0, AIR + reachU * H0);
+          const hi = Math.min(heroFrame.bottom - EDGE, vh - AIR) - reachU * H0;
+          ringCY = Math.min(Math.max(cy, lo), Math.max(lo, hi));
+          if (mark) mark.style.top = ringCY + 'px';                 // the MAX SHEN mark rides the ring's centre
+        }
         // slots = ten ring cards + the hero, fully populated (a card
         // rests directly on the hero's left at the end); correct
         // occlusion against the hero window is handled per-card in
@@ -2589,7 +2622,7 @@
           const el = document.createElement('div');
           el.className = SMALL ? 'si-card si-cm' : 'si-card';
           el.style.left = (cx - W0 * BASE / 2) + 'px';
-          el.style.top = (cy - H0 * BASE / 2) + 'px';
+          el.style.top = (ringCY - H0 * BASE / 2) + 'px';
           el.style.width = W0 * BASE + 'px';
           el.style.height = H0 * BASE + 'px';
           el.style.transform = 'scale(0)';
@@ -2724,7 +2757,7 @@
           heroX = hx - cx; heroHW = (VERT ? hh : hw) / 2; heroCo = co;
           if (VERT) {
             // upright ring: the window rides the Y axis (rising through the front)
-            const hy = cy - heroX;
+            const hy = ringCY - heroX;
             pTop.style.transform = 'scaleY(' + (Math.max(hy - hh / 2, 0) / vh) + ')';
             pBottom.style.transform = 'scaleY(' + (Math.max(vh - (hy + hh / 2), 0) / vh) + ')';
             pLeft.style.transform = 'scaleX(' + ((cx - hw / 2) / vw) + ')';
