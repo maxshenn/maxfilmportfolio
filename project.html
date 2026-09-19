@@ -1545,6 +1545,17 @@
         if (!ticking) { ticking = true; requestAnimationFrame(update); }
       }, { passive: true });
     })();
+
+    // Phones / tablets: every photo (the still and all the frames — not the film, not the live
+    // embeds) opens in a full-screen viewer with ‹ 3 / 15 › at the bottom
+    // (public/js/photo-lightbox.js). Requested only on small or touch screens, so desktop loads
+    // nothing new and its DOM is untouched.
+    if (window.matchMedia('(max-width: 960px), (pointer: coarse)').matches) {
+      window.PHOTO_LIGHTBOX = { selector: '.proj-media img, #projFrames .pf-frame:not(.pf-frame--embed) img' };
+      const plb = document.createElement('script');
+      plb.src = 'public/js/photo-lightbox.js';
+      document.body.appendChild(plb);
+    }
   </script>
 </body>
 </html>

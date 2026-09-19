@@ -1259,6 +1259,16 @@
       }, { passive: true });
       if (small.matches) update(); // a reload restored mid-page still gets the backing
     })();
+
+    // Phones / tablets: every photo opens in a full-screen viewer with ‹ 3 / 15 › at the bottom
+    // (public/js/photo-lightbox.js). Requested only on small or touch screens, so desktop loads
+    // nothing new and its DOM is untouched.
+    if (window.matchMedia('(max-width: 960px), (pointer: coarse)').matches) {
+      window.PHOTO_LIGHTBOX = { selector: '#destPageMosaic .m-item img' };
+      const plb = document.createElement('script');
+      plb.src = 'public/js/photo-lightbox.js';
+      document.body.appendChild(plb);
+    }
   </script>
 </body>
 </html>
