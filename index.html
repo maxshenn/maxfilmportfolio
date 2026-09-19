@@ -608,22 +608,23 @@
       transform: scale(1);
       transition: filter 0.6s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); /* hover zoom only */
     }
+    /* hover: the same gentle push-in the Projects tiles use. (The name used to appear centred
+       on hover over a dimmed photo; it now lives bottom-left all the time, so nothing dims.) */
     .dest-item:hover .dest-thumb,
     .dest-item.touch-active .dest-thumb {
-      filter: brightness(0.5) saturate(0.85);
-      transform: scale(1.06);
+      filter: brightness(1.08) saturate(1.25);
+      transform: scale(1.045);
     }
 
-
-    /* Scrim behind the label — only dark enough to read text against any
-       photo, fades in together with the label itself. */
+    /* A short gradient rising from the bottom edge — only tall and dark enough to keep the
+       place name legible on any photo. It firms up slightly on hover. */
     .dest-item::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.22);
-      opacity: 0;
-      transition: opacity 0.5s ease;
+      background: linear-gradient(to top, rgba(9, 8, 7, 0.55), rgba(9, 8, 7, 0) 44%);
+      opacity: 0.88;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
     }
     .dest-item:hover::after,
@@ -631,31 +632,23 @@
       opacity: 1;
     }
 
+    /* Place name: always on, lower-left, on every device */
     .dest-label {
       position: absolute;
-      inset: 0;
+      inset: auto 0 0 0;
+      z-index: 1;
       display: flex;
-      align-items: center;
-      justify-content: center;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 16px 18px;
       font-family: var(--font-sans);
       font-size: 13px;
       font-weight: 500;
+      line-height: 1.2;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: #fff;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.45s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
-                  letter-spacing 0.65s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
-    }
-    /* the name settles up and its tracking opens as it arrives */
-    .dest-item:hover .dest-label,
-    .dest-item.touch-active .dest-label { letter-spacing: 0.16em; }
-    .dest-item:hover .dest-label,
-    .dest-item.touch-active .dest-label {
-      opacity: 1;
-      transform: translateY(0);
     }
 
 
@@ -1538,26 +1531,11 @@
 
     /* ── Touch (no hover) ── */
     @media (hover: none) {
-      /* place names are always on: bottom-left over a short gradient (there is no hover to reveal them) */
-      .dest-label {
-        inset: auto 0 0 0;
-        z-index: 1;
-        justify-content: flex-start;
-        align-items: flex-end;
-        padding: 12px;
-        font-size: 12px;
-        line-height: 1.2;
-        opacity: 1;
-        transform: none;
-        transition: none;
-      }
-      .dest-item:hover .dest-label,
-      .dest-item.touch-active .dest-label { letter-spacing: 0.12em; }
+      /* place names are lower-left and always on everywhere now (base rule); touch screens just
+         use the tighter inset and size, and the gradient stays at full strength */
+      .dest-label { padding: 12px; font-size: 12px; }
       .dest-item::after,
-      .dest-item:hover::after {
-        background: linear-gradient(to top, rgba(9, 8, 7, 0.55), rgba(9, 8, 7, 0) 44%);
-        opacity: 1;
-      }
+      .dest-item:hover::after { opacity: 1; }
 
       /* :hover sticks after a tap on iOS — hold the rest state, keep :active as the press */
       .dest-item:hover .dest-thumb { filter: brightness(1.04) saturate(1.18); transform: scale(1); }
