@@ -1,0 +1,9 @@
+# Everything is public. This file exists mainly so crawlers get a 200 here
+# instead of a 404, and so they are handed the sitemap.
+#
+# It also matters for the FAVICON: Google fetches /favicon.ico with a separate
+# crawler that obeys robots.txt, so the icon must never be disallowed.
+User-agent: *
+Allow: /
+
+Sitemap: https://www.maxshenfilm.com/sitemap.xml
