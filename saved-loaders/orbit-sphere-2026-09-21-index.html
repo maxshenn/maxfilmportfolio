@@ -632,29 +632,16 @@
       overflow: hidden;
       background: #0d0c0b;
     }
-    /* The name is ALWAYS on the frame, lower-left, and thickens when you reach
-       for it — the same at-rest-then-bold signal the Projects captions give, so
-       the two indexes behave alike. It used to stay hidden until hover; Max's
-       call to show it always. */
-    /* The scrim goes with it: white type over a photograph is only legible with
-       one, and these tiles run from a bright beach to a night ocean. Worst-case
-       contrast over the glyphs measures 5.1:1, over the 4.5:1 the type size
-       requires — re-measure if the gradient, the type size or the reel changes.
-       The stops are in PIXELS, not percentages, because the label is: it always
-       sits 18-47px off the bottom whatever the tile. With percentage stops the
-       scrim tracked tile height instead, so on the phone's 158px tiles the top
-       of the glyphs landed at 25% of the tile where the gradient had already
-       fallen to ~0.39, and Italy measured 3.75:1. Anchored in px it is the same
-       on a 158px tile and a 574px one. */
+    /* Caption block — the at-rest signal. Name in page ink (so contrast is a solved problem,
+       unlike white over a photograph), a hairline, then the count in the mono "data" voice. */
+    /* the scrim that carries the name — absent at rest, so the photo is never muddied */
     .dest-media::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top,
-        rgba(9, 8, 7, 0.78) 0,
-        rgba(9, 8, 7, 0.62) 56px,
-        rgba(9, 8, 7, 0.14) 124px,
-        rgba(9, 8, 7, 0) 184px);
+      background: linear-gradient(to top, rgba(9, 8, 7, 0.72), rgba(9, 8, 7, 0.16) 42%, rgba(9, 8, 7, 0) 68%);
+      opacity: 0;
+      transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
     }
     .dest-name {
@@ -674,21 +661,42 @@
       color: #fff;
       white-space: nowrap;
       pointer-events: none;
-      /* the same weight move, curve and duration .work-caption uses. The name is
-         absolutely positioned and alone on its line, so thickening shifts nothing. */
-      transition: font-weight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 0;
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    /* The word arrives as ONE unit, on the same curve and duration the Projects captions use
+       for their weight change — no per-letter cascade. It stays hidden until the tile is
+       hovered (Max's call), so the photographs are clean until you reach for one. */
     @media (hover: hover) and (pointer: fine) {
-      .dest-item:hover .dest-name { font-weight: 700; }
+      .dest-item:hover .dest-name { opacity: 1; }
+      .dest-item:hover .dest-media::after { opacity: 1; }
     }
-    .dest-item:focus-visible .dest-name { font-weight: 700; }
+    .dest-item:focus-visible .dest-name { opacity: 1; }
+    .dest-item:focus-visible .dest-media::after,
+    .dest-item.touch-active .dest-media::after { opacity: 1; }
     /* TOUCH: there is no pointer to hover with, so what is being "reached for" is whatever you
-       have scrolled to. The tile nearest the middle of the screen thickens its name and
-       releases it as you scroll on — hover's one-at-a-time behaviour, driven by scroll
-       position instead of a cursor. .is-near is set by JS, and only on non-hover devices. */
-    .dest-item.is-near .dest-name { font-weight: 700; }
+       have scrolled to. The tile nearest the middle of the screen shows its name and releases
+       it as you scroll on — hover's one-at-a-time behaviour, driven by scroll position instead
+       of a cursor. The .is-near class is set by JS, and only on non-hover devices. */
+    .dest-item.is-near .dest-media::after { opacity: 1; }
+    /* TOUCH: the Projects treatment instead of the masked rise — the name is simply THERE,
+       lower-left in the frame, and thickens as you scroll to it. Its scrim is always on, since
+       the word is always legible-on-photo rather than only during a reveal. Desktop keeps the
+       per-letter mask on hover; only a device without a pointer takes this branch. */
+    @media (hover: none) {
+      .dest-media::after { opacity: 1; }
+      .dest-name {
+        opacity: 1;
+        /* same weight move, same curve, as .work-caption. The name is absolutely positioned
+           and alone on its line, so thickening it shifts nothing. */
+        transition: font-weight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .dest-item.is-near .dest-name { font-weight: 700; }
+    }
     @media (prefers-reduced-motion: reduce) {
-      .dest-name { transition: none; }
+      /* the reveal becomes a short fade, per the house rule; content never sits at opacity 0
+         on a device that cannot hover */
+      .dest-name { transition: opacity 0.25s ease; }
     }
     .dest-thumb {
       position: absolute;
@@ -985,9 +993,7 @@
     .intro-section {
       max-width: 1560px;
       margin: 0 auto;
-      /* bottom pairs with .frames-section's 56px top for 104px ink-to-ink — on the
-         spacing scale, and a step down from the 146px this used to leave. */
-      padding: clamp(40px, 6vh, 72px) 32px clamp(40px, 6vh, 48px);
+      padding: clamp(40px, 6vh, 72px) 32px clamp(64px, 10vh, 112px);
       text-align: center;
     }
     .intro-title, .intro-body { max-width: 780px; margin-left: auto; margin-right: auto; }
@@ -1113,38 +1119,22 @@
       .intro-frame { box-shadow: 0 8px 18px -12px rgba(26, 25, 23, 0.28); }
     }
     @media (max-width: 560px) {
-      .intro-section { padding: clamp(32px, 5vh, 56px) 24px clamp(40px, 6vh, 56px); }
+      .intro-section { padding: clamp(32px, 5vh, 56px) 24px clamp(48px, 8vh, 80px); }
       .intro-body p { font-size: 15px; }
     }
 
-    /* About panel reveal (the only thing on this page using .reveal).
-       The site already owns an arrival gesture: the page transition brings every
-       section in from 18px below on the expo-out curve. The scroll reveal uses
-       the SAME one, so the panel settles identically whether you arrive by
-       navigation or by scrolling down to it — consistency is what reads as
-       considered, and it is one less idea on the page.
-       It rises FROM BELOW. The old version fell 48px down from above, which
-       fights the direction you are scrolling; rising reads as settling in.
-       The delays are the actual fix. At 0.14 / 0.28 / 0.44s the title and the
-       three paragraphs arrived as four separate events — a stack. The same
-       offsets held under 0.1s total read as one soft wave instead. Do not widen
-       them past ~0.12s or the stack comes back. */
     .reveal {
       opacity: 0;
-      transform: translateY(18px);
-      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(-48px); /* enters from above — settles downward, the way you scroll */
+      transition: opacity 1.15s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  transform 1.15s cubic-bezier(0.22, 0.61, 0.36, 1);
       will-change: transform, opacity;
     }
-    .reveal.visible { opacity: 1; transform: none; }
-    .reveal-d1 { transition-delay: 0.04s; }
-    .reveal-d2 { transition-delay: 0.07s; }
-    .reveal-d3 { transition-delay: 0.095s; }
-    .reveal-d4 { transition-delay: 0.115s; }
-    @media (prefers-reduced-motion: reduce) {
-      .reveal { transform: none; transition: opacity 0.3s ease; }
-      .reveal-d1, .reveal-d2, .reveal-d3, .reveal-d4 { transition-delay: 0s; }
-    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: 0.14s; }
+    .reveal-d2 { transition-delay: 0.28s; }
+    .reveal-d3 { transition-delay: 0.44s; }
+    .reveal-d4 { transition-delay: 0.62s; }
 
     /* Work grid reveal handled inline via .work-item.revealed */
 
@@ -1308,7 +1298,7 @@
          selector on purpose: an engine that does not know this pseudo-element throws away the
          whole rule it appears in, so a shared selector list would silently drop the others. */
       .hero-video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
-      .si-cell video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
+      .si-card video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
       .hero-video::-webkit-media-controls-overlay-play-button { display: none !important; -webkit-appearance: none; }
       .hero-video::-webkit-media-controls { display: none !important; -webkit-appearance: none; }
     }
@@ -1325,129 +1315,140 @@
       }
     }
 
-    /* ── Cinematic site intro loader: the contact-sheet wall ──────
-       Every clip in public/loader lands in a full-bleed grid one at a
-       time, farthest cell from the middle first, so the wall closes in
-       and the last gap left is dead centre. The hero lands in that gap
-       as one more tile — the page's own hero frame, lifted ABOVE this
-       layer and cropped to the slot with clip-path — then grows out of
-       it over the wall while the wall fades away underneath, and rides
-       back to its resting frame: one continuous camera pull-back into
-       the page. Once per session; reduced motion gets a plain fade.
-       (The orbit-sphere loader is saved at saved-loaders/.) */
+    /* ── Cinematic site intro loader: the orbit sphere ────────────
+       A full 360° ring of video cards on an imaginary sphere, entirely
+       inside the viewport: true perspective (x = R·sinφ·K/(K−cosφ),
+       scale = K/(K−cosφ)) makes front cards large and bright while the
+       ones wrapping the back stream the other way — smaller, dimmer,
+       and passing BEHIND the front row. The hero slot is a transparent
+       window (the gap between the four white cover panels) that starts
+       at dead back-center, rides around the left limb to the front, and
+       glides to a stop at center; a beat later the window expands
+       four-corners-out while the hero zooms out to natural scale — one
+       continuous camera pull-back into the page.
+       Once per session; reduced motion gets a plain fade.
+       (Previous "film wheel" loader saved at saved-loaders/.) */
     #siteIntro {
       position: fixed;
       inset: 0;
       z-index: 10000;
       display: none;
-      background: #ffffff;          /* the white the page waits behind — and the wall's gutters */
+      /* one shared vanishing point — off-center cards foreshorten and
+         rotateY reads as real depth, not a flat scale. The shorter the
+         perspective, the deeper the scene. */
+      perspective: 1000px;
+      perspective-origin: 50% 50%;
     }
     html.si-lock #siteIntro, html.si-fade #siteIntro { display: block; }
     html.si-lock #grain { display: none; } /* invisible under the loader — skip its compositing */
     html.si-lock, html.si-lock body { overflow: hidden; }
-    /* ── The wall: the intro's contact sheet ──────────────────────
-       One cell per loader clip, edge-to-edge with a hairline gutter, and
-       one empty cell dead centre that the hero opens in at the end.
-       A cell is a STILL first (public/loader/<clip>.jpg — the clip's own
-       frame at the shared 0.3s in-point) with its film fading in over the
-       top once it is actually PLAYING, so the wall is never a grid of
-       empty boxes and nothing in the build ever waits on video. The tone
-       underneath is that still's own average colour: the one moment where
-       even a ~20 KB JPG can be late still reads as the shot it belongs to.
-       Cells animate on transform and opacity only. */
-    .si-cell {
+    html.si-fade #siteIntro { background: #ffffff; }
+    .si-p { position: absolute; inset: 0; background: #ffffff; will-change: transform; }
+    .si-p-top    { transform-origin: 50% 0; }
+    .si-p-bottom { transform-origin: 50% 100%; }
+    .si-p-left   { transform-origin: 0 50%; }
+    .si-p-right  { transform-origin: 100% 50%; }
+    /* Orbit cards: fixed base size, positioned by transform only —
+       translateX(R·sinθ) scale(cosθ) — so the frame loop is
+       compositor-only. Center card paints on top via cosθ z-index. */
+    .si-card {
       position: absolute;
       overflow: hidden;
-      opacity: 0;
-      transform: scale(0.9);
-      will-change: transform, opacity;
+      background: #0d0c0b;
+      will-change: transform, clip-path, opacity;
       backface-visibility: hidden;
+      /* soft grounded shadow lifts the card off the white — depth cue */
+      box-shadow: 0 18px 48px rgba(13, 12, 11, 0.22);
     }
-    /* still and film share the cell, oversized by the push distance so the
-       inner rise can never open a gap along the bottom edge */
-    .si-cell > * {
+    /* depth haze: an opaque-card-friendly dim — the veil whitens the
+       footage on the back hemisphere while the card itself stays 100%
+       opaque, so overlapping cards can never show through each other */
+    .si-veil {
       position: absolute;
-      left: 0;
-      top: -6%;
-      width: 100%;
-      height: 112%;
+      inset: 0;
+      background: #ffffff;
+      opacity: 0;
+      pointer-events: none;
+      will-change: opacity;
+    }
+    /* footage oversized inside its card and panned per-frame against
+       the card's travel — inner parallax, the award-site depth cue */
+    .si-card video {
+      position: absolute;
+      left: -7%;
+      top: -7%;
+      width: 114%;
+      height: 114%;
       object-fit: cover;
-      display: block;
-      transform: translateY(6%);
-      transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
-      /* the Frames panel's own treatment — the wall speaks the page's language */
-      filter: brightness(1.04) saturate(1.18);
       will-change: transform;
     }
-    .si-cell video {
-      opacity: 0;
-      transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
-                  opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .si-cell video.is-live { opacity: 1; }
-    /* a still that only arrives after its cell has landed fades up over the
-       tone rather than popping in on top of it */
-    .si-cell img {
-      opacity: 0;
-      transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1),
-                  opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .si-cell img.is-in { opacity: 1; }
-    html.si-fade .si-cell { display: none; }
-    /* The wordmark belongs to the final shot, on the hero — and the hero sits
-       ABOVE the intro, so the mark needs a layer of its own above both. */
-    #siteMark {
-      position: fixed;
-      inset: 0;
-      z-index: 10002;               /* over the lifted hero (10001) */
-      pointer-events: none;
-    }
-    #siteMark .si-mark {
+    html.si-fade .si-card { display: none; }
+    #siteIntro .si-mark {
       position: absolute;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
       width: clamp(120px, 13vw, 180px);
       height: auto;
+      mix-blend-mode: difference;
       opacity: 0;
       transition: opacity 0.5s ease;
+      z-index: 300; /* above the orbit cards (z 100–200) */
     }
-    #siteMark.p-mark .si-mark { opacity: 1; }
+    #siteIntro.p-mark .si-mark { opacity: 1; }
     .si-mark .wm-ink { stroke: #fff !important; }
     .si-mark .wm-boom, .si-mark .wm-shine, .si-mark .wm-flash, .si-mark .wm-rays, .si-mark .wm-shock, .si-mark .wm-hit { display: none; }
     .si-mark .wm-l, .si-mark .wm-l .wm-ink { animation: none !important; }
-    #siteMark.p-rise .si-mark { opacity: 0; }
+    #siteIntro.p-rise .si-mark { opacity: 0; }
     #siteIntro.p-out { opacity: 0; transition: opacity 0.6s ease; pointer-events: none; }
-    /* ── The hero rides ABOVE the wall ─────────────────────
-       The wall is the intro's contact sheet; the hero is the page's own
-       frame. They live on different layers, and the ORDER of those layers
-       is the choreography: the hero sits above the intro (10001 over
-       10000), so it grows over the grid as a solid frame while the cells
-       fade away underneath it — never a frame dissolving on top of the
-       film. It crops itself to its slot with clip-path, so nothing has to
-       be cut out of the white for it to show through, and because the
-       clip is on the frame itself the window can only ever show film.
-       The driver puts every number on it inline — carry, clip, opacity,
-       and the transitions between them — and clears them when the intro
-       is gone. These rules only lift the frame and pin it to its own
-       compositor layer for the ride.
-
-       THE LIFT DEPENDS ON NOTHING BETWEEN .hero-media AND THE ROOT
-       CREATING A STACKING CONTEXT — today .hero-section, body and html
-       are all plain, so this z-index resolves against the root and beats
-       #siteIntro's 10000. Give body or .hero-section a transform, a
-       filter, isolation, or any opacity below 1 and the hero is trapped
-       under the intro: it would vanish for the whole build and snap in
-       at the hand-off. The near miss is `html.page-enter body { opacity:
-       0.01 }` further down — it would do exactly that, and the only
-       reason it cannot is that page-enter is skipped while the loader
-       owns the reveal. Keep those two mutually exclusive. */
-    html.si-zoom .hero-media,
-    html.si-zoomout .hero-media {
-      position: relative;
-      z-index: 10001;
+    /* hero magnified beneath the wheel; zooms out with the expansion */
+    html.si-zoom .hero-video { transform: scale(1.8); transform-origin: 50% 50%; }
+    html.si-zoomout .hero-video {
+      transform: scale(1);
       transform-origin: 50% 50%;
-      will-change: transform, opacity;
+      transition: transform 0.85s cubic-bezier(0.76, 0, 0.24, 1);
+    }
+    /* ── The same intro on phones / tablets (html.si-m) ───────────
+       `si-m` is added by the gate script only under
+       (max-width: 1023px), (pointer: coarse) — desktop never carries it,
+       and the .si-cm / .si-still hooks below exist only on cards built
+       in that mode, so every rule here is inert on desktop.
+       · Portrait: the ring stands upright (cards travel the long axis,
+         front card ≈ the hero's width) instead of a thin band squeezed
+         across a narrow screen.
+       · Every card is a STILL first (tiny JPGs beside the clips) — never
+         an empty box while video buffers, and nothing to wait for. Three
+         front cards fade live footage in over their still if it plays.
+       · On these layouts the hero rests at the TOP of the page, not the
+         middle of the screen, so the frame itself is carried under the
+         window (translate + magnify, --si-hero-from) and rides back to
+         its resting place on the same clock as the window: one move. */
+    /* (every card carries a clip-path, which already clips the shadow away — on a card laid
+       out at full size it would only cost texture memory) */
+    .si-card.si-cm { box-shadow: none; }
+    .si-card .si-still { /* same oversize + parallax room as `.si-card video` */
+      position: absolute;
+      left: -7%;
+      top: -7%;
+      width: 114%;
+      height: 114%;
+      object-fit: cover;
+      will-change: transform;
+    }
+    .si-card .si-still { opacity: 0; }
+    .si-card .si-still.is-in { opacity: 1; }
+    .si-card .si-still.is-late { transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .si-card.si-cm video { opacity: 0; transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .si-card.si-cm video.is-live { opacity: 1; }
+    html.si-m.si-zoom .hero-video,
+    html.si-m.si-zoomout .hero-video { transform: none; transition: none; }
+    html.si-m.si-zoom .hero-section,
+    html.si-m.si-zoomout .hero-section { position: relative; z-index: 2; } /* the carried frame paints over the copy below it */
+    html.si-m.si-zoom .hero-media { transform: var(--si-hero-from, none); transform-origin: 50% 50%; }
+    html.si-m.si-zoomout .hero-media {
+      transform: translate(0px, 0px) scale(1);
+      transform-origin: 50% 50%;
+      transition: transform 0.85s cubic-bezier(0.76, 0, 0.24, 1);
     }
     /* the window has landed on the hero: the white lifts off the rest of the page */
     #siteIntro.p-lift { opacity: 0; transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; }
@@ -1561,10 +1562,12 @@
       #mobileMenu a, #mobileMenu.open a { transform: none; transition: none; }
     }
 
-    /* ── Phone (≤640px) ── */
+    /* ── Phone reveals (≤640px) ── */
     @media (max-width: 640px) {
-      /* (the reveal used to need a phone override to undo a 0.62s stagger; the
-         base values are short enough now that it reads the same on every size) */
+      /* the d1–d4 stagger was built for four frames entering side by side; stacked on a
+         phone each enters alone, so the delay is just lateness (up to 0.62s + 1.15s) */
+      .reveal { transition-duration: 0.8s; }
+      .intro-body .reveal, .intro-gallery .reveal { transition-delay: 0s; }
 
       /* lightbox controls out of the iOS toolbar / home-indicator tap zone */
       .ig-lb-prev, .ig-lb-next { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
@@ -1646,19 +1649,12 @@
         var cls = reduced ? 'si-fade' : 'si-lock';
         document.documentElement.classList.add(cls);
         // Phones / tablets (anything that is not a ≥1024px fine-pointer desktop) run the
-        // intro's small-screen staging — see the si-m CSS notes.
+        // intro's small-screen staging — see the si-m CSS notes. Their cards are stills,
+        // so start fetching them from here, before the rest of the document has parsed.
         if (!reduced && window.matchMedia('(max-width: 1023px), (pointer: coarse)').matches) {
           document.documentElement.classList.add('si-m');
-        }
-        // Every cell of the intro's wall is a still first, so start fetching them from
-        // here, before the rest of the document has parsed — 23 frames, ~430 KB all in,
-        // and the whole picture content of the intro. The films arrive behind them.
-        if (!reduced) {
           var stills = window.__siStills = {};
-          ['boom', 'brent', 'california', 'couple', 'fantastic', 'fish', 'horse',
-           'morocco-1', 'morocco-2', 'morocco-3', 'morocco-4', 'morocco-5', 'morocco-6', 'morocco-7',
-           'morocco-8', 'morocco-9', 'pier', 'spikeball', 'st-bernard', 'stanley-car', 'valley',
-           'vancouver', 'village', 'waterfall'].forEach(function (n) {
+          ['fantastic', 'boom', 'fish', 'spikeball', 'stanley-car', 'couple', 'morocco-5', 'pier', 'brent', 'dogs'].forEach(function (n) {
             var im = new Image();
             im.fetchPriority = 'high';                 // ahead of the page's own (far heavier) images
             im.src = 'public/loader/' + n + '.jpg';
@@ -1685,7 +1681,12 @@
 <body>
 
   <!-- ── Cinematic intro loader (once per session) ── -->
-  <div id="siteIntro" aria-hidden="true"></div>
+  <div id="siteIntro" aria-hidden="true">
+    <div class="si-p si-p-top"></div>
+    <div class="si-p si-p-bottom"></div>
+    <div class="si-p si-p-left"></div>
+    <div class="si-p si-p-right"></div>
+  </div>
 
   <!-- Film grain -->
   <div id="grain" aria-hidden="true"></div>
@@ -1869,7 +1870,7 @@
       <p class="reveal reveal-d3">In my free time, you can find me playing basketball, DJing, or working on my next video idea.</p>
     </div>
     <div class="intro-gallery">
-      <div class="intro-frame if-one reveal reveal-d4"><img src="maxshen1.JPG" srcset="public/about/m/maxshen1.jpg 1400w, maxshen1.JPG 3648w" sizes="(max-width: 640px) 60vw, 400px" alt="Max Shen at dusk by the ocean"></div>
+      <div class="intro-frame if-one reveal reveal-d1"><img src="maxshen1.JPG" srcset="public/about/m/maxshen1.jpg 1400w, maxshen1.JPG 3648w" sizes="(max-width: 640px) 60vw, 400px" alt="Max Shen at dusk by the ocean"></div>
     </div>
   </section>
 
@@ -2239,25 +2240,13 @@
     })();
 
 
-    // ── Scroll reveal ────────────────────────────────
-    // A panel reveals as ONE block. This used to observe every .reveal element
-    // separately, which meant the title crossed the trigger line first, then the
-    // first paragraph, then the second — the copy assembled itself a line at a
-    // time as you scrolled. No CSS delay could fix that, because the timing was
-    // coming from scroll position rather than from the transition.
-    // Watching the SECTION and cascading to its children makes it one movement,
-    // with the only offsets the small ones in the CSS. The panel has settled by
-    // the time it is centred, so nothing moves while you are reading it.
+    // ── Generic scroll reveal (about, contact) ────────────────
     const revealObs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
-        if (!e.isIntersecting) return;
-        e.target.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
-        revealObs.unobserve(e.target);
+        if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); }
       });
-    }, { threshold: 0.01, rootMargin: '0px 0px -22% 0px' });   // fires ~78% down the viewport
-    new Set(Array.from(document.querySelectorAll('.reveal'))
-      .map(el => el.closest('section') || el.parentElement))
-      .forEach(group => revealObs.observe(group));
+    }, { threshold: 0.01, rootMargin: '0px 0px -5% 0px' });
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
     // header marks (the globe, the laptop) animate only while their section is in view
     const markObs = new IntersectionObserver((entries) => {
@@ -2514,7 +2503,6 @@
           html.classList.remove('si-lock', 'si-fade', 'si-zoom', 'si-zoomout');
           html.classList.add('si-reveal');
           if (intro) { intro.querySelectorAll('video').forEach(function (v) { v.pause(); }); intro.remove(); }
-          // the lifted hero and the wordmark layer are the driver's: its own pageshow handler takes them back
         }
         enter();
       });
@@ -2522,32 +2510,11 @@
   </script>
 
   <script>
-    // Cinematic intro driver — the contact-sheet wall (see the si-* CSS notes).
-    // Every clip in public/loader lands in the wall one at a time, farthest
-    // cell first, so the last gap left is dead centre. The hero lands in that
-    // gap as one more tile, then grows out of it over the wall while the wall
-    // fades underneath, and rides home into the homepage.
-    // (The orbit sphere is saved at saved-loaders/orbit-sphere-index.html.)
+    // Cinematic intro driver — the orbit sphere (see the si-* CSS notes).
     (function () {
       const html = document.documentElement;
       const intro = document.getElementById('siteIntro');
       if (!intro) return;
-      const heroEl = document.querySelector('.hero-media');
-
-      // the wordmark rides on a layer of its own above the hero, so it has to
-      // be taken down explicitly
-      const dropMark = function () {
-        const m = document.getElementById('siteMark');
-        if (m) m.remove();
-      };
-      // hands the frame back to the page: every inline number the driver put
-      // on it goes, and the page's own CSS is all that is left
-      const restoreHero = function () {
-        heroEl.style.transition = '';
-        heroEl.style.transform = '';
-        heroEl.style.clipPath = '';
-        heroEl.style.opacity = '';
-      };
 
       const finish = function () {
         html.classList.add('si-reveal');
@@ -2556,7 +2523,6 @@
           html.classList.remove('si-lock', 'si-fade', 'si-zoom', 'si-zoomout');
           intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
           intro.remove();
-          dropMark();
         }, 650);
       };
 
@@ -2568,513 +2534,483 @@
         setTimeout(finish, 250);
         return;
       }
-      if (!html.classList.contains('si-lock')) { intro.remove(); dropMark(); return; }
+      if (!html.classList.contains('si-lock')) { intro.remove(); return; }
       try {
         sessionStorage.setItem('siteIntroPlayed', '1');
         sessionStorage.setItem('wmIntroPlayed', '1');
       } catch (e) {}
-      // Lift the hero above the intro and hide it there until it lands. The lift
-      // and the hiding happen in the same task, so there is no frame in which
-      // the frame could show at full size over the wall.
-      heroEl.style.transition = 'none';
-      heroEl.style.opacity = '0';
-      html.classList.add('si-zoom');
-      // left mid-intro and came back (bfcache): the page script drops the intro;
-      // the hero and the mark are this script's, so it hands them back itself
-      window.addEventListener('pageshow', function (e) {
-        if (e.persisted) { restoreHero(); dropMark(); }
-      });
+      html.classList.add('si-zoom'); // hero magnified beneath the wheel
       // Phones / tablets: the gate script sets si-m only under (max-width: 1023px), (pointer: coarse).
+      // Every SMALL branch below is dead code on desktop, whose path is left exactly as it was.
       const SMALL = html.classList.contains('si-m');
 
-      // ── the reel ──────────────────────────────────────────────
+      // blend-mode logo: clone the real wordmark asset
+      const navMark = document.querySelector('.wordmark');
+      let mark = null;
+      if (navMark) {
+        mark = navMark.cloneNode(true);
+        mark.classList.remove('wordmark', 'wm-intro');
+        mark.classList.add('si-mark');
+        mark.removeAttribute('height');
+        mark.setAttribute('aria-hidden', 'true');
+        intro.appendChild(mark);
+      }
+
+      // clip pool: one persistent playing element per clip
       const SRC = 'public/loader/';
-      // Every clip in public/loader. This order IS the wall's layout: cells are
-      // filled row-major from it and wrap when they run out, so the entries at
-      // the front are the ones that appear twice on a wall with more cells than
-      // clips — which is why they are the quietest frames in the reel.
-      // The order was solved, not guessed. The reel holds real look-alikes:
-      // morocco-2 and dogs are two cuts of the same moment, couple and fish the
-      // same lake at the same dusk, and there are three separate horse clips.
-      // This arrangement keeps every one of those pairs at least three cells
-      // apart on BOTH walls — the 5×5 and the phone's 3×9.
-      //
-      // It also keeps a BRIGHT frame edge off the hero. The gutter is 8px of
-      // white; a clip whose facing edge is bright merges with it, and the two
-      // read as one band — which looked like the hero sitting low in its slot
-      // even with the grid provably exact. `brent` (snow, bottom edge 134/255)
-      // was directly above the hero; the four cells touching it now present
-      // edges of 14–59 on the 5×5 and 8–44 on the 3×9. Measured off the stills,
-      // not judged by eye — re-measure if the reel changes.
-      const CLIPS = ['valley', 'pier', 'morocco-2', 'brent', 'morocco-4',
-                     'morocco-8', 'california', 'morocco-9', 'village', 'morocco-5',
-                     'fish', 'boom', 'stanley-car', 'morocco-6', 'st-bernard',
-                     'morocco-3', 'spikeball', 'couple', 'fantastic', 'horse',
-                     'morocco-1', 'vancouver', 'morocco-7', 'waterfall'];
-      // each still's own average colour (measured off the JPGs, not guessed)
-      const TONE = {
-        'boom': '#0e0e12', 'brent': '#5a8b9b', 'california': '#8c9076', 'couple': '#5d6764',
-        'fantastic': '#222537', 'fish': '#384647', 'horse': '#52672e', 'morocco-1': '#7e7d74',
-        'morocco-2': '#4f6e52', 'morocco-3': '#6d716c', 'morocco-4': '#262d2f', 'morocco-5': '#635b51',
-        'morocco-6': '#7b7a77', 'morocco-7': '#445961', 'morocco-8': '#5b6464', 'morocco-9': '#34506b',
-        'pier': '#9f665a', 'spikeball': '#2d4368', 'st-bernard': '#8aa18a', 'stanley-car': '#2f2e29',
-        'valley': '#374344', 'vancouver': '#344352', 'village': '#544c35', 'waterfall': '#434f56',
+      // Ten films, one per ring slot, no mid-spin reel swaps. Sized by
+      // perception research, not ambition: at a readable cruise a ~1.8s
+      // spin can present roughly 8–10 films with real screen presence
+      // (Nielsen's 1s flow / 10s attention limits; abandonment data
+      // puts tolerated branded splashes in the 2–3s band, and this
+      // whole intro now lands ≈2.8s from white to homepage).
+      // slot order maps to the final tableau: FILES[0] rests on the
+      // hero's RIGHT flank, FILES[9] on its LEFT
+      const FILES  = ['fantastic.mp4', 'boom.mp4', 'fish.mp4', 'spikeball.mp4', 'stanley-car.mp4',
+                      'couple.mp4', 'morocco-5.mp4', 'pier.mp4', 'brent.mp4', 'dogs.mp4'];
+      // clips are pre-trimmed to their best beat, so one shared in-point
+      const START = {};
+      const mkVid = function (file) {
+        const v = document.createElement('video');
+        v.muted = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.loop = true;
+        v.preload = 'auto';
+        v.src = SRC + file;
+        // play + pre-seek as soon as THIS clip is ready — all decode work
+        // happens during the preload window, none at spin start
+        v.addEventListener('canplay', function () {
+          v.play().catch(function () {});
+          try { v.currentTime = Math.max(START[file] || 0.3, 0.04); } catch (e) {}
+        }, { once: true });
+        return v;
       };
-
-      // ── pace ──────────────────────────────────────────────────
-      // STAGGER is THE dial: the ms between two cells landing, so the whole
-      // build runs STAGGER × (cells − 1) and every beat after it keys off
-      // that. At 58ms a 24-cell wall builds in ~1.4s and the page arrives
-      // ~3.6s from white — deliberately slower than the orbit's 1.8s spin,
-      // because the point here is to read every frame as it lands.
-      const STAGGER = 34;    // ms between cells — 24 cells land in ~0.8s at this value
-      const CELL_MS = 560;   // ms for one cell (and the hero) to settle
-      const FADE_MS = 260;   // ms for a cell's picture — and the hero's plate — to cross
-      const PAUSE   = 200;   // ms the finished wall holds before it gives way
-      const OUT_MS  = 800;   // ms of the pull-back
-      const REVEAL_AT = 520; // ms into the pull-back when the white lifts off the page
-      // The wall fades UNDER the expanding hero, and it starts a beat after the
-      // hero has begun to grow — the frame is seen pushing out over its
-      // neighbours first, and then the wall gives way while it is still moving.
-      // The cells sit below the hero (the hero is lifted above the whole intro),
-      // so a cell may fade for as long as it likes without ever painting over
-      // the film; these two numbers are purely about what reads well.
-      const WALL_LAG = 150;  // ms into the pull-back when the wall starts to fade
-      const WALL_MS = 480;   // ms for the whole wall to dissolve — every cell together
-      const EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
-      // The pull-back gets its own curve, and not the one above. The hero film is
-      // 23.976fps, so across an 800ms expansion it has only ~19 pictures to show
-      // while the transform itself runs at the display's refresh rate — the
-      // geometry is smooth, the CONTENT is the ceiling. What the eye reads as
-      // judder is how far the frame jumps between two of those pictures, and an
-      // ease-in-out puts its peak velocity at the midpoint, exactly when the
-      // frame is largest and a jump is most visible. Measured over the real
-      // scale range: that curve jumps 224px (25%) between video frames at its
-      // worst; this near-linear one jumps 89px (10%). It is also simply what a
-      // real dolly move does — near-constant velocity, soft at both ends.
-      const EASE_PULL = 'cubic-bezier(0.45, 0.05, 0.55, 0.95)';
-
-      // ── geometry ──────────────────────────────────────────────
-      // EVERY number here is re-derivable, because the viewport can change under
-      // the wall AFTER it has been built. Opening a NEW TAB is the case that
-      // matters: Chrome shows the bookmarks bar on the New Tab Page and hides it
-      // again on navigation, so innerHeight grows a frame or two after the page
-      // has loaded. A reload never does that, which is exactly why this only
-      // ever showed up on a first visit and never on a refresh.
-      //
-      // The cells are absolute pixels, and so is the hero's carry into its slot;
-      // neither re-resolves on its own. Measured once, the wall was left laid
-      // out for the old height with its centre slot ~20px above where the hero
-      // actually sat — which reads as white space above the hero. measure() +
-      // relayout() keep everything in step. Never go back to measuring this once.
-      let vw, vh, NARROW, COLS, ROWS, GUT, X, Y, MR, MC, midRect, gapRect, CW, CH,
-          heroBox, heroZoom, heroDX, heroDY;
-      let phase = 0;                                    // 0 build · 1 landed · 2 skipping · 3 pulling back · 4 abandoned
-      const rectOf = function (r, c) {
-        return { l: X[c], t: Y[r], w: X[c + 1] - X[c] - GUT, h: Y[r + 1] - Y[r] - GUT };
-      };
-
-      function measure() {
-        vw = window.innerWidth; vh = window.innerHeight;
-        // A true centre cell needs an odd count on both axes. Phones get a
-        // 3-wide wall so a frame is still big enough to read; everything else
-        // gets 5×5. Cells take whatever aspect the viewport hands them —
-        // object-fit: cover does the cropping, so the grid never has to fight
-        // the screen for 16:9.
-        NARROW = vw < 760;
-        COLS = NARROW ? 3 : 5;
-        ROWS = NARROW ? 7 : 5;
-        GUT = NARROW ? 4 : Math.round(Math.min(Math.max(vw * 0.005, 4), 8));
-        // Column and row edges snapped to whole pixels, with every cell and the
-        // centre gap cut from that one table. Sizing each element off a
-        // fractional grid instead leaves the gap a pixel or two adrift of the
-        // cell that would have stood there. Snapping also makes every gutter
-        // exactly GUT, with no sub-pixel seams to round away.
-        X = []; Y = [];
-        for (let c = 0; c <= COLS; c++) X.push(Math.round(c * (vw + GUT) / COLS));
-        for (let r = 0; r <= ROWS; r++) Y.push(Math.round(r * (vh + GUT) / ROWS));
-        MR = (ROWS - 1) / 2; MC = (COLS - 1) / 2;
-        midRect = rectOf(MR, MC);   // the gap the hero opens in — dead centre of the viewport
-        gapRect = midRect;          // the hero's slot is the cell, whole
-        CW = midRect.w; CH = midRect.h;
-
-        // From the pull-back on, the frame's target is the page's own layout —
-        // there is nothing left here to derive, and clearing the carry to
-        // measure would cut into the ride.
-        if (phase >= 3) return;
-        // The hero's true RESTING frame. The carry is cleared first so this
-        // measures where the frame actually rests rather than where it is being
-        // held — with its transition off, or the clear would START a transition
-        // and the rect would be read at its first frame, carry still on. The
-        // caller puts the carry back before anything paints.
-        window.scrollTo(0, 0);
-        heroEl.style.transition = 'none';
-        heroEl.style.transform = '';
-        heroBox = heroEl.getBoundingClientRect();
-
-        // Carry the hero's frame into the gap: translate it to the viewport
-        // centre and scale it down until it COVERS the cell, exactly as every
-        // other tile covers its own. The hero's slot IS a cell of the grid —
-        // same size, same gutters, no exceptions. Fitting it inside the cell
-        // instead (contain) was tried and is wrong: it left the slot short and
-        // put double the gutter above and below, which reads as the hero
-        // sitting unevenly among the other frames. 1.005 is sub-pixel insurance
-        // so rounding can never leave the clip a hair outside the film.
-        heroZoom = 1.005 * Math.max(midRect.w / heroBox.width, midRect.h / heroBox.height);
-        heroDX = vw / 2 - (heroBox.left + heroBox.width / 2);
-        heroDY = vh / 2 - (heroBox.top + heroBox.height / 2);
-      }
-      // the carry, as a transform: k < 1 is the same frame a fraction smaller
-      // about its own centre, which is how a tile lands
-      const carry = function (k) {
-        return 'translate(' + heroDX.toFixed(2) + 'px, ' + heroDY.toFixed(2) + 'px) scale(' + (heroZoom * k).toFixed(6) + ')';
-      };
-      // A viewport rect as a clip on the CARRIED frame, in the frame's own
-      // coordinates. Under the full carry a point of the frame lands at
-      //   viewport = centre + (local − box / 2) × heroZoom
-      // so the slot comes back through the inverse. The clip lives in local
-      // space and the frame scales about its centre, so growing the frame
-      // grows the window with it — the whole tile, picture and all, like every
-      // tile beside it — and because the clip is on the film itself, what shows
-      // inside the window is film and nothing else, whatever else moves.
-      //
-      // The clip is pulled a hair INSIDE the slot (BIAS, in screen px). The
-      // slot's edges are whole device pixels, and the compositor resolves a
-      // clip to the whole device pixels it touches — so a clip edge that lands
-      // at 857.99 instead of 858.00 takes the pixel above with it, and the
-      // gutter over the hero came out one device pixel thinner than the rest
-      // on a 3× phone. Leaning inward decides the rounding; the 1.005 cover
-      // keeps film under the clip regardless.
-      const BIAS = 0.02;
-      const clipFor = function (r) {
-        const W = heroBox.width, H = heroBox.height, z = heroZoom, b = BIAS / z;
-        const top    = H / 2 + (r.t - vh / 2) / z + b;
-        const right  = W / 2 - (r.l + r.w - vw / 2) / z + b;
-        const bottom = H / 2 - (r.t + r.h - vh / 2) / z + b;
-        const left   = W / 2 + (r.l - vw / 2) / z + b;
-        return 'inset(' + top.toFixed(3) + 'px ' + right.toFixed(3) + 'px ' + bottom.toFixed(3) + 'px ' + left.toFixed(3) + 'px)';
-      };
-      // the frame held in its slot without easing — a tenth small during the
-      // build, which is where every tile starts from
-      const holdHero = function (k) {
-        heroEl.style.transition = 'none';
-        heroEl.style.clipPath = clipFor(gapRect);
-        heroEl.style.transform = carry(k);
-      };
-      measure();
-      holdHero(0.9);
-
-      // ── the cells ─────────────────────────────────────────────
-      const slots = [];
-      for (let r = 0, n = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          if (r === MR && c === MC) continue;           // the hero's gap takes no clip
-          const dx = c - MC, dy = r - MR;
-          slots.push({ r: r, c: c, d: Math.sqrt(dx * dx + dy * dy), name: CLIPS[n % CLIPS.length] });
-          n++;
-        }
-      }
-      // ── reveal order ──────────────────────────────────────────
-      // Farthest cell first, so the wall closes in on the middle and the last
-      // frames to land are the ones touching the gap. A hash-based half-cell
-      // jitter breaks the perfect concentric rings a pure distance sort would
-      // give — deterministic, so the intro plays identically every run.
-      const jit = function (i) { const x = Math.sin((i + 1) * 127.1) * 43758.5453; return x - Math.floor(x) - 0.5; };
-      const rank = function (i) { return slots[i].d + 0.8 * jit(i); };
-      slots.map(function (s, i) { return i; })
-        .sort(function (a, b) { return rank(b) - rank(a); })
-        .forEach(function (i, k) { slots[i].k = k; });   // k = landing position, 0 first
-
-      // Live footage: desktop runs every cell, staggered so the decoders spin up
-      // across the build rather than all at once. Phones keep the four cells
-      // touching the gap live and leave the rest as stills — that is where the
-      // eye is, and two dozen simultaneous decodes is more than a phone should
-      // be asked for. Data-saver gets stills only, which is the design, not a
-      // fallback: a wall of frames is still a wall of frames.
-      const saveData = !!(navigator.connection && navigator.connection.saveData);
-      const liveFor = function (s) {
-        if (saveData) return false;
-        if (!SMALL) return true;
-        return Math.abs(s.r - MR) + Math.abs(s.c - MC) === 1;
-      };
-
-      const cells = slots.map(function (s) {
-        const el = document.createElement('div');
-        el.className = 'si-cell';
-        const rc = rectOf(s.r, s.c);
-        el.style.left = rc.l + 'px';                    // whole pixels already — see the grid table
-        el.style.top = rc.t + 'px';
-        el.style.width = rc.w + 'px';
-        el.style.height = rc.h + 'px';
-        el.style.background = TONE[s.name] || '#1a1917';
-        // A FRESH element per cell. The gate's prefetch warms the HTTP cache,
-        // which is the whole point of it — reusing the prefetched element
-        // itself would MOVE it out of the first cell whenever a clip appears
-        // twice on the wall, leaving that cell on its bare tone.
-        const im = new Image();
-        im.src = SRC + s.name + '.jpg';
+      // ── phones / tablets: a card is a STILL (public/loader/<clip>.jpg — the clip's own
+      // frame at the shared 0.3s in-point, ~18 KB each), so it is never an empty box and the
+      // spin never waits on video. Ten simultaneous decodes are also more than a phone should
+      // be asked for: only the three cards that hold the front through the glide-down and the
+      // final tableau (slots 0, 1, 9) carry live footage, faded in over their still once it is
+      // actually PLAYING — Low Power Mode / data-saver refuse autoplay and simply keep the still.
+      const TONE = ['#222537', '#0d0e11', '#384647', '#2d4367', '#2e2e29', '#5d6764', '#635b51', '#9f665a', '#5a8b9b', '#5a7166'];
+      const LIVE = (navigator.connection && navigator.connection.saveData) ? {} : { 0: 1, 1: 1, 9: 1 };
+      const mkStill = function (file, i) {
+        const name = file.replace(/\.mp4$/, '');
+        const im = (window.__siStills && window.__siStills[name]) || new Image();
+        if (!im.src) im.src = SRC + name + '.jpg';
+        im.className = 'si-still';
         im.alt = '';
         im.draggable = false;
-        el.appendChild(im);
-        let v = null;
-        if (liveFor(s)) {
-          v = document.createElement('video');
+        im._tone = TONE[i];                       // the still's average colour: what the card shows if even the JPG is late
+        // ready = loaded AND decoded, so the first frame of the spin paints pictures, not tones
+        im._ready = new Promise(function (res) {
+          if (im.complete) { res(); return; }
+          im.addEventListener('load', res, { once: true });
+          im.addEventListener('error', res, { once: true });
+        }).then(function () {
+          return (im.naturalWidth && im.decode) ? im.decode().catch(function () {}) : null;
+        }).then(function () { if (im.naturalWidth) im.classList.add('is-in'); });
+        if (LIVE[i]) {
+          const v = document.createElement('video');
           // iOS only autoplays inline when these are ATTRIBUTES, present before src / play()
           v.muted = true; v.defaultMuted = true; v.setAttribute('muted', '');
           v.playsInline = true; v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
           v.loop = true;
           v.preload = 'auto';
           v.disableRemotePlayback = true;
-          // The src is attached below, in the order the cells will LAND — not here,
-          // in grid order — so the browser's six connections work through the reel
-          // in the order the wall actually needs it.
-          v._src = SRC + s.name + '.mp4#t=0.3';          // the same in-point the still was cut at
-          const live = function () {
-            if (v.currentTime > 0 && !v.paused) { v.classList.add('is-live'); v.removeEventListener('timeupdate', live); }
-          };
+          v.src = SRC + file + '#t=' + Math.max(START[file] || 0.3, 0.04);   // same in-point as the still
+          const live = function () { if (v.currentTime > 0 && !v.paused) { v.classList.add('is-live'); v.removeEventListener('timeupdate', live); } };
           v.addEventListener('timeupdate', live);
+          im._live = v;
+        }
+        return im;
+      };
+      const pool = FILES.map(SMALL ? mkStill : mkVid);
+      const preloaded = SMALL ? Promise.race([
+        // stills only, and a hard cap: a slow link starts on the tone panels, never on a stall
+        Promise.all(pool.map(function (im) { return im._ready; })),
+        new Promise(function (res) { setTimeout(res, 1000); }),
+      ]) : Promise.race([
+        Promise.all(pool.map(function (v) {
+          return new Promise(function (res) {
+            v.addEventListener('canplay', res, { once: true });
+            v.addEventListener('error', res, { once: true });
+          });
+        })),
+        new Promise(function (res) { setTimeout(res, 3000); }),
+      ]);
+      const whiteHold = new Promise(function (res) { setTimeout(res, 120); });
+
+      Promise.all([preloaded, whiteHold]).then(function () {
+        const EASE = 'cubic-bezier(0.76, 0, 0.24, 1)';
+        const heroEl = document.querySelector('.hero-video') || document.querySelector('.hero-media');
+        const hero = heroEl.getBoundingClientRect();
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const cx = vw / 2, cy = vh / 2;
+        const rad = function (d) { return d * Math.PI / 180; };
+
+        // ── sphere model ──────────────────────────────────────────
+        // A full 360° ring seen head-on, entirely inside the viewport:
+        // a card at ring angle φ sits at depth z = R·cosφ and projects
+        // to x = R·sinφ · K/(K − cosφ), scale = K/(K − cosφ) — true
+        // perspective (K = camera distance in radii). Front cards are
+        // large and bright; a card slides right, dives behind the
+        // sphere's right limb, shrinks, streams leftward across the
+        // BACK behind the front row, and re-emerges on the left.
+        // 8 slots at 45°: 6 clips + the hero window + one empty slot
+        // trailing the hero, so nothing follows it around.
+        // K is the camera distance in sphere radii — the depth dial.
+        // At 1.4 the projection gives a 6:1 near-to-far scale ratio:
+        // the centermost card looms at 3.5×, its immediate neighbors sit
+        // at ~71% of it, the limbs at ~29%, the far back at ~17%. The
+        // scale curve s(φ)=K/(K−cosφ) has ZERO slope at φ=0, so a card
+        // crests smoothly through center — a swell, never a pump.
+        const K = 1.4;
+        const TILT = 46; // deg — cards turn tangent to the sphere at the limbs
+        // ── phones / tablets (SMALL) ──────────────────────────────
+        // PORTRAIT stands the ring upright: a 16:9 card is short, so along the screen's long
+        // axis the same eleven slots fit at a real size — the front card is ~the hero's own
+        // width — where the sideways ring could only be a thin band of overlapping thumbnails.
+        // Cards rise through the front, so the hero arrives from below and keeps rising into
+        // its place at the top of the page: one direction, start to finish.
+        // DESKTOP uses the same upright ring (Max's call: the web splash should be composed like
+        // the phone one). Only the layout switches — desktop still runs live video cards, its own
+        // preload, timing and handoff. A phone held sideways keeps the sideways ring.
+        const VERT = SMALL ? vh > vw : true;
+        const FRONT = K / (K - 1);                 // a card's scale at front-centre (3.5×)
+        // SMALL cards are laid out at their FRONT size and only ever scaled DOWN, so the still
+        // is sharp where it is biggest; desktop keeps BASE = 1 (s / 1 === s, left / top unchanged).
+        const BASE = SMALL ? FRONT : 1;
+        // the hero's true resting box — measured before the frame is carried under the window
+        if (SMALL) window.scrollTo(0, 0);
+        const heroBox = SMALL ? document.querySelector('.hero-media').getBoundingClientRect() : null;
+        // DESKTOP upright ring — keep the hero window inside the hero. The window is a hole onto
+        // the live page. On a phone the hero's frame is carried under it; on desktop the hero
+        // simply sits where it sits (vertically centred in its 100vh section, up to 1300px wide),
+        // so wherever the window travels it must still be over the hero — anywhere else it would
+        // show blank page, or the About copy, instead of footage.
+        // Its travel is lopsided: it starts at the top of the column, TOP_U card-heights above
+        // the ring's centre (φ = 90°: offset R, scale 1), goes round the back, and comes up from
+        // below — reaching `reachU` card-heights under the centre, which is also how far the
+        // cards themselves reach either way. So: cap the card size so that whole span fits the
+        // hero's height (and the column fits the screen), then put the centre where it fits —
+        // dead mid-screen whenever that already works (it does at 1440×900).
+        let ringCY = cy, frontCap = Infinity, reachU = 0, heroFrame = null;
+        const TOP_U = 2.4 + 0.5, AIR = 24, EDGE = 6;
+        if (VERT && !SMALL) {
+          for (let d = 0; d < 360; d += 1) {
+            const sd = K / (K - Math.cos(rad(d)));
+            reachU = Math.max(reachU, Math.abs(2.4 * Math.sin(rad(d)) * sd) + sd / 2);   // R = 2.4·H0
+          }
+          heroFrame = document.querySelector('.hero-media').getBoundingClientRect();
+          const fitHero = (heroFrame.height - 2 * EDGE) / (TOP_U + reachU);                  // window stays on the hero
+          const fitScreen = (Math.min(heroFrame.bottom - EDGE, vh - AIR) - AIR) / (2 * reachU); // column stays on screen
+          frontCap = Math.min(fitHero, fitScreen) * FRONT * 16 / 9;
+        }
+        // (heroBox is only measured on SMALL; on desktop the height and fit terms are the binding ones)
+        const frontW = VERT ? Math.min((heroBox ? heroBox.width : hero.width) * 0.92, vw - 40, vh * 0.30 * 16 / 9, frontCap) : 0;
+        const W0 = VERT ? frontW / FRONT
+          : Math.round(vw <= 560 ? Math.min(vw * 0.21, vh * 0.24) : Math.min(vw * 0.115, vh * 0.27));
+        const H0 = VERT ? W0 * 9 / 16 : Math.round(W0 * 9 / 16);
+        if (VERT && !SMALL) {
+          const lo = Math.max(heroFrame.top + EDGE + TOP_U * H0, AIR + reachU * H0);
+          const hi = Math.min(heroFrame.bottom - EDGE, vh - AIR) - reachU * H0;
+          ringCY = Math.min(Math.max(cy, lo), Math.max(lo, hi));
+          if (mark) mark.style.top = ringCY + 'px';                 // the MAX SHEN mark rides the ring's centre
+        }
+        // slots = ten ring cards + the hero, fully populated (a card
+        // rests directly on the hero's left at the end); correct
+        // occlusion against the hero window is handled per-card in
+        // layoutCard, not by thinning the ring
+        const STEP = 360 / (pool.length + 1);
+        // hero starts at the right limb: visible from frame one, it
+        // arcs away around the back and returns to the front — a 270°
+        // journey that parks the ring in the same final tableau
+        const HERO0 = 90;
+        // widest transit at K=1.4 reaches 1.44R (around φ≈42°)
+        // upright ring: 2.4 card-heights keeps the front card and its neighbours a hair
+        // apart (the same density the desktop ring has in card-widths) and the whole column
+        // inside ~1.25 front-card heights either side of centre — always within the screen.
+        const R = VERT ? 2.4 * H0 : Math.max((vw / 2 - 24 - 0.91 * W0) / 1.44, W0);
+
+        // SMALL: carry the hero's frame under the window. The window is a hole onto the live
+        // page; on desktop the hero already sits mid-screen beneath it, but on these layouts it
+        // rests at the top of the page, so the hole showed the ABOUT copy instead of the film.
+        // Translate the frame to the ring's centre and magnify it until it covers the window's
+        // whole path; onArrived sends it home on the same clock as the window.
+        let heroDX = 0, heroDY = 0;
+        if (SMALL) {
+          const AX0 = VERT ? H0 : W0;                       // card extent along the ring's axis
+          let reach = 0;
+          for (let d = 0; d < 360; d += 3) {
+            const sd = K / (K - Math.cos(rad(d)));
+            reach = Math.max(reach, Math.abs(R * Math.sin(rad(d)) * sd) + AX0 * sd / 2);
+          }
+          const along = VERT ? heroBox.height : heroBox.width;
+          const across = VERT ? heroBox.width : heroBox.height;
+          const zoom = Math.max(1.8, 2 * (reach + 6) / along, ((VERT ? W0 : H0) * FRONT + 12) / across);
+          heroDX = cx - (heroBox.left + heroBox.width / 2);
+          heroDY = cy - (heroBox.top + heroBox.height / 2);
+          html.style.setProperty('--si-hero-from',
+            'translate(' + heroDX.toFixed(2) + 'px, ' + heroDY.toFixed(2) + 'px) scale(' + zoom.toFixed(4) + ')');
+        }
+
+        // one card element per clip, transform-only from here on
+        const cards = pool.map(function (v) {
+          const el = document.createElement('div');
+          el.className = SMALL ? 'si-card si-cm' : 'si-card';
+          el.style.left = (cx - W0 * BASE / 2) + 'px';
+          el.style.top = (ringCY - H0 * BASE / 2) + 'px';
+          el.style.width = W0 * BASE + 'px';
+          el.style.height = H0 * BASE + 'px';
+          el.style.transform = 'scale(0)';
+          if (SMALL) {
+            el.style.background = v._tone;
+            if (!v.classList.contains('is-in')) v.classList.add('is-late');   // a late still fades in, it never pops
+          }
           el.appendChild(v);
+          if (v._live) el.appendChild(v._live);
+          const veil = document.createElement('div');
+          veil.className = 'si-veil';
+          el.appendChild(veil);
+          intro.appendChild(el);
+          if (v._live) {
+            const p = v._live.play();                        // in the document now — iOS wants that
+            if (p && p.catch) p.catch(function () {});       // refused → the still stays, which is the design
+          }
+          return { el: el, v: v, v2: v._live || null, veil: veil, vo: -1, clip: '', z: -1, pp: 99 };
+        });
+
+        // SMALL: the geometry above is measured once. If the phone is turned mid-intro, step
+        // straight to the finished page rather than play a ring laid out for the other
+        // orientation. (Width only — Safari's toolbars resize the HEIGHT on their own.)
+        if (SMALL) {
+          const bail = function () {
+            if (!document.body.contains(intro)) { window.removeEventListener('resize', bail); return; }
+            if (window.innerWidth === vw) return;
+            window.removeEventListener('resize', bail);
+            html.classList.add('si-reveal');
+            html.classList.remove('si-lock', 'si-zoom', 'si-zoomout');
+            intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
+            intro.remove();
+          };
+          window.addEventListener('resize', bail);
         }
-        intro.appendChild(el);
-        return { s: s, el: el, im: im, v: v };
-      });
 
-      // Every clip starts fetching NOW, in the order its cell will land.
-      //
-      // The previous scheme gave each clip only ~320ms of head start before its
-      // own cell arrived, to spread the network load. That was the wrong trade:
-      // measured against throttled connections it meant 8 of 24 clips were
-      // playing at 100 Mbps, 4 at 50 and 1 at 25 — so a first visit built a wall
-      // of STILLS while a cached reload built the same wall out of moving film.
-      // Same geometry, completely different thing to look at. The reel is 5.5 MB
-      // all in; asking for it up front, in the right order, is what makes a first
-      // visit look like every visit after it.
-      const byTurn = cells.slice().sort(function (a, b) { return a.s.k - b.s.k; });
-      byTurn.forEach(function (c) {
-        if (!c.v) return;
-        c.v.src = c.v._src;
-        const pr = c.v.play();                           // refused → the still stays, which is the design
-        if (pr && pr.catch) pr.catch(function () {});
-      });
+        const pTop = intro.querySelector('.si-p-top');
+        const pBottom = intro.querySelector('.si-p-bottom');
+        const pLeft = intro.querySelector('.si-p-left');
+        const pRight = intro.querySelector('.si-p-right');
 
-      // the wordmark belongs to the final shot: it fades in as the hero lands
-      // and leaves with the pull-back. It rides on a layer of its own ABOVE the
-      // hero, since the hero itself now sits above the intro.
-      const navMark = document.querySelector('.wordmark');
-      let markLayer = null, mark = null;
-      if (navMark) {
-        markLayer = document.createElement('div');
-        markLayer.id = 'siteMark';
-        markLayer.setAttribute('aria-hidden', 'true');
-        mark = navMark.cloneNode(true);
-        mark.classList.remove('wordmark', 'wm-intro');
-        mark.classList.add('si-mark');
-        mark.removeAttribute('height');
-        mark.setAttribute('aria-hidden', 'true');
-        mark.style.width = Math.round(Math.min(Math.max(gapRect.w * 0.66, 96), 180)) + 'px';
-        markLayer.appendChild(mark);
-        document.body.appendChild(markLayer);
-      }
+        // hero window state for this frame (set by layoutHole, read by
+        // layoutCard): screen x relative to center, halfwidth, depth
+        let heroX = 0, heroHW = 0, heroCo = -1;
 
-      // ── the run ───────────────────────────────────────────────
-      const timers = [];
-      const at = function (ms, fn) { timers.push(setTimeout(fn, ms)); };
-      const alive = function () { return document.body.contains(intro); };
-
-      function land(c) {
-        c.el.style.transition = 'opacity ' + (FADE_MS / 1000) + 's ' + EASE_OUT +
-                                ', transform ' + (CELL_MS / 1000) + 's ' + EASE_OUT;
-        c.el.style.opacity = '1';
-        c.el.style.transform = 'scale(1)';
-        c.im.style.transform = 'translateY(0)';
-        if (c.v) c.v.style.transform = 'translateY(0)';
-      }
-
-      function landHero() {
-        if (phase > 0 || !alive()) return;
-        phase = 1;
-        // The hero takes the last turn in the stagger and lands EXACTLY the way
-        // every other frame does — the two moves `land()` makes: its picture
-        // crosses over FADE_MS while the tile grows its last 10% over CELL_MS.
-        // The clip is fixed in the frame's own coordinates, so growing the frame
-        // grows the window with it: the whole tile scales up, picture and all,
-        // like every tile beside it. Nothing waits for it, and it gets no
-        // reveal of its own.
-        heroEl.style.transition = 'opacity ' + (FADE_MS / 1000) + 's ' + EASE_OUT
-                                + ', transform ' + (CELL_MS / 1000) + 's ' + EASE_OUT;
-        heroEl.style.opacity = '1';
-        heroEl.style.transform = carry(1);
-        if (markLayer) markLayer.classList.add('p-mark');
-      }
-
-      // The wall does not clear and THEN hand over — the hero grows out over it
-      // first, and the wall gives way underneath while the frame is still
-      // moving. Nothing here can paint over the film: the hero is lifted above
-      // the whole intro, so the cells fade behind a solid frame however long
-      // they take, and the only question WALL_LAG and WALL_MS answer is what
-      // reads well.
-      function dissolveWall() {
-        if (!alive()) return;
-        // Hand the whole decoder budget to the hero for the expansion. The cells
-        // are fading out over WALL_MS regardless, so a frozen last frame under
-        // the fade is invisible — and two dozen H.264 streams stop competing
-        // with the 1080p film that is about to fill the screen, which is the one
-        // moment in the intro where a dropped frame would actually be seen.
-        cells.forEach(function (c) { if (c.v) c.v.pause(); });
-        // The WHOLE wall fades at once — one duration, no delay, no stagger. A
-        // nearest-first ripple was tried and reads as fussy; the wall should simply
-        // recede while the hero grows over it.
-        cells.forEach(function (c) {
-          c.el.style.transition = 'opacity ' + (WALL_MS / 1000) + 's ease'
-                                + ', transform ' + (WALL_MS / 1000) + 's ' + EASE_OUT;
-          c.el.style.opacity = '0';
-          c.el.style.transform = 'scale(0.97)';
-        });
-      }
-
-      function pullBack() {
-        if (phase > 2 || !alive()) return;
-        phase = 3;
-        // The frame rides home: its clip opens to its whole box while its
-        // transform returns to rest — two properties on ONE element, one
-        // duration, one curve. The window is the film's own edge, so it cannot
-        // outrun the film or fall behind it; there is no second thing to keep in
-        // step. The curve is EASE_PULL, not an ease-in-out — see its note.
-        heroEl.style.transition = 'clip-path ' + (OUT_MS / 1000) + 's ' + EASE_PULL
-                                + ', transform ' + (OUT_MS / 1000) + 's ' + EASE_PULL;
-        heroEl.style.clipPath = 'inset(0px 0px 0px 0px)';
-        heroEl.style.transform = 'translate(0px, 0px) scale(1)';
-        html.classList.remove('si-zoom');
-        html.classList.add('si-zoomout');
-        if (markLayer) markLayer.classList.add('p-rise');
-        if (mark) {   // the mark leaves WITH the frame instead of being stranded on the white
-          mark.style.transition = 'opacity 0.5s ease, transform ' + (OUT_MS / 1000) + 's ' + EASE_PULL;
-          mark.style.transform = 'translate(-50%, -50%) translate(' + (-heroDX).toFixed(2) + 'px, ' + (-heroDY).toFixed(2) + 'px)';
+        function layoutCard(i, rot) {
+          // clips ride one STEP apart ahead of the hero around the ring
+          const t = rad(HERO0 + STEP * (i + 1) + rot);
+          const co = Math.cos(t);
+          const s = K / (K - co);
+          const x = R * Math.sin(t) * s;
+          const c = cards[i];
+          // rotateY(±TILT·sinφ): flat at front/back center, turned at the
+          // limbs with the outer edge receding — tangent to the sphere
+          // upright ring (phones, portrait): the same travel on the Y axis, rising through the
+          // front (y = −x), tilting about X so the outer edge still recedes
+          c.el.style.transform = VERT
+            ? 'translateY(' + (-x) + 'px) scale(' + (s / BASE) + ') rotateX(' + (TILT * Math.sin(t)) + 'deg)'
+            : 'translateX(' + x + 'px) scale(' + (s / BASE) + ') rotateY(' + (TILT * Math.sin(t)) + 'deg)';
+          // inner parallax: the oversized footage pans against the
+          // card's travel, so frame and image move at different rates
+          const pan = -5 * Math.sin(t);
+          if (Math.abs(pan - c.pp) > 0.1) {
+            const panT = VERT ? 'translateY(' + (-pan).toFixed(2) + '%)' : 'translateX(' + pan.toFixed(2) + '%)';
+            c.v.style.transform = panT;
+            if (c.v2) c.v2.style.transform = panT;
+            c.pp = pan;
+          }
+          // depth haze via the opaque veil — the card element itself is
+          // NEVER translucent, so cards can't show through each other
+          const haze = co >= 0 ? 0 : Math.min(-co * 0.32, 0.32);
+          if (Math.abs(haze - c.vo) > 0.004) { c.veil.style.opacity = haze; c.vo = haze; }
+          // TRUE occlusion against the hero window: the window is a hole
+          // in the cover panels, so it always paints deepest — a card
+          // that is FARTHER than the hero yet crosses the window's
+          // screen rect is CLIPPED at the window's edge (a hard cut, as
+          // real occlusion would be), never faded. rotateY maps local
+          // vertical lines to screen-vertical lines, so a horizontal
+          // inset stays a clean vertical cut; fractions are overcut 8%
+          // to absorb the projection's local↔screen nonlinearity.
+          const tiltCos = Math.cos(rad(TILT * Math.sin(t)));
+          // (upright ring: the same test along Y — rotateX keeps horizontal cuts horizontal)
+          const chw = ((VERT ? H0 : W0) * s / 2) * tiltCos;
+          let fL = 0, fR = 0;
+          // smooth depth gate: 0 while the card is nearer than the hero,
+          // ramping to 1 as it falls clearly behind — so the clip can
+          // never toggle on/off in a single frame when depths cross.
+          // The 1.12 overcut is proportional (continuous from zero), not
+          // an additive step, absorbing the projection's nonlinearity.
+          const wOcc = Math.max(0, Math.min((heroCo - co) / 0.12, 1));
+          if (wOcc > 0) {
+            const cardL = x - chw, cardR = x + chw;
+            const hL = heroX - heroHW, hR = heroX + heroHW;
+            if (hR > cardL && hL < cardR) {
+              if (hL <= cardL) fL = (Math.min(hR, cardR) - cardL) / (2 * chw) * 1.12 * wOcc;
+              if (hR >= cardR) fR = (cardR - Math.max(hL, cardL)) / (2 * chw) * 1.12 * wOcc;
+              if (hL > cardL && hR < cardR) fR = (cardR - hL) / (2 * chw) * 1.12 * wOcc;
+            }
+          }
+          // a card reduced to a thin sliver reads as an artifact, not an
+          // occlusion — taper the remainder CONTINUOUSLY to nothing
+          // (smoothstep from 45% visible down to 12%), never a snap
+          const vis = 1 - fL - fR;
+          if ((fL > 0 || fR > 0) && vis > 0 && vis < 0.45) {
+            const u = Math.max((vis - 0.12) / 0.33, 0);
+            const target = vis * u * u * (3 - 2 * u);
+            const extra = vis - target;
+            if (fR >= fL) fR += extra; else fL += extra;
+          }
+          // upright ring: +x is UP the screen, so the "right" cut becomes the top inset
+          const clip = VERT
+            ? 'inset(' + (Math.min(fR, 1) * 100).toFixed(1) + '% 0% ' + (Math.min(fL, 1) * 100).toFixed(1) + '% 0%)'
+            : 'inset(0% ' + (Math.min(fR, 1) * 100).toFixed(1) + '% 0% ' + (Math.min(fL, 1) * 100).toFixed(1) + '%)';
+          if (clip !== c.clip) { c.el.style.clipPath = clip; c.clip = clip; }
+          const z = 200 + Math.round(co * 100);
+          if (z !== c.z) { c.el.style.zIndex = z; c.z = z; }
         }
-        // the wall gives way UNDER the frame, a beat after it has begun to grow
-        at(WALL_LAG, dissolveWall);
-        at(REVEAL_AT, function () {
-          // the white still covers the PAGE either side of the frame — the nav above
-          // it, the copy below — so it lifts off as a fade and those arrive as the
-          // second beat instead of popping in when the overlay is finally removed
-          html.classList.add('si-reveal');
-          intro.classList.add('p-lift');
-        });
-        at(OUT_MS + 420, function () {
-          html.classList.remove('si-lock', 'si-zoomout');
-          restoreHero();                                // the frame is the page's again
-          intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
-          intro.remove();
-          dropMark();
-          if (window.heroPlay) window.heroPlay();   // decoders freed — retry the hero if iOS declined it
-        });
-      }
 
-      // a tap or a click skips straight to the hand-off
-      const skip = function () {
-        if (phase > 2 || !alive()) return;
-        timers.forEach(clearTimeout);
-        timers.length = 0;
-        if (phase < 1) {
-          // skipped before the hero ever landed: put it in its slot at once and
-          // pull back from there, the same place the normal path pulls back from
-          heroEl.style.transition = 'none';
-          heroEl.style.opacity = '1';
-          heroEl.style.transform = carry(1);
-          void heroEl.offsetWidth;                      // commit that state before the ride
+        // The hero "card" is a hole: the four cover panels leave an
+        // uncovered rect riding the same ring (180° → front center),
+        // revealing the LIVE magnified hero beneath the overlay. It is
+        // the deepest layer, so front cards legitimately pass over it
+        // while it travels the back and comes around the left limb.
+        function layoutHole(rot) {
+          // the hero rides the FULL spin with the swarm (180° + 540° =
+          // 720° ≡ front center at rest) — never parked mid-journey
+          const t = rad(Math.min(HERO0 + rot, HERO0 + ROT_TOTAL));
+          const co = Math.cos(t);
+          const s = K / (K - co);
+          const hx = cx + R * Math.sin(t) * s;
+          const hw = W0 * s, hh = H0 * s;
+          heroX = hx - cx; heroHW = (VERT ? hh : hw) / 2; heroCo = co;
+          if (VERT) {
+            // upright ring: the window rides the Y axis (rising through the front)
+            const hy = ringCY - heroX;
+            pTop.style.transform = 'scaleY(' + (Math.max(hy - hh / 2, 0) / vh) + ')';
+            pBottom.style.transform = 'scaleY(' + (Math.max(vh - (hy + hh / 2), 0) / vh) + ')';
+            pLeft.style.transform = 'scaleX(' + ((cx - hw / 2) / vw) + ')';
+            pRight.style.transform = 'scaleX(' + ((vw - (cx + hw / 2)) / vw) + ')';
+            return;
+          }
+          const L = Math.max(hx - hw / 2, 0), Rr = Math.min(hx + hw / 2, vw);
+          const T = cy - hh / 2, B = cy + hh / 2;
+          pTop.style.transform = 'scaleY(' + (T / vh) + ')';
+          pBottom.style.transform = 'scaleY(' + ((vh - B) / vh) + ')';
+          pLeft.style.transform = 'scaleX(' + (L / vw) + ')';
+          pRight.style.transform = 'scaleX(' + (Math.max(vw - Rr, 0) / vw) + ')';
         }
-        phase = 2;
-        at(80, pullBack);
-      };
-      // A deliberate tap or click skips to the hand-off. A KEY does not: Max was
-      // losing the intro to whatever he happened to press — a modifier, a
-      // screenshot shortcut, a tab switch — and a keystroke aimed at the browser
-      // is not a request to dismiss the page's own opening.
-      window.addEventListener('pointerdown', skip, { once: true });
 
-      // The viewport can change under the wall at any moment: a new tab hiding
-      // Chrome's bookmarks bar on navigation, a phone's toolbars, a window drag.
-      // The cover panels and the hero track it by themselves; the cells are
-      // absolute pixels and do not, so they are the part that goes stale — and
-      // a wall laid out for the old height leaves its centre hole adrift of the
-      // gap, which reads as white space above the hero. Re-derive and move
-      // everything instead of ignoring it. Watching HEIGHT as well as width is
-      // the whole point; this used to watch width only.
-      const abandon = function () {
-        window.removeEventListener('resize', relayout);
-        timers.forEach(clearTimeout);
-        phase = 4;
-        html.classList.add('si-reveal');
-        html.classList.remove('si-lock', 'si-zoom', 'si-zoomout');
-        restoreHero();
-        intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
-        intro.remove();
-        dropMark();
-      };
-      const relayout = function () {
-        if (!alive()) { window.removeEventListener('resize', relayout); return; }
-        if (window.innerWidth === vw && window.innerHeight === vh) return;
-        const wasCols = COLS, wasRows = ROWS;
-        measure();
-        // the grid changed SHAPE (a phone turned, or the 760px break crossed):
-        // the cells no longer map onto it, so step straight to the finished page
-        if (COLS !== wasCols || ROWS !== wasRows) { abandon(); return; }
-        cells.forEach(function (c) {
-          const rc = rectOf(c.s.r, c.s.c);
-          c.el.style.left = rc.l + 'px';
-          c.el.style.top = rc.t + 'px';
-          c.el.style.width = rc.w + 'px';
-          c.el.style.height = rc.h + 'px';
-        });
-        if (mark) mark.style.width = Math.round(Math.min(Math.max(gapRect.w * 0.66, 96), 180)) + 'px';
-        // and put the frame back in its slot, without easing — from the pull-back
-        // on its target is the page's own layout, and measure() left it alone
-        if (phase < 3) holdHero(phase === 0 ? 0.9 : 1);
-      };
-      window.addEventListener('resize', relayout);
+        // ── spin profile ──────────────────────────────────────────
+        // One and a HALF revolutions on a single cubic ease-out: the
+        // first full revolution rips past in about half a second — a
+        // swarm of film — then the same curve sheds speed the whole way
+        // down, the swarm resolves, and the hero glides the final
+        // degrees into center. One curve, no seams: the launch and the
+        // landing are two ends of the same motion.
+        const ROT_TOTAL = 270;
+        const T_TOTAL = 1800;                     // ms — whole spin
+        // three-phase velocity, C1-continuous at every joint: a short
+        // quadratic wind-up, then a steady READABLE cruise — no single
+        // blinding peak, so each film holds the front long enough to
+        // register — then a long cubic glide-down to a dead stop on
+        // the hero. Flow without harshness.
+        const A = 0.15, B = 0.30;                 // wind-up and cruise fractions
+        const CDEC = 1 - A - B;                   // glide-down fraction
+        const V = ROT_TOTAL / (A / 2 + B + CDEC / 3); // cruise speed, deg per unit time
+        function rotAt(ms) {
+          const u = Math.min(ms / T_TOTAL, 1);
+          if (u < A) return V * u * u / (2 * A);
+          if (u < A + B) return V * A / 2 + V * (u - A);
+          const w = (1 - u) / CDEC;
+          return V * A / 2 + V * B + V * CDEC / 3 * (1 - w * w * w);
+        }
 
-      // ── start ─────────────────────────────────────────────────
-      // Only the first few stills have to be decoded before the wall starts —
-      // the rest have the whole build to arrive, and a slow link starts on the
-      // tone panels rather than on a stall.
-      const decoded = function (im) {
-        return new Promise(function (res) {
-          if (im.complete) { res(); return; }
-          im.addEventListener('load', res, { once: true });
-          im.addEventListener('error', res, { once: true });
-        }).then(function () { return (im.naturalWidth && im.decode) ? im.decode().catch(function () {}) : null; });
-      };
-      // every cell's still marks itself in as soon as it is decoded; the ones
-      // that make it before their cell lands are simply already there
-      const shown = cells.map(function (c) {
-        return decoded(c.im).then(function () { if (c.im.naturalWidth) c.im.classList.add('is-in'); });
-      });
-      // a clip counts as ready once it can actually play from its in-point
-      const playable = function (c) {
-        return new Promise(function (res) {
-          if (!c.v || c.v.readyState >= 3) { res(); return; }
-          c.v.addEventListener('canplay', res, { once: true });
-          c.v.addEventListener('error', res, { once: true });
-        });
-      };
-      Promise.race([
-        // the stills that open the wall AND the clips that go with them, so the
-        // first frames to land are moving rather than held
-        Promise.all(shown.filter(function (_, i) { return cells[i].s.k < 8; })
-          .concat(cells.filter(function (c) { return c.s.k < 6; }).map(playable))),
-        new Promise(function (res) { setTimeout(res, 1100); }),   // hard cap: a slow link starts on stills
-      ]).then(function () {
-        return new Promise(function (res) { setTimeout(res, 100); });   // a beat of white before the first frame
-      }).then(function () {
-        if (!alive() || phase > 0) return;
-        cells.forEach(function (c) { at(c.s.k * STAGGER, function () { land(c); }); });
-        // The hero takes the NEXT turn after the last cell, on the same beat —
-        // nothing waits for it and it gets no reveal of its own. The pause comes
-        // afterwards, on the finished wall, and then the hero pulls back out of
-        // it — the wall fades under it on the pull-back's own clock (WALL_LAG).
-        const heroAt = cells.length * STAGGER;
-        at(heroAt, landHero);
-        at(heroAt + CELL_MS + PAUSE, pullBack);
+        const t0 = performance.now();
+        // the wordmark belongs to the FINAL shot only: it fades in over
+        // the hero window as it settles into center, not over the clips
+        let marked = false;
+        function frame(now) {
+          if (!document.body.contains(intro)) return;
+          const ms = now - t0;
+          const rot = Math.min(rotAt(ms), ROT_TOTAL);
+          layoutHole(rot); // first — cards occlusion-test against it
+          for (let i = 0; i < pool.length; i++) layoutCard(i, rot);
+          if (!marked && rot >= ROT_TOTAL - 15) { marked = true; intro.classList.add('p-mark'); }
+          if (ms >= T_TOTAL) { onArrived(); return; }
+          requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+
+        function onArrived() {
+          // the hero window rests at center, full card size. Brief hold,
+          // then: four-corner window expansion + hero zoom-out on the
+          // same clock — one continuous camera pull-back into the page —
+          // while the remaining cards on the right melt away.
+          setTimeout(function () {
+            ['top', 'bottom', 'left', 'right'].forEach(function (side) {
+              intro.querySelector('.si-p-' + side).style.transition = 'transform 0.85s ' + EASE;
+            });
+            if (SMALL) {
+              // the window travels to the hero's TRUE resting box while the carried frame
+              // (si-zoomout, same curve, same 0.85s) rides home beneath it — both are linear in
+              // the same eased progress, so the frame covers the window the whole way
+              pTop.style.transform = 'scaleY(' + (Math.max(heroBox.top, 0) / vh) + ')';
+              pBottom.style.transform = 'scaleY(' + (Math.max(vh - heroBox.bottom, 0) / vh) + ')';
+              pLeft.style.transform = 'scaleX(' + (Math.max(heroBox.left, 0) / vw) + ')';
+              pRight.style.transform = 'scaleX(' + (Math.max(vw - heroBox.right, 0) / vw) + ')';
+              if (mark) {   // the mark leaves WITH the window instead of being stranded on the white
+                mark.style.transition = 'opacity 0.5s ease, transform 0.85s ' + EASE;
+                mark.style.transform = 'translate(-50%, -50%) translate(' + (-heroDX).toFixed(2) + 'px, ' + (-heroDY).toFixed(2) + 'px)';
+              }
+            } else {
+            pTop.style.transform = 'scaleY(' + (hero.top / vh) + ')';
+            pBottom.style.transform = 'scaleY(' + ((vh - hero.bottom) / vh) + ')';
+            pLeft.style.transform = 'scaleX(' + (hero.left / vw) + ')';
+            pRight.style.transform = 'scaleX(' + ((vw - hero.right) / vw) + ')';
+            }
+            html.classList.remove('si-zoom');
+            html.classList.add('si-zoomout');
+            intro.classList.add('p-rise');
+            // dismiss cards deepest-first with a short stagger: by the
+            // time a front card fades, everything it was covering is
+            // already gone — nothing can ever show through a fading card
+            let zMin = Infinity, zMax = -Infinity;
+            cards.forEach(function (c) { zMin = Math.min(zMin, c.z); zMax = Math.max(zMax, c.z); });
+            cards.forEach(function (c) {
+              const front = (c.z - zMin) / Math.max(zMax - zMin, 1); // 0 deepest → 1 front
+              c.el.style.transition = 'opacity 0.12s ease ' + (front * 0.1).toFixed(3) + 's';
+              c.el.style.opacity = '0';
+            });
+            if (SMALL) {
+              // a live clip that never got going is dropped now — the link belongs to the hero
+              cards.forEach(function (c) {
+                if (c.v2 && !c.v2.classList.contains('is-live')) { c.v2.removeAttribute('src'); c.v2.load(); }
+              });
+              // here the white covers the PAGE, not just the margins (copy sits right under the
+              // hero): as the window lands it lifts off as a fade, so the nav and the copy arrive
+              // as the second beat instead of popping in when the overlay is removed
+              setTimeout(function () { html.classList.add('si-reveal'); intro.classList.add('p-lift'); }, 640);
+            } else {
+            setTimeout(function () { html.classList.add('si-reveal'); }, 350);
+            }
+            setTimeout(function () {
+              html.classList.remove('si-lock', 'si-zoomout');
+              intro.querySelectorAll('video').forEach(function (v) { v.pause(); });
+              intro.remove();
+              if (window.heroPlay) window.heroPlay();   // decoders freed — retry the hero if iOS declined it
+            }, 1400);
+          }, 250);
+        }
       });
     })();
   </script>
