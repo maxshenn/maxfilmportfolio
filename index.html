@@ -638,14 +638,34 @@
        call to show it always. */
     /* The scrim goes with it: white type over a photograph is only legible with
        one, and these tiles run from a bright beach to a night ocean. Worst-case
-       contrast over the glyphs measures 5.1:1, over the 4.5:1 the type size
-       requires — re-measure if the gradient, the type size or the reel changes.
-       The stops are in PIXELS, not percentages, because the label is: it always
-       sits 18-47px off the bottom whatever the tile. With percentage stops the
-       scrim tracked tile height instead, so on the phone's 158px tiles the top
-       of the glyphs landed at 25% of the tile where the gradient had already
-       fallen to ~0.39, and Italy measured 3.75:1. Anchored in px it is the same
-       on a 158px tile and a 574px one. */
+       contrast over the glyphs measures 7.10:1 (desktop hover), over the 4.5:1
+       the type size requires — measured over the GLYPH rect, not the label's
+       box, across every tile at 1440, 390 and 430 wide in the rest, hover and
+       .is-near states. Re-measure all of those if the gradient, the type size,
+       the filters or the reel changes.
+       THE TWO STOPS THE LABEL SITS IN ARE IN PIXELS, not percentages, because
+       the label is: it always sits 18-47px off the bottom whatever the tile.
+       With percentage stops the scrim tracked tile height instead, so on the
+       phone's 158px tiles the top of the glyphs landed at 25% of the tile where
+       the gradient had already fallen to ~0.39, and Italy measured 3.75:1.
+       Anchored in px, 0 and 56px are the same on a 158px tile and a 574px one.
+
+       THE TAIL, THOUGH, IS CAPPED AS A FRACTION OF THE TILE — and it has to be.
+       Pinned at a flat 184px it overran a phone tile completely: measured, the
+       scrim covered 100% of four of the five phone tiles and left the MIDDLE of
+       every photo under 0.46 alpha, against 0.10 on the 281px desktop tile. Same
+       filter on the image, utterly different picture — which is what Max saw as
+       the phone covers not being vibrant like the web.
+       This is safe, and it is safe for a specific reason: the glyphs live at
+       18-39px, entirely inside the FIRST segment (0 -> 56px), and a gradient
+       interpolates each segment from its own two stops alone. Nothing after 56px
+       can move the label's contrast. Measured both ways to be sure.
+       The percentages are chosen NOT to bind on desktop — 184/281 = 65.5%, so at
+       66% the shortest desktop tile keeps its exact 124/184px stops and the web
+       version is untouched, which is what Max asked for. On a 158px phone tile
+       they become 71px and 104px. The max() floors keep the third stop clear of
+       the 56px one on a very short tile (below ~124px), where the percentages
+       would otherwise cross it and inverted stops would snap into a hard edge. */
     .dest-media::after {
       content: '';
       position: absolute;
@@ -653,8 +673,8 @@
       background: linear-gradient(to top,
         rgba(9, 8, 7, 0.78) 0,
         rgba(9, 8, 7, 0.62) 56px,
-        rgba(9, 8, 7, 0.14) 124px,
-        rgba(9, 8, 7, 0) 184px);
+        rgba(9, 8, 7, 0.14) max(64px, min(124px, 45%)),
+        rgba(9, 8, 7, 0) max(88px, min(184px, 66%)));
       pointer-events: none;
     }
     .dest-name {
@@ -687,6 +707,14 @@
        releases it as you scroll on — hover's one-at-a-time behaviour, driven by scroll
        position instead of a cursor. .is-near is set by JS, and only on non-hover devices. */
     .dest-item.is-near .dest-name { font-weight: 700; }
+    /* ...and the photo lifts with it. On a phone .is-near IS the hover state, so it gets
+       hover's colour move — the same brightness/saturate pair the pointer gets below, and
+       the same pair the Projects tiles use. Max's call: the frame should come up as its
+       name does. The push-in (scale 1.045) is deliberately NOT included: on a pointer it
+       answers a deliberate hover, but on scroll every tile in the grid would zoom as it
+       passed the middle, which reads as the page breathing rather than as focus. A tap
+       still gets its own scale through .touch-active. */
+    .dest-item.is-near .dest-thumb { filter: brightness(1.08) saturate(1.25); }
     @media (prefers-reduced-motion: reduce) {
       .dest-name { transition: none; }
     }
