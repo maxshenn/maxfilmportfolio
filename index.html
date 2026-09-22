@@ -4,9 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Max Shen</title>
-  <link rel="icon" href="public/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="public/favicon-32.png" sizes="32x32" type="image/png">
-  <link rel="apple-touch-icon" href="public/apple-touch-icon.png">
+  <!-- Favicons. /favicon.ico lives at the SITE ROOT because that is the path crawlers
+       request by default — Google falls back to it, and Bing, DuckDuckGo, Yandex and
+       Baidu lean on it heavily. It was 404ing, which is why the icon was missing from
+       search results even though the page declared one. It is a multi-size ICO: 16 and
+       32 for browser tabs, 48 because that is the size Google's search-result favicon
+       pipeline works in. Google also wants a square whose side is a multiple of 48, so
+       48 and 192 are declared; the 32 that used to be the only PNG was below that and
+       got upscaled. Root-absolute paths so they resolve the same from every page and
+       from a crawler's own base URL. Keep this block identical across all four pages —
+       a favicon that changes between pages is one Google may decline to show. -->
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/public/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="icon" href="/public/favicon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
   <!-- Type assets: self-hosted, preload only the two above-the-fold faces.
        See CLAUDE.md › Typography System. -->
   <link rel="preload" href="public/fonts/general-sans-variable.woff2" as="font" type="font/woff2" crossorigin>
