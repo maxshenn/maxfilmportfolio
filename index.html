@@ -2813,18 +2813,19 @@
         .sort(function (a, b) { return rank(b) - rank(a); })
         .forEach(function (i, k) { slots[i].k = k; });   // k = landing position, 0 first
 
-      // Live footage: desktop runs every cell, staggered so the decoders spin up
-      // across the build rather than all at once. Phones keep the four cells
-      // touching the gap live and leave the rest as stills — that is where the
-      // eye is, and two dozen simultaneous decodes is more than a phone should
-      // be asked for. Data-saver gets stills only, which is the design, not a
-      // fallback: a wall of frames is still a wall of frames.
+      // Live footage: EVERY cell runs live, on the phone as well as the desktop.
+      // The phone used to keep only the four cells touching the gap live and
+      // leave the other sixteen as stills, on the reasoning that two dozen
+      // simultaneous decodes is more than a phone should be asked for. In
+      // practice that read as a wall of photographs with one moving frame in the
+      // middle, which is not the shot — Max's call to run them all. The clips are
+      // 640x360 and ~230 KB each, which is what makes it affordable; they are all
+      // paused the moment the dissolve starts, so the hero has the whole decoder
+      // budget for the pull-back, which is the one moment a dropped frame shows.
+      // Data-saver still gets stills only, which is the design, not a fallback:
+      // a wall of frames is still a wall of frames.
       const saveData = !!(navigator.connection && navigator.connection.saveData);
-      const liveFor = function (s) {
-        if (saveData) return false;
-        if (!SMALL) return true;
-        return Math.abs(s.r - MR) + Math.abs(s.c - MC) === 1;
-      };
+      const liveFor = function () { return !saveData; };
 
       const cells = slots.map(function (s) {
         const el = document.createElement('div');
@@ -2845,7 +2846,7 @@
         im.draggable = false;
         el.appendChild(im);
         let v = null;
-        if (liveFor(s)) {
+        if (liveFor()) {
           v = document.createElement('video');
           // iOS only autoplays inline when these are ATTRIBUTES, present before src / play()
           v.muted = true; v.defaultMuted = true; v.setAttribute('muted', '');
@@ -2877,12 +2878,41 @@
       // Same geometry, completely different thing to look at. The reel is 5.5 MB
       // all in; asking for it up front, in the right order, is what makes a first
       // visit look like every visit after it.
+      //
+      // ASK AGAIN UNTIL IT ACTUALLY PLAYS. A single play() per clip was enough
+      // when four of them ran; with the whole wall live it is not. Starting
+      // twenty videos in one turn is exactly the case an engine pushes back on —
+      // iOS rejects play() while it is still opening decoders, and a rejection
+      // used to be swallowed, leaving that cell on its still for the whole
+      // intro. That is the "only the middle one is moving" wall. So each clip
+      // keeps asking: on its own readiness events, and on a slow poll, until it
+      // is genuinely advancing. It is bounded — it gives up after TRIES attempts
+      // and stops the moment the pull-back begins, so nothing is still retrying
+      // into the hand-off.
+      const TRIES = 14;
+      const keepPlaying = function (v) {
+        let n = 0, iv = 0;
+        const running = function () { return !v.paused && v.currentTime > 0; };
+        const done = function () { if (iv) { clearInterval(iv); iv = 0; }
+                                   v.removeEventListener('loadeddata', go);
+                                   v.removeEventListener('canplay', go); };
+        const go = function () {
+          if (!v.isConnected || phase >= 2) { done(); return; }   // handing over — stop asking
+          if (running()) { done(); return; }
+          if (n++ >= TRIES) { done(); return; }
+          const pr = v.play();
+          if (pr && pr.catch) pr.catch(function () {});
+        };
+        v.addEventListener('loadeddata', go);
+        v.addEventListener('canplay', go);
+        iv = setInterval(go, 240);
+        go();
+      };
       const byTurn = cells.slice().sort(function (a, b) { return a.s.k - b.s.k; });
       byTurn.forEach(function (c) {
         if (!c.v) return;
         c.v.src = c.v._src;
-        const pr = c.v.play();                           // refused → the still stays, which is the design
-        if (pr && pr.catch) pr.catch(function () {});
+        keepPlaying(c.v);                                // refused → asked again; still refused → the still stays
       });
 
       // the wordmark belongs to the final shot: it fades in as the hero lands

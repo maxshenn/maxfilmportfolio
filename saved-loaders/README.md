@@ -75,6 +75,18 @@ Things worth knowing before editing it — the full set is in `CLAUDE.md`:
   on every frame the wall is visible; the opacity spread between any two cells is ~0; 24 cells
   are visible at peak; and every gutter around the landed hero equals the gutter between any two
   cells, with all the full-width white bands in a screenshot coming out the same number.
+- **Every cell runs live, on the phone too.** It used to run four on a phone and leave the
+  rest as stills; that read as a wall of photographs with one moving frame in the middle.
+  Measured after the change: 20/20 phone cells playing and visibly moving, in both engines.
+  The price is data — the phone pulls 4.94 MB of clips instead of 0.73 MB — and `saveData`
+  still gets stills. The hand-off is unaffected because the cells are already paused by then:
+  the pull-back measures the same at 4 and at 20 live cells, 0 dropped hero frames either way.
+- **A clip keeps asking to play until it does.** One `play()` each was fine for four; for
+  twenty it is not. iOS refuses `play()` while it is still opening decoders, and that
+  rejection used to be swallowed, stranding the cell on its still. `keepPlaying()` retries on
+  `loadeddata`/`canplay` and a 240ms poll, capped at 14 tries and stopped once the hand-off
+  begins. Chromium and WebKit refuse none of them, so it lies dormant in testing — it is there
+  for real iOS, which Playwright does not reproduce. Never restore the bare swallowed catch.
 - **The wall's videos pause when the dissolve starts**, so 24 H.264 streams stop competing
   with the 1080p hero at the one moment a dropped frame would be seen.
 - **`OUT_MS` and `EASE_PULL` are applied inline to the one element that moves.** The clip opens
