@@ -833,8 +833,19 @@
       if (!mark) return;
       const letters = mark.querySelectorAll('.wm-l');
       const boom = mark.querySelector('.wm-boom');
-      if (!sessionStorage.getItem('wmIntroPlayed')) {
-        sessionStorage.setItem('wmIntroPlayed', '1');
+      // Once per tab. The read is GUARDED: with storage blocked (cookies off, some private
+      // modes and in-app browsers) getItem throws, and unguarded it killed this whole script
+      // — no wordmark intro, and no hover boops either, because the listeners below never
+      // attached. With no memory every page counts as the first, EXCEPT while the site's
+      // loader owns this page load (si-lock / si-fade on <html>): the loader used to
+      // suppress this through the same flag, and that coupling has to survive without storage.
+      var loaderOwnsIt = /\bsi-(lock|fade)\b/.test(document.documentElement.className);
+      var first = false;
+      try {
+        first = !sessionStorage.getItem('wmIntroPlayed');
+        if (first) sessionStorage.setItem('wmIntroPlayed', '1');
+      } catch (e) { first = true; }
+      if (first && !loaderOwnsIt) {
         mark.classList.add('wm-intro');
         setTimeout(function () { mark.classList.remove('wm-intro'); }, 1700);
       }

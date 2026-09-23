@@ -32,6 +32,30 @@ Things worth knowing before editing it — the full set is in `CLAUDE.md`:
 - **A key press must never skip the intro.** A deliberate tap or click does; a keystroke aimed
   at the browser — a modifier, a screenshot shortcut, a tab switch — is not a request to
   dismiss the page's own opening. Do not re-add a `keydown` listener.
+- **No storage must mean “play it”, not “skip it”.** With cookies blocked, in some private
+  modes and in-app browsers, `sessionStorage` throws. The gate's catch used to skip the whole
+  intro on any throw — a visitor with storage locked down got the site with no loading
+  screen at all. The flag read is guarded on its own now; a throw counts as not played, so
+  that visitor sees it on every homepage load in the tab. Better twice than never.
+- **The white can never be permanent.** The head paints the page white before first paint
+  and only the driver takes it away. `window.__siReveal` (defined in the head) undoes
+  everything safely, including the hero's inline styles; the driver calls it if it throws,
+  and two timers armed up front call it at 9s (loader never started) or 15s (started and
+  died). A real intro on the slowest link measured is gone by 5.8s. Verified by sabotaging
+  the driver three ways; silent on a normal load.
+- **“Played” means seen, not started.** The flag is written at the pull-back (wall built, held,
+  hand-off begun), on a deliberate skip, or when a resize abandons the intro. Writing it the
+  instant the driver started meant a reload during the white gate burned it, and the load
+  the visitor then watched played nothing — measured as 0 cells on a reload at 250ms or
+  900ms. Writing it when the hero landed was still too early (a coin-flip at 900ms on a
+  fast load). A needless replay costs three seconds; a needless skip is the complaint.
+- **The loader ignores Reduce Motion — Max's explicit decision.** Routing it to the plain fade is
+  exactly what his sister saw as “the loading screen didn't play”. `HONOUR_REDUCED_MOTION = false`
+  in the gate; the fade path is kept, so honouring it again is one flag. This overrides an
+  accessibility preference knowingly — the hero expand is the kind of zoom it exists for —
+  so do not put it back without asking. The rest of the site still honours the preference.
+  Bandwidth and distance are not a cause: at 400ms RTT and 1.5 Mbps the wall still builds
+  from stills and finishes.
 - **The pull-back's smoothness is capped by the film, not the animation.** `hero.mp4` is
   23.976fps, so the 800ms expansion has ~19 pictures to show while the transform runs at the
   display's refresh rate (0 dropped frames, measured). Judder is how far the frame jumps

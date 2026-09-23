@@ -1684,15 +1684,62 @@
     // Site intro gate — decides before first paint whether the cinematic
     // loader (once per session) or a plain fade (reduced motion) runs.
     (function () {
+      var h = document.documentElement;
+      // Abandon the intro SAFELY, whatever state it is in: every intro class off, the hero's
+      // inline numbers cleared (the driver hides it at opacity 0 while the wall builds, so a
+      // driver that dies at the wrong moment would otherwise leave the hero invisible), and
+      // the overlay layers gone. Defined HERE, in the head, so it exists even if the driver
+      // script at the end of the body never runs at all. The driver calls it if it throws;
+      // the watchdog below calls it if nothing else does.
+      window.__siReveal = function () {
+        h.classList.remove('si-lock', 'si-fade', 'si-zoom', 'si-zoomout');
+        h.classList.add('si-reveal');
+        var hm = document.querySelector('.hero-media');
+        if (hm) { hm.style.transition = ''; hm.style.transform = ''; hm.style.clipPath = ''; hm.style.opacity = ''; }
+        ['siteIntro', 'siteMark'].forEach(function (id) { var el = document.getElementById(id); if (el) el.remove(); });
+      };
       try {
         // Plays once per tab (sessionStorage): the first open of the site, never again on
         // Back/Forward or in-site links. `?intro=1` forces it (for previewing).
         try { localStorage.removeItem('siteIntroPlayed'); } catch (e2) {}   // clear the old per-browser flag
         var force = /[?&]intro=1(&|$)/.test(location.search);
-        if (!force && sessionStorage.getItem('siteIntroPlayed')) return;
-        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // The read is guarded ON ITS OWN, and a failure means "not played" — so the intro
+        // runs. With cookies blocked, in some private modes and in some in-app browsers,
+        // touching sessionStorage THROWS; this whole block used to be one try/catch whose
+        // catch skipped the intro, which is how a visitor with storage locked down got the
+        // site with no loading screen at all. Without storage it simply cannot remember it
+        // played, so for that visitor it replays on each homepage load in the tab — which is
+        // the right way round: better twice than never.
+        var played = false;
+        try { played = !!sessionStorage.getItem('siteIntroPlayed'); } catch (e3) { played = false; }
+        if (!force && played) return;
+        // REDUCED MOTION IS DELIBERATELY NOT HONOURED BY THE LOADER. It used to route to the
+        // plain si-fade, and that is exactly what a visitor with iOS "Reduce Motion" on
+        // reported as "the loading screen didn't play" (Max's sister; her other settings were
+        // ruled out one by one). Max's call: the wall plays for everyone. This overrides the
+        // site's own rule and an accessibility preference — the hero expand is the kind of
+        // large zoom that preference exists for — and it is done knowingly. The si-fade path
+        // is kept intact below and in the driver, so honouring it again is this ONE flag.
+        // The rest of the site's reduced-motion rules (wordmark, About reveal, Frames labels,
+        // lightbox, nav) are untouched.
+        var HONOUR_REDUCED_MOTION = false;
+        var reduced = HONOUR_REDUCED_MOTION && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         var cls = reduced ? 'si-fade' : 'si-lock';
-        document.documentElement.classList.add(cls);
+        h.classList.add(cls);
+        // WATCHDOG. That class has just painted the whole page white, and only the driver at
+        // the end of the body takes it away. If the driver never runs, or dies part way, a
+        // visitor would sit on a blank page for ever — the worst thing this intro can do. So:
+        // at 9s, if the loader has not even STARTED (the driver adds si-zoom synchronously the
+        // instant it runs), reveal. If it has started, it is a fixed-length choreography of
+        // ~4s that finishes itself, so allow until 15s before concluding it died mid-way. The
+        // reduced-motion fade (si-fade) is covered by the same check. On the slowest link
+        // measured (400ms RTT, 1.5 Mbps) the intro is gone by 5.8s, so 9s cannot cut a real one.
+        // BOTH stages are armed here, up front: the 15s one does not depend on being able to
+        // schedule a fresh timer later from inside the 9s one — one less thing to go wrong.
+        var stillLocked = function () { return h.classList.contains('si-lock') || h.classList.contains('si-fade'); };
+        var started = function () { return h.classList.contains('si-zoom') || h.classList.contains('si-zoomout'); };
+        setTimeout(function () { if (stillLocked() && !started()) window.__siReveal(); }, 9000);
+        setTimeout(function () { if (stillLocked()) window.__siReveal(); }, 15000);
         // Phones / tablets (anything that is not a ≥1024px fine-pointer desktop) run the
         // intro's small-screen staging — see the si-m CSS notes.
         if (!reduced && window.matchMedia('(max-width: 1023px), (pointer: coarse)').matches) {
@@ -1713,7 +1760,7 @@
             stills[n] = im;
           });
         }
-      } catch (e) { /* no sessionStorage — skip the intro */ }
+      } catch (e) { /* nothing above should throw now; if it somehow does, the watchdog still reveals */ }
     })();
   </script>
   <script>
@@ -2577,6 +2624,7 @@
     // fades underneath, and rides home into the homepage.
     // (The orbit sphere is saved at saved-loaders/orbit-sphere-index.html.)
     (function () {
+    try {
       const html = document.documentElement;
       const intro = document.getElementById('siteIntro');
       if (!intro) return;
@@ -2617,10 +2665,17 @@
         return;
       }
       if (!html.classList.contains('si-lock')) { intro.remove(); dropMark(); return; }
-      try {
-        sessionStorage.setItem('siteIntroPlayed', '1');
-        sessionStorage.setItem('wmIntroPlayed', '1');
-      } catch (e) {}
+      // The WORDMARK flag is set now: the loader owns this page's arrival, so the nav mark
+      // must not run its own intro on the next page either way.
+      try { sessionStorage.setItem('wmIntroPlayed', '1'); } catch (e) {}
+      // The INTRO flag is deliberately NOT set here. It is set by seen() once the visitor has
+      // actually watched the show — at pullBack() (wall built, held, hand-off begun), on a
+      // deliberate skip, or when a resize abandons it. Setting it at start burned it on any
+      // interrupted load: a reload during the white gate (impatience on a slow link) meant
+      // the load the visitor then sat through played nothing at all. Measured: reload at
+      // 250ms or 900ms in → 0 cells on the reload, Chromium and WebKit, desktop and phone.
+      // "Once per tab" still holds — it is now once per tab that was SEEN.
+      const seen = function () { try { sessionStorage.setItem('siteIntroPlayed', '1'); } catch (e) {} };
       // Lift the hero above the intro and hide it there until it lands. The lift
       // and the hiding happen in the same task, so there is no frame in which
       // the frame could show at full size over the wall.
@@ -3013,6 +3068,11 @@
       function pullBack() {
         if (phase > 2 || !alive()) return;
         phase = 3;
+        // Only NOW has the show been watched: the wall built, held through the pause, and the
+        // hand-off begun. Marking it at landHero() was too early — on a fast load the wall is
+        // whole at ~1s, and a reload right then (measured as a coin-flip at 900ms on the phone)
+        // burned the flag on a visitor who had seen one frame of it. Err toward replaying.
+        seen();
         // The frame rides home: its clip opens to its whole box while its
         // transform returns to rest — two properties on ONE element, one
         // duration, one curve. The window is the film's own edge, so it cannot
@@ -3053,6 +3113,7 @@
         if (phase > 2 || !alive()) return;
         timers.forEach(clearTimeout);
         timers.length = 0;
+        seen();                                       // a deliberate dismissal counts as seen
         if (phase < 1) {
           // skipped before the hero ever landed: put it in its slot at once and
           // pull back from there, the same place the normal path pulls back from
@@ -3082,6 +3143,7 @@
         window.removeEventListener('resize', relayout);
         timers.forEach(clearTimeout);
         phase = 4;
+        seen();                                       // they were watching when the viewport changed shape
         html.classList.add('si-reveal');
         html.classList.remove('si-lock', 'si-zoom', 'si-zoomout');
         restoreHero();
@@ -3154,6 +3216,12 @@
         at(heroAt, landHero);
         at(heroAt + CELL_MS + PAUSE, pullBack);
       });
+    } catch (e) {
+      // A setup error here would otherwise leave the page white until the watchdog fires 9s
+      // later. Errors inside the driver's own timers are not caught by this (they run later),
+      // and that is what the watchdog in the head is for.
+      if (window.__siReveal) window.__siReveal();
+    }
     })();
   </script>
   <script>
@@ -3313,8 +3381,19 @@
       if (!mark) return;
       const letters = mark.querySelectorAll('.wm-l');
       const boom = mark.querySelector('.wm-boom');
-      if (!sessionStorage.getItem('wmIntroPlayed')) {
-        sessionStorage.setItem('wmIntroPlayed', '1');
+      // Once per tab. The read is GUARDED: with storage blocked (cookies off, some private
+      // modes and in-app browsers) getItem throws, and unguarded it killed this whole script
+      // — no wordmark intro, and no hover boops either, because the listeners below never
+      // attached. With no memory every page counts as the first, EXCEPT while the site's
+      // loader owns this page load (si-lock / si-fade on <html>): the loader used to
+      // suppress this through the same flag, and that coupling has to survive without storage.
+      var loaderOwnsIt = /\bsi-(lock|fade)\b/.test(document.documentElement.className);
+      var first = false;
+      try {
+        first = !sessionStorage.getItem('wmIntroPlayed');
+        if (first) sessionStorage.setItem('wmIntroPlayed', '1');
+      } catch (e) { first = true; }
+      if (first && !loaderOwnsIt) {
         mark.classList.add('wm-intro');
         setTimeout(function () { mark.classList.remove('wm-intro'); }, 1700);
       }
