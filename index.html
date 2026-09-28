@@ -3897,7 +3897,7 @@
         if (stageSeen) wake();
       }, { rootMargin: '200px 0px' }).observe(sheet);
 
-      function setPick(cb, cr) {
+      function setPick(cb, cr, late) {
         let hitsAll = 0, ySum = 0;
         for (let k = 0; k < N; k++) {
           const f = frames[k];
@@ -3932,7 +3932,11 @@
         const hue = Math.round(((Math.atan2(cr, cb) * 180 / Math.PI) + 360) % 360) % 360;
         const sat = Math.min(100, Math.round(Math.sqrt(cb * cb + cr * cr) / RMAX * 100));
         pick = { cb: cb, cr: cr, hex: hex, rgb: 'rgb(' + rgb.join(',') + ')', label: 'Hue ' + hue + '°\u2002Sat ' + sat + '%' };
-        const ranked = rankAll();
+        let ranked = rankAll();
+        // A photo that arrives LATE — the connection is slow and the visitor is already looking — joins the
+        // trace, and takes an empty place among the four if there is one. It does not put out a photo
+        // that is already showing: nothing on the stage changes unless the visitor picks a colour.
+        if (late) ranked = current.concat(ranked.filter(function (f) { return current.indexOf(f) < 0; })).slice(0, MAX_SHOWN);
         ranked.forEach(function (f) { if (weights[f.k] < 0.7) weights[f.k] = 0.7; });   // a frame in the puzzle always shows its trace
         requestSet(ranked);
         setTargets(weights);
@@ -4058,7 +4062,7 @@
       let refreshT = 0;
       function refreshPick() {
         if (!pick || refreshT) return;
-        refreshT = requestAnimationFrame(function () { refreshT = 0; if (pick && hoverFrame < 0) setPick(pick.cb, pick.cr); });
+        refreshT = requestAnimationFrame(function () { refreshT = 0; if (pick && hoverFrame < 0) setPick(pick.cb, pick.cr, true); });
       }
       const stage = section.querySelector('.scope-stage');
       // keyboard: arrows walk the phase and the saturation from wherever the pick is; Enter or Space
