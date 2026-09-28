@@ -943,6 +943,16 @@
     /* out of the field: a tight contact shadow and a soft ink-tinted one, so it rides above the rest */
     .scope-cell.is-out { box-shadow: 0 2px 4px rgba(26, 25, 23, 0.12), 0 20px 38px -18px rgba(26, 25, 23, 0.36); }
     .scope-cell:not(.is-set) { pointer-events: none; }     /* only the four, fitted and at rest, answer the pointer */
+    /* A TAP ON A PHOTO IS CLEAN. A link's default on a phone is a 40% black flash over it for the length
+       of the tap (measured: `rgba(0, 0, 0, 0.4)`) — that was the "glitch in the photo" when its
+       colours were asked for. `manipulation` takes away the double-tap zoom, which two taps on one
+       photo would otherwise set off; nothing here is text, so nothing is selectable. */
+    .scope-cell {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none; user-select: none;
+      touch-action: manipulation;
+    }
     .scope-cell img {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
@@ -1023,7 +1033,11 @@
        shows as many as fit (data-sw, set by the script), largest colours first. The hex has one
        place, above the left end of the strip, because a label centred on the first or the last
        dot ran off the edge of the photo and was cut by it. */
-    .scope-sheet.is-coarse .scope-pal { min-height: 44px; }
+    .scope-sheet.is-coarse .scope-pal { min-height: 44px; will-change: opacity, transform; }
+    /* under a finger the shade and the row are layers of their own from the start, so that raising them
+       on a tap does not repaint the photo under them. (Only under a finger: on a desktop the hint moved
+       386 pixels of the shade by up to 6/255, and the desktop is not to change.) */
+    .scope-sheet.is-coarse .scope-cell::after { will-change: opacity; }
     .scope-sheet.is-coarse .scope-cell.is-compact .scope-pal { gap: 5px; padding: 0 8px 8px; }
     .scope-sheet.is-coarse .scope-sw { position: static; flex: none; }
     .scope-sheet.is-coarse .scope-sw::before { content: none; }
@@ -1100,14 +1114,22 @@
        frame"): the thumb works the scope at the bottom of the screen and the photos it brings
        up are over it, not under the hand. They sit at the BOTTOM of their stage (the script), so
        they are always right on top of the scope whatever their height. */
+    /* THE INSTRUCTIONS ARE RIGHT UNDER THE TITLE on a phone (Max: "move the instructions to right under
+       the vectorscope title and reduce the white space to make up for the movement of the text"):
+       title → what it is and how to work it → photos → scope → readout. They were at the very
+       bottom, under the scope, read after the thing they explain. The section is a column so
+       that the guide, which comes after the stage in the page, can be shown before it. The white
+       is taken back where it was: 12px under the title (28), and a stage 0.74 of its width (0.78). */
     @media (max-width: 560px) {
-      .scope-section { padding: 64px 0 40px; }
+      .scope-section { padding: 64px 0 40px; display: flex; flex-direction: column; }
+      .scope-section > .work-header { order: 0; margin-bottom: 12px; }
+      .scope-section > .scope-guide { order: 1; margin: 0 16px 16px; }
+      .scope-section > .scope-stage { order: 2; }
       .scope-stage { --scope-size: min(100%, 72vw); gap: 16px; padding: 0 16px; }
-      /* 0.78 of its width, not a square: over 37 colours the four were 223–356px tall in a 358px
+      /* 0.74 of its width, not a square: over 37 colours the four were 223–356px tall in a 358px
          stage (median 253), so a square left a median 130px of white between the label and the
          photos. A set that would stand taller is drawn to fit the height instead. */
-      .scope-sheet { order: -1; height: calc((100vw - 32px) * 0.78); }
-      .scope-guide { margin: 24px 16px 0; }
+      .scope-sheet { order: -1; height: calc((100vw - 32px) * 0.74); }
     }
 
     /* The place name used to sit here over a bottom gradient; both are gone (Max's call —
@@ -3587,7 +3609,10 @@
         let best = null, cover = null;
         orders.forEach(function (seq) {
           build(seq).forEach(function (root) {
-            const got = fit(root, W, H, GAP, room.low);
+            // the four stand in the MIDDLE of their stage, on a phone as on a desktop: what height the stage has
+            // to spare is shared above and below them. At the bottom of it (photos over the scope) or the top
+            // (photos under it) the whole of the slack fell in ONE gap, up to 69px of white on a phone
+            const got = fit(root, W, H, GAP, false);
             if (!got) return;
             if (!cover || got.area > cover.area) cover = got;
             let area = 0, moved = 0;
@@ -3648,7 +3673,7 @@
         a.appendChild(img);
         const r = seeded(f.k * 2654435761 + 97), k = 210 + 70 * r();
         // every piece is its own object: its own spring, its own bob — so they never move as one
-        const p = { f: f, el: a, img: img, big: null, ready: false, placed: false, role: 0, back: false, shrink: false, field: null,
+        const p = { f: f, el: a, img: img, big: null, ready: false, placed: false, role: 0, back: false, shrink: false, hold: false, fade: false, bigReady: null, field: null,
                     x: 0, y: 0, w: 1, r: 0, o: 0, vx: 0, vy: 0, vw: 0, vr: 0, tx: 0, ty: 0, tw: 1, th: 1, sx: 0, sy: 0, sw: 1, to: 0, ew: 0, eh: 0,
                     k: k, c: 2 * (0.9 + 0.1 * r()) * Math.sqrt(k), phase: r() * 6.283, period: 3.2 + 2 * r() };
         const set = function () { return a.classList.contains('is-set'); };
@@ -3659,9 +3684,13 @@
           if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
           e.preventDefault();
           if (!set()) return;
-          // under a finger the FIRST tap is what hovering is on a desktop: this photo's colours come up, and
-          // only this photo's. The second opens its gallery. (A photo too narrow for colours just opens.)
-          if (coarse && !a.classList.contains('is-small') && !a.classList.contains('is-hover')) {
+          // under a finger a tap is what hovering is on a desktop: this photo's colours come up, and only
+          // this photo's. A SECOND tap puts them away again and the photo is as it was (Max: "when you tap
+          // it again, it returns to the normal photo without displaying the colors, not directing it").
+          // It used to open the gallery. Under a finger these photos do not navigate at all.
+          if (coarse) {
+            if (a.classList.contains('is-small')) return;
+            if (a.classList.contains('is-hover')) { closePalettes(null); return; }
             closePalettes(a);
             showFrame(f.k);
             enterCell(a, f);
@@ -3698,7 +3727,7 @@
         if (!(e.target.closest && e.target.closest('.scope-cell'))) closePalettes(null);
       }, { passive: true });
       // nothing is shown before its picture has loaded — not the four either: an empty box with a description in it is not a photo
-      function shown(p) { return !p.ready ? 0 : p.role ? 1 : (p.field ? (up ? FIELD_STOPPED : FIELD_MOVING) : 0); }
+      function shown(p) { return !p.ready || p.hold ? 0 : p.role ? 1 : (p.field ? (up ? FIELD_STOPPED : FIELD_MOVING) : 0); }
       // AT THE OPENING NOTHING TRAVELS. The four are simply in their places, and the block they are in
       // rises and fades like every other block on the site. They used to fly out of the field, which
       // was an arrival of their own on top of the panel's. Until `placeUntil`, a piece is PUT where it
@@ -3748,8 +3777,11 @@
       function arrange() {
         if (!room || !fieldOn) return;
         const four = current, boxes = four.length ? (up ? puzzleBoxes(four) : popBoxes(four)) : [], placing = performance.now() < placeUntil;
+        if (coarse && up && !placing) { swapInPlace(four, boxes); if (four.length) sheet.classList.add('is-active'); wake(); return; }
+        swapN++; clearTimeout(swapT); clearTimeout(swapIn);      // a swap still waiting is overtaken
         for (let k = 0; k < pieces.length; k++) {
           const p = pieces[k], i = four.indexOf(p.f), b = i >= 0 ? boxes[i] : null;
+          p.hold = false;
           if (b) {
             p.role = up ? 2 : 1; p.back = false;
             setBox(p, b);
@@ -3783,28 +3815,114 @@
       // a dropped frame (58ms measured). A small piece is already as sharp as its thumb can make it
       // and does not ask; a phone and a data-saver ask only once the piece is out.
       function sharpen(p) {
-        if (p.big || !p.role) return;
-        if (p.role === 1 && (coarse || lean)) return;
-        if (coarse && lean) return;                       // a phone on a data-saver keeps its thumbs
+        if (!p.role) return DONE;
+        if (p.big) return p.bigReady || DONE;
+        if (p.role === 1 && (coarse || lean)) return DONE;
+        if (coarse && lean) return DONE;                  // a phone on a data-saver keeps its thumbs
         // a phone's screen is 3x: a 175px photo is 525 device pixels and its 320px thumb is SOFT on it. The
         // cap was 2 everywhere, which is why a phone never asked. (A desktop's cap stays 2.)
         const dpr = Math.min(coarse ? 3 : 2, window.devicePixelRatio || 1);
-        if (p.img.naturalWidth && p.tw * dpr <= p.img.naturalWidth * 1.15) return;
+        if (p.img.naturalWidth && p.tw * dpr <= p.img.naturalWidth * 1.15) return DONE;
         const big = new Image();
         p.big = big;
         big.className = 'scope-big';
         big.alt = '';
         big.decoding = 'async';
         big.draggable = false;
-        const show = function () {
-          if (p.big !== big) return;                      // the piece went home while it was on its way
-          p.el.insertBefore(big, p.img.nextSibling);
-          requestAnimationFrame(function () { requestAnimationFrame(function () { big.classList.add('is-ready'); }); });
+        p.bigReady = new Promise(function (done) {
+          const show = function () {
+            if (p.big !== big) { done(); return; }        // the piece went home while it was on its way
+            p.el.insertBefore(big, p.img.nextSibling);
+            if (p.hold) { big.style.transition = 'none'; big.classList.add('is-ready'); }   // not yet seen: it is simply there when the piece is
+            else requestAnimationFrame(function () { requestAnimationFrame(function () { big.classList.add('is-ready'); }); });
+            done();
+          };
+          const lost = function () { console.warn('Vectorscope: could not load ' + p.f.photo.lite); if (p.big === big) { p.big = null; p.bigReady = null; } done(); };
+          big.src = p.f.photo.lite;
+          if (big.decode) big.decode().then(show, lost);
+          else { big.addEventListener('load', show); big.addEventListener('error', lost); }
+        });
+        return p.bigReady;
+      }
+      // ── UNDER A FINGER THE FOUR CHANGE IN PLACE ──
+      // A tap on the scope has no field in sight for photos to come out of. They came out of it all the
+      // same: each new photo was first seen 22–49px wide, grew five or six times over while it
+      // travelled up to 234px, with the old four still on their way home under it (eight on the
+      // stage at once) and its own sharp picture a second behind it. Max: "the photos distort a
+      // bit". So under a finger, stopped: the four on show STAY until the new four are loaded and
+      // sharp; then the old go out where they stand and the new come in where they belong. Nothing
+      // grows, nothing travels, nothing is seen soft. A photo that is in both sets, or that the
+      // finger has just let go of, is already in sight and glides to its new place.
+      const SWAP_WAIT = 700;     // ms the old four are held for the new ones' sharp pictures; after it they come as they are
+      const SWAP_OUT = 0.045;    // s, time constant: the old four go out first…
+      const SWAP_GAP = 110;      // ms …and the new come in after them, so two photos never lie over each other half seen
+      const DONE = Promise.resolve();
+      let swapN = 0, swapT = 0, swapIn = 0;
+      function quiet(p, is) {
+        if (is) { p.el.tabIndex = -1; p.el.setAttribute('aria-hidden', 'true'); }
+        else { p.el.removeAttribute('tabindex'); p.el.removeAttribute('aria-hidden'); }
+      }
+      function home(p) {
+        p.role = 0; p.back = false; p.hold = false; p.fade = false;
+        if (p.field) { size(p, p.field.w, p.field.h); setBox(p, p.field); p.x = p.sx = p.tx; p.y = p.sy = p.ty; p.w = p.sw = p.tw; }
+        p.r = 0; p.vx = p.vy = p.vw = p.vr = 0;
+        p.el.style.zIndex = '1';
+        p.el.classList.remove('is-out'); p.el.classList.remove('is-set');
+        if (p.big) { p.big.remove(); p.big = null; p.bigReady = null; }
+        quiet(p, true);
+        p.o = 0; p.to = shown(p);
+      }
+      function swapInPlace(four, boxes) {
+        const n = ++swapN, coming = [];
+        clearTimeout(swapT); clearTimeout(swapIn);
+        for (let k = 0; k < pieces.length; k++) {
+          const p = pieces[k], i = four.indexOf(p.f), b = i >= 0 ? boxes[i] : null;
+          if (b) {
+            const inSight = p.role > 0 && !p.hold && !p.fade && p.o > 0.3;
+            p.role = 2; p.back = false; p.fade = false;
+            setBox(p, b);
+            p.el.style.zIndex = String(20 + four.length - i);
+            p.el.classList.add('is-out');
+            if (inSight) { p.to = shown(p); quiet(p, false); sharpen(p); }
+            else {                                          // put in its place UNSEEN, to wait for its sharp picture
+              p.hold = true;
+              if (p.shrink) size(p, p.tw, p.th);
+              p.x = p.sx = p.tx; p.y = p.sy = p.ty; p.w = p.sw = p.tw; p.r = 0;
+              p.vx = p.vy = p.vw = p.vr = 0;
+              p.o = p.to = 0;
+              quiet(p, true);
+              coming.push(p);
+            }
+          } else if (p.hold) home(p);                       // it was coming for a tap that has been overtaken, and was never seen
+          else if (!p.role && !p.fade) { if (p.field) setBox(p, p.field); p.to = shown(p); }
+          // else it is one of the old four: it stays exactly as it is until the new four are ready
+        }
+        const go = function () { commit(n); };
+        Promise.all(coming.map(sharpen)).then(go, go);
+        swapT = setTimeout(go, SWAP_WAIT);
+      }
+      function commit(n) {
+        if (n !== swapN) return;
+        swapN++;
+        clearTimeout(swapT);
+        let went = false;
+        for (let k = 0; k < pieces.length; k++) {
+          const p = pieces[k];
+          if (!p.role || p.fade || p.hold || current.indexOf(p.f) >= 0) continue;
+          p.fade = true; p.to = 0; went = true;
+          p.el.classList.remove('is-set'); leaveCell(p.el);
+          if (hoverFrame === p.f.k) showFrame(-1);
+          quiet(p, true);
+        }
+        const bring = function () {
+          for (let k = 0; k < pieces.length; k++) {
+            const p = pieces[k];
+            if (p.hold && current.indexOf(p.f) >= 0) { p.hold = false; p.to = shown(p); quiet(p, false); }
+          }
+          wake();
         };
-        const lost = function () { console.warn('Vectorscope: could not load ' + p.f.photo.lite); if (p.big === big) p.big = null; };
-        big.src = p.f.photo.lite;
-        if (big.decode) big.decode().then(show, lost);
-        else { big.addEventListener('load', show); big.addEventListener('error', lost); }
+        if (went && !reduced) swapIn = setTimeout(bring, SWAP_GAP); else bring();
+        wake();
       }
       // every sampled frame in the order it carries the colour: the ones inside the pick by share, then
       // the rest by how far the circle would have to grow to reach them — so there are always four.
@@ -3876,6 +3994,7 @@
         // as the pointer left. A dash that lands on the scope is picked SETTLE later, where it lands.
         judge();
       }
+      const later = window.requestIdleCallback ? function (f) { requestIdleCallback(f, { timeout: 400 }); } : function (f) { setTimeout(f, 80); };
       function wake() {
         if (awake || !room) return;
         awake = true; tickT = performance.now();
@@ -3893,6 +4012,11 @@
         for (let k = 0; k < pieces.length; k++) {
           const p = pieces[k];
           if (!p.field) continue;
+          if (p.fade) {                                     // going out where it stands: it does not shrink and it does not travel
+            p.o += (0 - p.o) * (1 - Math.exp(-dt / SWAP_OUT));
+            if (p.o < 0.012 || reduced) home(p);            // …and only when it is out of sight is it put back in the field
+            else { p.el.style.opacity = p.o.toFixed(3); moving = true; continue; }
+          }
           const a = p.role === 2 ? 0 : loose, w = 6.283 * t / p.period + p.phase;
           const bx = a * BOB * Math.sin(w), by = a * BOB * Math.cos(w * 0.77 + p.phase), bs = p.role ? 1 : 1 - (1 - LOOSE) * loose;
           // where it is GOING (rx…) and where the spring is being led just now (gx…)
@@ -3925,9 +4049,12 @@
           const st = p.el.style;
           st.transform = 'translate(' + (p.x - p.ew / 2).toFixed(2) + 'px,' + (p.y - p.eh / 2).toFixed(2) + 'px) rotate(' + p.r.toFixed(3) + 'deg) scale(' + (p.w / p.ew).toFixed(4) + ')';
           st.opacity = p.o.toFixed(3);
-          const set = p.role === 2 && up && Math.abs(p.x - rx) < 8 && Math.abs(p.y - ry) < 8 && Math.abs(p.w - rw) < 12;
+          const set = p.role === 2 && up && !p.hold && p.o > 0.85 && Math.abs(p.x - rx) < 8 && Math.abs(p.y - ry) < 8 && Math.abs(p.w - rw) < 12;
           if (set !== p.el.classList.contains('is-set')) {
             p.el.classList.toggle('is-set', set);
+            // under a finger the colours are worked out and their row made BEFORE they are asked for, in an idle
+            // moment, so that the tap itself only turns them up
+            if (set && coarse) later(function () { if (p.role === 2) buildPalette(p.el, p.f); });
             if (!set && p.el.classList.contains('is-hover')) { leaveCell(p.el); if (hoverFrame === p.f.k) showFrame(-1); }
           }
           if (!still || p.o !== p.to || p.shrink || p.back) moving = true;
