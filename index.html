@@ -1006,22 +1006,37 @@
     .scope-cell.is-compact .scope-pal { gap: 5px; padding: 0 12px 10px; }
     .scope-cell.is-compact .scope-sw { width: 16px; height: 16px; }
     .scope-sw:hover, .scope-sw.is-open { transform: scale(1.18); }
-    .scope-sw-hex {
-      position: absolute; bottom: calc(100% + 8px); left: 50%;
-      transform: translate(-50%, 4px);
-      padding: 5px 8px;
+    /* THE HEX IS A BUBBLE AT THE BOTTOM OF THE SCREEN, on a desktop and on a phone alike (Max: "when i
+       click on the color circles in the image, display the hashtag as a bubble in the bottom of
+       the screen rather than inside the photo (apply for all)"). It was a pill over the swatch,
+       inside the photo: it covered the picture it was describing, it had to be kept from running
+       off the photo's edge, and on a phone it sat under the finger that had asked for it. ONE
+       bubble, made by the script and hung on <body> — fixed, so it must not sit inside a block that
+       carries a transform (the panel's blocks do). Its swatch is the colour; the text is the hex. */
+    .scope-hexbubble {
+      position: fixed; left: 50%; z-index: 450;                 /* over the page, under the nav (500) */
+      bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px 10px 12px;
       border-radius: 999px;
-      background: rgba(13, 12, 11, 0.82);
+      background: rgba(13, 12, 11, 0.92);
       color: #fff;
-      font: 500 11px/1 var(--font-mono);
-      font-style: normal;
-      letter-spacing: 0.06em;
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      font-feature-settings: "case", "tnum";
       white-space: nowrap;
+      /* floating: a tight contact shadow and a soft, ink-tinted one */
+      box-shadow: 0 2px 6px rgba(26, 25, 23, 0.22), 0 18px 40px -16px rgba(26, 25, 23, 0.5);
       opacity: 0;
-      transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+      transform: translate(-50%, 10px);
+      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
     }
-    .scope-sw:hover .scope-sw-hex, .scope-sw.is-open .scope-sw-hex { opacity: 1; transform: translate(-50%, 0); }
+    .scope-hexbubble.is-on { opacity: 1; transform: translate(-50%, 0); }
+    .shb-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.55); }
+    @media (prefers-reduced-motion: reduce) {
+      .scope-hexbubble, .scope-hexbubble.is-on { transform: translate(-50%, 0); transition: opacity 0.2s ease; }
+    }
     /* UNDER A FINGER (.is-coarse, set by the script on `hover: none`). THE COLOURS COME UP ON A TAP
        (Max: "make it so that the color circles only show when u tap the photo"): the first tap on
        a photo is what hovering it is on a desktop — its colours rise, and only its own — and the
@@ -1030,9 +1045,7 @@
        strip along the bottom of the photo answers — 44px tall, and a tap anywhere on it picks the
        swatch NEAREST the finger (the script) — and a tap on the rest of the photo opens the gallery.
        The dots stay round: they used to be squeezed into ovals on a narrow photo, and now a photo
-       shows as many as fit (data-sw, set by the script), largest colours first. The hex has one
-       place, above the left end of the strip, because a label centred on the first or the last
-       dot ran off the edge of the photo and was cut by it. */
+       shows as many as fit (data-sw, set by the script), largest colours first. */
     .scope-sheet.is-coarse .scope-pal { min-height: 44px; will-change: opacity, transform; }
     /* under a finger the shade and the row are layers of their own from the start, so that raising them
        on a tap does not repaint the photo under them. (Only under a finger: on a desktop the hint moved
@@ -1041,9 +1054,6 @@
     .scope-sheet.is-coarse .scope-cell.is-compact .scope-pal { gap: 5px; padding: 0 8px 8px; }
     .scope-sheet.is-coarse .scope-sw { position: static; flex: none; }
     .scope-sheet.is-coarse .scope-sw::before { content: none; }
-    .scope-sheet.is-coarse .scope-sw-hex { left: 24px; bottom: 46px; transform: translateY(4px); }
-    .scope-sheet.is-coarse .scope-cell.is-compact .scope-sw-hex { left: 8px; bottom: 32px; }
-    .scope-sheet.is-coarse .scope-sw.is-open .scope-sw-hex { transform: none; }
     .scope-sheet.is-coarse .scope-cell[data-sw="3"] .scope-sw:nth-child(n+4),
     .scope-sheet.is-coarse .scope-cell[data-sw="4"] .scope-sw:nth-child(n+5),
     .scope-sheet.is-coarse .scope-cell[data-sw="5"] .scope-sw:nth-child(n+6),
@@ -2395,7 +2405,7 @@
     <!-- the guide: what a vectorscope does, and how to work this one -->
     <div class="scope-guide reveal reveal-d3" role="group" aria-label="About the vectorscope">
       <p class="scope-about">A vectorscope shows which colours are in the photos and how strong they are. The stronger the colour, the further it sits from the middle. <span class="scope-how for-mouse">Click to start, click again to stop.</span><span class="scope-how for-touch">Tap or drag to pick a colour.</span></p>
-      <p class="scope-keys">Arrow keys move the ring, Enter holds it, Escape resets it.</p>
+      <p class="scope-keys">Arrow keys move the ring, Shift moves it further, Enter holds it, Escape resets it.</p>
     </div>
   </section>
 
@@ -3288,6 +3298,30 @@
         });
         return f.pal;
       }
+      // THE HEX BUBBLE: one, at the bottom of the screen, for whichever swatch was last asked.
+      const bubble = document.createElement('div');
+      bubble.className = 'scope-hexbubble';
+      bubble.setAttribute('role', 'status');
+      bubble.setAttribute('aria-live', 'polite');
+      const bubbleDot = document.createElement('span'), bubbleHex = document.createElement('span');
+      bubbleDot.className = 'shb-dot';
+      bubbleDot.setAttribute('aria-hidden', 'true');
+      bubble.appendChild(bubbleDot); bubble.appendChild(bubbleHex);
+      document.body.appendChild(bubble);
+      let hexSw = null, hexPinned = false;
+      function showHex(sw, pin) {
+        if (hexSw && hexSw !== sw) hexSw.classList.remove('is-open');
+        hexSw = sw; hexPinned = !!pin;
+        if (pin) sw.classList.add('is-open');
+        bubbleDot.style.background = sw.dataset.rgb;
+        bubbleHex.textContent = sw.dataset.hex;
+        bubble.classList.add('is-on');
+      }
+      function hideHex() {
+        if (hexSw) hexSw.classList.remove('is-open');
+        hexSw = null; hexPinned = false;
+        bubble.classList.remove('is-on');
+      }
       function buildPalette(cell, f) {
         if (cell.querySelector('.scope-pal') || !f.cb) return;
         const row = document.createElement('span');
@@ -3297,10 +3331,18 @@
           const sw = document.createElement('span');
           sw.className = 'scope-sw';
           sw.style.setProperty('--c', p.rgb);
-          const hx = document.createElement('i');
-          hx.className = 'scope-sw-hex';
-          hx.textContent = p.hex;
-          sw.appendChild(hx);
+          sw.dataset.hex = p.hex;
+          sw.dataset.rgb = p.rgb;
+          if (!coarse) {
+            // on a desktop the hex follows the pointer over the swatches; a CLICK on one keeps it up (and does
+            // not follow the photo's link, which a click on a swatch used to do)
+            sw.addEventListener('pointerenter', function () { if (!hexPinned || hexSw === sw) showHex(sw, hexPinned && hexSw === sw); else showHex(sw, false); });
+            sw.addEventListener('pointerleave', function () { if (hexSw === sw && !hexPinned) hideHex(); });
+            sw.addEventListener('click', function (e) {
+              e.preventDefault(); e.stopPropagation();
+              if (hexPinned && hexSw === sw) hideHex(); else showHex(sw, true);
+            });
+          }
           row.appendChild(sw);
         });
         // under a finger the whole strip answers: a tap picks the swatch nearest to it, and shows its hex
@@ -3315,9 +3357,7 @@
             if (d < bd) { bd = d; best = sw; }
           });
           if (!best) return;
-          const open = best.classList.contains('is-open');
-          row.querySelectorAll('.scope-sw.is-open').forEach(function (o) { o.classList.remove('is-open'); });
-          if (!open) best.classList.add('is-open');
+          if (hexSw === best) hideHex(); else showHex(best, true);
         });
         cell.appendChild(row);
       }
@@ -3327,6 +3367,7 @@
       }
       function leaveCell(cell) {
         cell.classList.remove('is-hover');
+        if (hexSw && cell.contains(hexSw)) hideHex();      // its colours go down, and the bubble with them
       }
 
       // ── the trace: an accumulation buffer at 1× CSS pixels, tone-mapped through a phosphor curve ──
@@ -3718,7 +3759,6 @@
           const el = pieces[k].el;
           if (el === keep || !el.classList.contains('is-hover')) continue;
           leaveCell(el);
-          el.querySelectorAll('.scope-sw.is-open').forEach(function (o) { o.classList.remove('is-open'); });
           any = true;
         }
         if (any && !keep && hoverFrame >= 0) showFrame(-1);
@@ -3777,7 +3817,7 @@
       function arrange() {
         if (!room || !fieldOn) return;
         const four = current, boxes = four.length ? (up ? puzzleBoxes(four) : popBoxes(four)) : [], placing = performance.now() < placeUntil;
-        if (coarse && up && !placing) { swapInPlace(four, boxes); if (four.length) sheet.classList.add('is-active'); wake(); return; }
+        if (coarse && up && !placing && !leaving) { swapInPlace(four, boxes); if (four.length) sheet.classList.add('is-active'); wake(); return; }
         swapN++; clearTimeout(swapT); clearTimeout(swapIn);      // a swap still waiting is overtaken
         for (let k = 0; k < pieces.length; k++) {
           const p = pieces[k], i = four.indexOf(p.f), b = i >= 0 ? boxes[i] : null;
@@ -3957,9 +3997,15 @@
       // STOPPED or BROWSING. The four are out in the puzzle whenever the ring is stopped, the pointer
       // is off the scope, or it has come to rest on it; they fall back to the field, grown where
       // they lie, only while it is BROWSING — moving about at a pace that picks colours.
+      // `leaving`: the stage is coming OUT OF A BROWSE. Under a finger that is a drag let go of, or paused
+      // — the field is in sight, so the four come out of it on the spring, as on a desktop. Only a TAP,
+      // with no field in sight, changes the four in place with a fade (Max: "when i hover and let go,
+      // there shouldn't be a flash animation. only when i tap should there be a flash").
+      let leaving = false;
       function judge() {
         const v = locked || !onDisc || rested;
         if (v === up) return;
+        leaving = v && !up;
         up = v;
         if (up) {
           // A stop settles whatever was still waiting — the pick of a quick move, a set held back by
@@ -3971,6 +4017,7 @@
           if (pendingR) { clearTimeout(dwellT); dwellT = 0; current = pendingR; setKey = keyOf(current); pendingR = null; lastChange = performance.now(); }
         }
         arrange();
+        leaving = false;
       }
       // Is this move a resting hand's TREMOR? Then nothing follows it and nothing is picked from it. It
       // used to be picked, so a hand that had stopped went on changing the four a few pixels at a time.
@@ -4157,8 +4204,14 @@
         // A press, or a move that is measurably slow, picks on the next frame — its OWN position, not
         // whatever faster ones follow it in the same frame. The first event after a pause has no
         // speed yet, so it only picks if the pointer then rests.
-        const slow = e.type === 'pointerdown' || (dt > 0 && dt <= 250 && dist / dt < FAST);
+        // A FINGER on the scope is never travel — it is there to pick — so every move of it picks, at any
+        // speed. And a finger coming DOWN picks nothing yet: if it lifts where it is, that is a tap, and
+        // the tap picks (endPress); if it moves, that is a drag, and the drag does. Picking on the way
+        // down swapped the photos in place under a drag that had only just begun.
+        const touch = e.pointerType === 'touch', press = e.type === 'pointerdown';
+        const slow = press || touch || (dt > 0 && dt <= 250 && dist / dt < FAST);
         moved(e, slow);                                // browsing, travelling, or come to rest: the stage follows
+        if (press && touch) return;
         if (slow) {
           fastQ = null;                                // what was waiting on a quick move is overtaken: this pick is later, and it is made
           slowQ = q;
@@ -4238,24 +4291,37 @@
         refreshT = requestAnimationFrame(function () { refreshT = 0; if (pick && hoverFrame < 0) setPick(pick.cb, pick.cr, true); });
       }
       const stage = section.querySelector('.scope-stage');
-      // keyboard: arrows walk the phase and the saturation from wherever the pick is; Enter or Space
-      // holds or hands back; Escape returns to the middle
+      // THE ARROW KEYS MOVE THE RING THE WAY THEY POINT, by the same distance wherever it is (Max: "the
+      // arrow keys dont function properly for vectorscope once it enters the bottom half. fix that so
+      // it moves as the arrow keys intend and at the same rate/speed throughout"). They used to walk
+      // the PHASE and the SATURATION — Left and Right turned the ring about the middle, Up and Down
+      // took it out and in — which is what the arrows mean only at the very top of the scope. Anywhere
+      // else it was wrong: at the bottom Left went right and Up went down, at the side Left went up.
+      // Measured from ten places, 36 of 40 presses went the wrong way, and a press moved the ring
+      // anywhere from 3px to 36px, because ten degrees is a short way near the middle and a long one
+      // at the rim. Now a key is a step across the SCREEN: x is Cb and y is Cr, so Right is +Cb and
+      // Up is +Cr. At the rim the ring stays on the scope and slides along it.
+      const KEY_STEP = 0.04;     // of the scope's radius a press: 10px on a 518px scope
+      const KEY_BIG = 4;         // with Shift held
+      // Enter or Space holds or hands back; Escape returns to the middle
       disc.addEventListener('keydown', function (e) {
-        let hue = 103, sat = 45;   // start on the red target's phase, mid-way out
-        if (pick) { hue = (Math.atan2(pick.cr, pick.cb) * 180 / Math.PI + 360) % 360; sat = Math.sqrt(pick.cb * pick.cb + pick.cr * pick.cr) / RMAX * 100; }
+        let dx = 0, dy = 0;
         switch (e.key) {
           case 'Escape':     centrePick(false); return;
           case 'Enter': case ' ': if (pick) { if (locked) setLocked(false); else hold(false); } e.preventDefault(); return;
-          case 'ArrowLeft':  hue = (hue + 10) % 360; break;    // counter-clockwise: phase increases
-          case 'ArrowRight': hue = (hue + 350) % 360; break;
-          case 'ArrowUp':    sat = Math.min(100, sat + 5); break;
-          case 'ArrowDown':  sat = Math.max(4, sat - 5); break;
+          case 'ArrowLeft':  dx = -1; break;
+          case 'ArrowRight': dx = 1; break;
+          case 'ArrowUp':    dy = 1; break;      // up the screen is +Cr
+          case 'ArrowDown':  dy = -1; break;
           default: return;
         }
-        e.preventDefault();
+        e.preventDefault();                      // the page does not scroll under the scope
         started = true;
-        const m = sat / 100 * RMAX, a = hue * Math.PI / 180;
-        setPick(Math.cos(a) * m, Math.sin(a) * m);
+        const step = KEY_STEP * RMAX * (e.shiftKey ? KEY_BIG : 1);
+        let cb = (pick ? pick.cb : 0) + dx * step, cr = (pick ? pick.cr : 0) + dy * step;
+        const m = Math.hypot(cb, cr);
+        if (m > RMAX) { cb *= RMAX / m; cr *= RMAX / m; }
+        setPick(cb, cr);
         land();
       });
 
