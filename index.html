@@ -810,7 +810,14 @@
       background: #0d0c0b;
       overflow: hidden;
       cursor: crosshair;
-      touch-action: pan-y;      /* a tap or a sideways drag picks; a vertical swipe still scrolls the page */
+      /* A JOYSTICK under a finger (Max: "anytime im dragging/hovering the vectorscope, the screen
+         shouldn't move, similar to joystick logic"): a touch that starts on the disc belongs to the
+         disc, in every direction, and the page stays where it is. It used to be `pan-y` — a
+         sideways drag picked and a vertical one scrolled the page and dropped the ring, so half
+         the scope could not be reached by dragging. The page is scrolled from anywhere else. */
+      touch-action: none;
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;      /* no magnifier, no selection, on a long press */
       -webkit-tap-highlight-color: transparent;
       /* the instrument sits ON the page: a tight contact shadow and a soft, ink-tinted one */
       box-shadow: 0 1px 2px rgba(26, 25, 23, 0.16), 0 28px 56px -28px rgba(26, 25, 23, 0.38);
@@ -966,8 +973,7 @@
       transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
     }
-    .scope-cell.is-set.is-hover:not(.is-small)::after,
-    .scope-sheet.is-coarse .scope-cell.is-set:not(.is-small)::after { opacity: 1; }
+    .scope-cell.is-set.is-hover:not(.is-small)::after { opacity: 1; }
     .scope-pal {
       position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
       display: flex; align-items: flex-end; gap: 7px;
@@ -977,8 +983,7 @@
       transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
     }
-    .scope-cell.is-set.is-hover:not(.is-small) .scope-pal,
-    .scope-sheet.is-coarse .scope-cell.is-set:not(.is-small) .scope-pal { opacity: 1; transform: none; pointer-events: auto; }
+    .scope-cell.is-set.is-hover:not(.is-small) .scope-pal { opacity: 1; transform: none; pointer-events: auto; }
     .scope-sw {
       position: relative;
       width: 22px; height: 22px;
@@ -1007,10 +1012,13 @@
       pointer-events: none;
     }
     .scope-sw:hover .scope-sw-hex, .scope-sw.is-open .scope-sw-hex { opacity: 1; transform: translate(-50%, 0); }
-    /* UNDER A FINGER (.is-coarse, set by the script on `hover: none`). A 16px dot 21px from its
-       neighbour is a small thing to hit, and a miss used to open the gallery. So the whole strip
-       along the bottom of the photo answers — 44px tall, and a tap anywhere on it picks the swatch
-       NEAREST the finger (the script) — and only a tap on the rest of the photo opens the gallery.
+    /* UNDER A FINGER (.is-coarse, set by the script on `hover: none`). THE COLOURS COME UP ON A TAP
+       (Max: "make it so that the color circles only show when u tap the photo"): the first tap on
+       a photo is what hovering it is on a desktop — its colours rise, and only its own — and the
+       second opens its gallery. They used to be up on all four all the time, over every photo.
+       Once they are up: a 16px dot 21px from its neighbour is a small thing to hit, so the whole
+       strip along the bottom of the photo answers — 44px tall, and a tap anywhere on it picks the
+       swatch NEAREST the finger (the script) — and a tap on the rest of the photo opens the gallery.
        The dots stay round: they used to be squeezed into ovals on a narrow photo, and now a photo
        shows as many as fit (data-sw, set by the script), largest colours first. The hex has one
        place, above the left end of the strip, because a label centred on the first or the last
@@ -1087,13 +1095,19 @@
     /* THE PHONE. The scope and the photos it brings up have to be on the screen TOGETHER — a tap on
        the scope that changes photos you cannot see is a tap that did nothing. Full width, the disc
        was 358px and the photos started 132px under it: with the panel at the top of an iPhone 13's
-       screen 42% of them were in sight. So the disc is 72vw, the stage is a square and the photos
-       start at its TOP (the script), right under the readout. */
+       screen 42% of them were in sight. So the disc is 72vw and the stage is a square.
+       THE PHOTOS ARE ABOVE THE SCOPE (Max: "swap the position of the vectorscope with the photos
+       frame"): the thumb works the scope at the bottom of the screen and the photos it brings
+       up are over it, not under the hand. They sit at the BOTTOM of their stage (the script), so
+       they are always right on top of the scope whatever their height. */
     @media (max-width: 560px) {
       .scope-section { padding: 64px 0 40px; }
       .scope-stage { --scope-size: min(100%, 72vw); gap: 16px; padding: 0 16px; }
+      /* 0.78 of its width, not a square: over 37 colours the four were 223–356px tall in a 358px
+         stage (median 253), so a square left a median 130px of white between the label and the
+         photos. A set that would stand taller is drawn to fit the height instead. */
+      .scope-sheet { order: -1; height: calc((100vw - 32px) * 0.78); }
       .scope-guide { margin: 24px 16px 0; }
-      .scope-sheet { height: calc(100vw - 32px); }
     }
 
     /* The place name used to sit here over a bottom gradient; both are gone (Max's call —
@@ -1913,6 +1927,7 @@
       #mobileMenu.open li:nth-child(2) a { transition-delay: 0.12s; }
       #mobileMenu.open li:nth-child(3) a { transition-delay: 0.18s; }
       #mobileMenu.open li:nth-child(4) a { transition-delay: 0.24s; }
+      #mobileMenu.open li:nth-child(5) a { transition-delay: 0.30s; }
 
       /* below the hero the returning nav carries a frosted backing — the same one the
          destination and project pages use — so the wordmark stops overprinting body copy and
@@ -2211,6 +2226,7 @@
       <li><a href="#hero">Home</a></li>
       <li class="about-btn"><a href="#about">About</a></li>
       <li><a href="#frames">Frames</a></li>
+      <li><a href="#vectorscope">Vectorscope</a></li>
       <li><a href="#work">Projects</a></li>
     </ul>
     <span id="navUnderline" aria-hidden="true"></span>
@@ -2224,6 +2240,7 @@
       <li><a href="#hero">Home</a></li>
       <li class="mobile-about"><a href="#about">About</a></li>
       <li><a href="#frames">Frames</a></li>
+      <li><a href="#vectorscope">Vectorscope</a></li>
       <li><a href="#work">Projects</a></li>
     </ul>
   </div>
@@ -2756,7 +2773,7 @@
     (function () {
       const navEl      = document.getElementById('nav');
       const underline  = document.getElementById('navUnderline');
-      const sectionIds = ['hero', 'frames', 'work', 'about'];
+      const sectionIds = ['hero', 'frames', 'vectorscope', 'work', 'about'];
       const linkFor    = id => navEl.querySelector('.nav-links a[href="#' + id + '"]');
 
       let activeId = null;
@@ -3505,11 +3522,11 @@
           lay(node.r, x, y + lh + gap, w, h - lh - gap, gap, boxes);
         }
       }
-      function fit(root, W, H, gap, top) {
+      function fit(root, W, H, gap, low) {
         const h = Math.min(H, (W - root.B) / root.A);
         if (!(h > 0)) return null;
         const w = root.A * h + root.B, boxes = [];
-        lay(root, (W - w) / 2, top ? 0 : (H - h) / 2, w, h, gap, boxes);
+        lay(root, (W - w) / 2, low ? H - h : (H - h) / 2, w, h, gap, boxes);
         return { boxes: boxes, area: w * h };
       }
       // THE FIELD: every frame in one cut. Seventy-odd frames have far too many cuts to try, so a
@@ -3564,11 +3581,13 @@
         (function perm(rest, acc) { if (!rest.length) { orders.push(acc); return; } for (let i = 0; i < rest.length; i++) perm(rest.slice(0, i).concat(rest.slice(i + 1)), acc.concat(rest[i])); })(list.map(function (f, i) { return i; }), []);
         // no piece is a sliver, and none is narrower than the 150px a row of swatches needs — on a phone
         // that alone decides the cut: two columns
-        const diag = Math.hypot(W, H), minW = Math.max(W * 0.17, Math.min(W * 0.45, 150)), minH = Math.max(H * 0.15, Math.min(H * 0.22, 92));
+        // (a phone's stage is shorter than it is wide, so a set of squares is drawn to its height and the
+        // floor there is 35% of the width — 125px on a 358px stage, room for five swatches)
+        const diag = Math.hypot(W, H), minW = Math.max(W * 0.17, Math.min(W * (room.low ? 0.35 : 0.45), 150)), minH = Math.max(H * 0.15, Math.min(H * 0.22, 92));
         let best = null, cover = null;
         orders.forEach(function (seq) {
           build(seq).forEach(function (root) {
-            const got = fit(root, W, H, GAP, room.top);
+            const got = fit(root, W, H, GAP, room.low);
             if (!got) return;
             if (!cover || got.area > cover.area) cover = got;
             let area = 0, moved = 0;
@@ -3639,7 +3658,16 @@
         a.addEventListener('click', function (e) {
           if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
           e.preventDefault();
-          if (set()) pageLeave(a.href);
+          if (!set()) return;
+          // under a finger the FIRST tap is what hovering is on a desktop: this photo's colours come up, and
+          // only this photo's. The second opens its gallery. (A photo too narrow for colours just opens.)
+          if (coarse && !a.classList.contains('is-small') && !a.classList.contains('is-hover')) {
+            closePalettes(a);
+            showFrame(f.k);
+            enterCell(a, f);
+            return;
+          }
+          pageLeave(a.href);
         });
         if (!coarse) {
           const over = function () { if (set() && !a.classList.contains('is-hover')) { showFrame(f.k); enterCell(a, f); } };
@@ -3653,6 +3681,22 @@
         return p;
       }
       frames.forEach(function (f) { pieces[f.k] = makePiece(f); });
+      // under a finger: every palette but `keep`'s goes down. A tap on another photo, on the scope, or
+      // anywhere that is not a photo puts them away.
+      function closePalettes(keep) {
+        let any = false;
+        for (let k = 0; k < pieces.length; k++) {
+          const el = pieces[k].el;
+          if (el === keep || !el.classList.contains('is-hover')) continue;
+          leaveCell(el);
+          el.querySelectorAll('.scope-sw.is-open').forEach(function (o) { o.classList.remove('is-open'); });
+          any = true;
+        }
+        if (any && !keep && hoverFrame >= 0) showFrame(-1);
+      }
+      if (coarse) document.addEventListener('pointerdown', function (e) {
+        if (!(e.target.closest && e.target.closest('.scope-cell'))) closePalettes(null);
+      }, { passive: true });
       // nothing is shown before its picture has loaded — not the four either: an empty box with a description in it is not a photo
       function shown(p) { return !p.ready ? 0 : p.role ? 1 : (p.field ? (up ? FIELD_STOPPED : FIELD_MOVING) : 0); }
       // AT THE OPENING NOTHING TRAVELS. The four are simply in their places, and the block they are in
@@ -3670,7 +3714,7 @@
       function size(p, w, h) {
         p.ew = w; p.eh = h; p.shrink = false;
         p.el.style.width = w.toFixed(1) + 'px'; p.el.style.height = h.toFixed(1) + 'px';
-        p.el.classList.toggle('is-small', w < (coarse ? 110 : 150));   // too narrow for any row of swatches
+        p.el.classList.toggle('is-small', w < (coarse ? 100 : 150));   // too narrow for any row of swatches
         p.el.classList.toggle('is-compact', w < 230);     // room for a row of smaller ones
         // under a finger the dots keep their size and a narrow photo shows as many as fit: 16px dots, 5px apart, 8px in
         if (coarse) p.el.dataset.sw = String(w < 230 ? Math.max(3, Math.min(7, Math.floor((w - 16 + 5) / 21))) : 7);
@@ -3686,9 +3730,9 @@
       function measureStage() {
         const w = sheet.clientWidth, h = sheet.clientHeight;
         if (!w || !h) return false;
-        // on a phone the four start at the TOP of the stage, right under the readout: centred, a short
-        // puzzle left a band of white above it as well as below, and pushed the photos down the screen
-        room = { w: w, h: h, top: window.matchMedia('(max-width: 560px)').matches };
+        // on a phone the stage is ABOVE the scope and the four sit at the BOTTOM of it, right on top of
+        // the scope: centred, a short puzzle left a band of white between the photos and the scope
+        room = { w: w, h: h, low: window.matchMedia('(max-width: 560px)').matches };
         const list = frames.filter(function (f) { return f.state !== 3; });
         const boxes = solveField(list, w, h, w < 480 ? 4 : 5);
         if (boxes.length !== list.length) return false;
@@ -3884,7 +3928,6 @@
           const set = p.role === 2 && up && Math.abs(p.x - rx) < 8 && Math.abs(p.y - ry) < 8 && Math.abs(p.w - rw) < 12;
           if (set !== p.el.classList.contains('is-set')) {
             p.el.classList.toggle('is-set', set);
-            if (set && coarse) buildPalette(p.el, p.f);      // no hover to raise it: the palette is up once the piece is
             if (!set && p.el.classList.contains('is-hover')) { leaveCell(p.el); if (hoverFrame === p.f.k) showFrame(-1); }
           }
           if (!still || p.o !== p.to || p.shrink || p.back) moving = true;
@@ -4038,6 +4081,9 @@
         setPick(q[0], q[1]);
         hold(false);
       }
+      // the joystick again, for an engine that does not take `touch-action: none` at its word: while a
+      // finger that came down on the disc is moving, the page is not
+      disc.addEventListener('touchmove', function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false });
       disc.addEventListener('pointerup', function (e) { endPress(e, false); });
       disc.addEventListener('pointercancel', function (e) { endPress(e, true); });
       disc.addEventListener('pointerleave', function () {
