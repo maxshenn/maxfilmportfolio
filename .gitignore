@@ -19,6 +19,7 @@ featuredwork.png
 .claude/
 agent/
 skills-lock.json
+scope-thumbs.py
 *.mov
 /bottomref.png
 /lcd-*.png

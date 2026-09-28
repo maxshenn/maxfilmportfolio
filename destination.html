@@ -761,160 +761,16 @@
   </div>
 
 
+  <script src="public/js/frames-data.js"></script>
   <script>
-    // ── Per-destination data. Every photo renders at its own natural
-    // aspect ratio in the masonry below — nothing is force-cropped. w/h
-    // are each photo's real pixel dimensions: the mosaic builder needs
-    // the ratio (not the image itself) to decide column placement and
-    // to size each box before the image has even loaded. Swap in real
-    // photos for the other destinations the same way Spain's are below.
-    const R2SPAIN = 'public/destinations/spain/';
-    const SPAIN_PHOTOS = [
-      { file: 'yacht-flag-girl-crop.jpg',    w: 1692, h: 1560 }, // girl + yacht, american flag — hand-cropped
-      { file: 'jump.jpg',                    w: 2880, h: 2160 }, // overhead cliff jump, turquoise cove
-      { file: 'Timeline 1_01_00_04_08.jpg',  w: 3840, h: 2160 }, // pines + boat
-      { file: 'Timeline 1_01_00_06_11.jpg',  w: 3840, h: 2160 }, // woman holding phone
-      { file: 'cover.jpg',                   w: 3840, h: 2160 }, // beach cove between cliffs, umbrellas
-      { file: 'goat.png',                    w: 1916, h: 1514 }, // goat
-      { file: 'Timeline 1_01_00_08_10.jpg',  w: 3840, h: 2160 }, // yacht side
-      { file: 'Timeline 1_01_00_23_13.jpg',  w: 3840, h: 2160 }, // paddleboard
-      { file: 'beach.jpg',                   w: 3840, h: 2160 }, // cove harbor, swimmers
-      { file: 'Timeline 1_01_00_25_21.jpg',  w: 3840, h: 2160 }, // cliff coastline, girl on bow
-      { file: 'Timeline 1_01_00_10_21.jpg',  w: 3840, h: 2160 }, // church
-      { file: 'Timeline 1_01_00_32_15.jpg',  w: 3840, h: 2160 }, // cliff jump into cove
-      { file: 'Timeline 1_01_00_41_13.jpg',  w: 3840, h: 2160 }, // boarding at the marina
-      { file: 'Timeline 1_01_00_14_09.jpg',  w: 3840, h: 2160 }, // town + trams
-      { file: 'Timeline 1_01_00_03_11.jpg',  w: 3840, h: 2160 }, // cove overview
-      { file: 'jump-shot-crop.jpg',          w: 2256, h: 1550 }, // jump off boat — hand-cropped
-      { file: 'Timeline 1_01_00_49_16.jpg',  w: 3840, h: 2160 }, // tram + people
-      { file: 'replacement.jpg',              w: 2880, h: 2160 }, // jet skis — full uncropped image
-      { file: 'Timeline 1_01_00_17_02.jpg',  w: 3840, h: 2160 }, // lemons
-      { file: 'Timeline 1_01_01_29_09.jpg',  w: 3840, h: 2160 }, // sunbathers — closer
-    ].map(function (p) { return { src: R2SPAIN + p.file, w: p.w, h: p.h }; });
-
-    const R2JAPAN = 'public/destinations/japan/';
-    // Spain-style mix: an aligned 3:2 top row, then wides / squares /
-    // 3:2s interleaved so every column gets one of each shape (the
-    // middle rows mismatch on purpose while the column totals stay
-    // equal), closing on an aligned 4:3 night row with a flush bottom.
-    const JAPAN_PHOTOS = [
-      // The shape rotation starts at the very top: every row (the first
-      // included) mixes a 3:2, a wide, and a square, but each column
-      // still collects one of each shape — so the seams mismatch from
-      // row one while the columns stay equal and the bottoms flush.
-      { file: 'green-32.jpg',               w: 3240, h: 2160 }, // greenery framing a temple roof
-      // kamakura's w is 3241 on purpose: the hair-thinner ratio wins the
-      // greedy tie against green, keeping it in the middle column (its
-      // real file is 3240×2160 — the 0.03% difference is sub-pixel)
-      { file: 'kamakura-32.jpg',            w: 3241, h: 2160 }, // train window, ocean view
-      { file: 'couple-crop.jpg',            w: 2160, h: 2160 }, // Kamakura street, umbrella couple (from couple1, centred)
-      { file: 'family1.jpg',                w: 3178, h: 2066 }, // couple making a heart on the beach (wide shape)
-      { file: 'shrine-sq.jpg',              w: 2160, h: 2160 }, // shrine steps, sunny day
-      { file: 'bells-wide.jpg',             w: 3322, h: 2160 }, // wind chimes at the shrine
-      { file: 'bird-sq.jpg',                w: 2160, h: 2160 }, // three doves by the pond
-      { file: 'gate-32.jpg',                w: 3240, h: 2160 }, // railway crossing by the ocean
-      { file: 'van-crop.jpg',               w: 3322, h: 2160 }, // kei van by the ocean
-      { file: 'stanley-32.jpg',             w: 3240, h: 2160 }, // Shibuya at night, neon portrait
-      { file: 'tram-32.jpg',                w: 3240, h: 2160 }, // Enoden tram on the hillside
-      { file: 'waves-32.jpg',               w: 2400, h: 1600 }, // overhead, arms out in the waves (from reveal1, centred)
-      // Last row — aligned 4:3 night finale: Osaka and Tokyo after dark
-      { file: 'dotonbori-43.jpg',           w: 2880, h: 2160 }, // Dotonbori busker under the lanterns
-      { file: 'shibuya-43.jpg',             w: 2880, h: 2160 }, // Shibuya crossing crowd
-      { file: 'glico-crop.jpg',             w: 2880, h: 2160 }, // Glico sign, Osaka
-    ].map(function (p) { return { src: R2JAPAN + p.file, w: p.w, h: p.h }; });
-
-    const R2ITALY = 'public/destinations/italy/';
-    // Same Spain-style mix as Japan: aligned 16:9 opener, then one 4:3,
-    // one square, and one 3:2 per column so the middle rows mismatch
-    // while the columns still end flush.
-    const ITALY_PHOTOS = [
-      // Four shapes (16:9 / square / 3:2 / 4:3), one of each per column,
-      // rotating from the very first row — no row shares one ratio, yet
-      // the columns stay equal and the bottoms flush.
-      { file: 'peaks.jpg',         w: 3840, h: 2160 }, // arms out before the jagged peaks
-      { file: 'overlook-sq.jpg',   w: 1080, h: 1080 }, // seated before the ridge panorama
-      { file: 'hotel-32.jpg',      w: 1620, h: 1080 }, // alpine hotel beneath the massif
-      { file: 'horses-43.jpg',     w: 2082, h: 1561 }, // two horses galloping in the meadow
-      { file: 'friends-43.jpg',    w: 2090, h: 1568 }, // four packs, arms around shoulders
-      { file: 'family.jpg',        w: 3840, h: 2160 }, // hikers with poles in the meadow
-      { file: 'dandelion-sq.jpg',  w: 1080, h: 1080 }, // dandelion blow at dusk
-      { file: 'scree-sq.jpg',      w: 1080, h: 1080 }, // crossing the white scree basin
-      { file: 'trail-32.jpg',      w: 1620, h: 1080 }, // climbing the grassy switchback
-      { file: 'cards-43.jpg',      w: 1440, h: 1080 }, // card game on the terrace
-      { file: 'rest-32.jpg',       w: 1620, h: 1080 }, // break beside the trail, big peak
-      { file: 'bridge.jpg',        w: 3840, h: 2160 }, // village bridge, flower boxes
-    ].map(function (p) { return { src: R2ITALY + p.file, w: p.w, h: p.h }; });
-
-    const R2VAN = 'public/destinations/vancouver/';
-    // Same recipe as Japan: every column collects two 3:2s, one wide,
-    // one square, and one 4:3 night shot — rows mismatch from the top,
-    // columns end flush, and the fireworks close the page.
-    const VANCOUVER_PHOTOS = [
-      { file: 'rings-32.jpg',      w: 3240, h: 2160 }, // Olympic rings on the Whistler slope
-      { file: 'baker-32.jpg',      w: 2223, h: 1482 }, // Mt. Baker over the valley, from the road (bottom trimmed to the grass line)
-      { file: 'goggles-sq.jpg',    w: 2160, h: 2160 }, // goggles on the ski jacket, slope mirrored
-      { file: 'jump-wide.jpg',     w: 3322, h: 2160 }, // four friends mid-leap into the lake
-      { file: 'dive-sq.jpg',       w: 1558, h: 1558 }, // the dive and the splash — from the hand-cropped jump.png
-      { file: 'village-wide.jpg',  w: 3322, h: 2160 }, // Whistler village crowd
-      { file: 'sparkpair-sq.jpg',  w: 2160, h: 2160 }, // twin bursts over English Bay
-      { file: 'chairwalk-32.jpg',  w: 3240, h: 2160 }, // walking the ridge, board on back
-      { file: 'gondola-wide.jpg',  w: 3322, h: 2160 }, // gondola laughs, boards racked
-      { file: 'carwave-32.jpg',    w: 3240, h: 2160 }, // wave out the car window
-      { file: 'dock-32.jpg',       w: 3240, h: 2160 }, // dock afternoon on the lake
-      { file: 'skislope-32.jpg',   w: 3240, h: 2160 }, // red jacket carving under the chairlift
-      // aligned 4:3 night finale — fireworks over the city
-      { file: 'fw-city-43.jpg',    w: 2880, h: 2160 }, // pink bloom over the skyline
-      { file: 'fw-orange-43.jpg',  w: 2880, h: 2160 }, // amber burst, water glowing
-      { file: 'fw-gold-43.jpg',    w: 2880, h: 2160 }, // green-gold pair from the beach
-    ].map(function (p) { return { src: R2VAN + p.file, w: p.w, h: p.h }; });
-
-    const R2MOROCCO = 'public/destinations/morocco/';
-    // Italy's four-shape rotation (16:9 / square / 3:2 / 4:3, one of
-    // each per column): rows mismatch from the top, columns end flush.
-    // The arc runs dawn to dusk — balloons open, the golden-hour trio
-    // (chairs, pool, riders) closes.
-    const MOROCCO_PHOTOS = [
-      { file: 'balloons.jpg',    w: 2560, h: 1440 }, // hot-air balloons over the fields at dawn — 1.5× zoom
-      { file: 'cat-sq.jpg',      w: 2160, h: 2160 }, // boardwalk cat on patrol
-      { file: 'rooftops-32.jpg', w: 3240, h: 2160 }, // medina rooftops at dusk
-      { file: 'market-43.jpg',   w: 2880, h: 2160 }, // market crew, night portrait
-      { file: 'couple-43.jpg',   w: 2880, h: 2160 }, // two at the shoreline, pastel sea
-      { file: 'shoplaugh.jpg',   w: 3840, h: 2160 }, // the shop laugh
-      { file: 'dog-sq.jpg',      w: 2160, h: 2160 }, // the brown dog says hello
-      { file: 'captain-sq.jpg',  w: 2160, h: 2160 }, // captain through the blue rigging
-      { file: 'atv-32.jpg',      w: 3240, h: 2160 }, // quad run across the flats
-      { file: 'chairs-43.jpg',   w: 2880, h: 2160 }, // two chairs facing the Atlantic
-      { file: 'pool-32.jpg',     w: 3240, h: 2160 }, // pool gathering at sunset
-      { file: 'riders.jpg',      w: 3840, h: 2160 }, // horse riders silhouetted on the dusk beach
-    ].map(function (p) { return { src: R2MOROCCO + p.file, w: p.w, h: p.h }; });
-
-    const PLACES = {
-      spain: {
-        title: 'MALLORCA & IBIZA',
-        caption: 'One week of beach hopping, too much Ibérico ham, and trying to recreate the Limitless edit.',
-        photos: SPAIN_PHOTOS,
-      },
-      japan: {
-        title: 'Tokyo, Osaka, & Kamakura',
-        caption: 'Some of the best scenery in the world. Temples, Shibuya Crossing, small beach towns, and 7-Eleven iced vanilla lattes.',
-        photos: JAPAN_PHOTOS,
-      },
-      italy: {
-        title: 'The Dolomites',
-        caption: 'Grad trip through the Dolomites. Five days, five hostels, one thunderstorm, and some of the most beautiful views I’ve ever seen. Unforgettable trip.',
-        photos: ITALY_PHOTOS,
-      },
-      vancouver: {
-        title: 'Vancouver',
-        caption: 'The best city in the world. Beaches, great food, great people, and the only place I can drive a car.',
-        photos: VANCOUVER_PHOTOS,
-      },
-      morocco: {
-        title: 'Marrakech',
-        caption: 'Missed the trip, but not the footage. Frames shot by my friend Brent, color graded by me.',
-        photos: MOROCCO_PHOTOS,
-      },
-    };
+    // ── Per-destination data lives in public/js/frames-data.js, shared with the
+    // homepage's Vectorscope (which samples every one of these photos). Each
+    // place: title, caption, photos[{ src, lite, thumb, w, h, alt }]. Every
+    // photo renders at its own natural aspect ratio in the masonry below —
+    // nothing is force-cropped. w/h are each photo's real pixel dimensions:
+    // the mosaic builder needs the ratio (not the image itself) to decide
+    // column placement and to size each box before the image has even loaded.
+    const PLACES = window.FRAMES.places;
 
     function placeholderPhotos(title, count) {
       const arr = [];
@@ -992,12 +848,12 @@
           if (lite !== p.src && img.getAttribute('src') === lite) img.src = p.src;
           else show();
         });
-        img.alt = place.title + ' — photo ' + (i + 1);
+        img.alt = p.alt || (place.title + ' — photo ' + (i + 1));
         img.src = lite;
         if (img.complete && img.naturalWidth) show();
       } else {
         img.src = p.src;
-        img.alt = place.title + ' — photo ' + (i + 1);
+        img.alt = p.alt || (place.title + ' — photo ' + (i + 1));
         img.loading = 'lazy';
       }
       cell.appendChild(img);

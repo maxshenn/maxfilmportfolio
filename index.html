@@ -769,6 +769,333 @@
       outline-offset: 3px;
     }
 
+    /* ─────────────────────────────────────────────
+       VECTORSCOPE — every gallery frame's chroma on one scope
+       The disc is a Rec. 709 vectorscope drawn from real pixels (see the
+       "Vectorscope" script). Beside it, the same 74 frames as a contact sheet
+       with their chroma taken away; a pick on the scope gives the colour back
+       to the frames that carry it. --lit (0..1, set by the script) is how lit
+       a cell is; every visual on the cell derives from it.
+    ───────────────────────────────────────────── */
+    .scope-section { padding: 56px 0 64px; }
+    /* the scope mark beside the label: a trace point riding the phase circle, only while on screen */
+    .scopemark { width: 16px; height: 16px; flex: none; align-self: center; overflow: visible; }
+    .sm-rim   { fill: none; stroke: #000; stroke-width: 1.1; }
+    .sm-ticks { fill: none; stroke: #000; stroke-width: 1.1; stroke-linecap: round; }
+    .sm-dot   { fill: #000; }
+    .sm-orbit {
+      transform-box: view-box;
+      transform-origin: 12px 12px;
+      animation: scope-orbit 6s linear infinite;
+      animation-play-state: paused;
+    }
+    .scope-section.in-view .sm-orbit { animation-play-state: running; }
+    @keyframes scope-orbit { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .sm-orbit { animation: none; } }
+
+    .scope-stage {
+      --scope-size: clamp(360px, 36vw, 520px);
+      display: grid;
+      grid-template-columns: var(--scope-size) minmax(0, 1fr);
+      gap: 48px;
+      padding: 0 80px;
+      align-items: start;
+    }
+    .scope-instrument { width: var(--scope-size); }
+    .scope {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: #0d0c0b;
+      overflow: hidden;
+      cursor: crosshair;
+      touch-action: pan-y;      /* a tap or a sideways drag picks; a vertical swipe still scrolls the page */
+      -webkit-tap-highlight-color: transparent;
+      /* the instrument sits ON the page: a tight contact shadow and a soft, ink-tinted one */
+      box-shadow: 0 1px 2px rgba(26, 25, 23, 0.16), 0 28px 56px -28px rgba(26, 25, 23, 0.38);
+      /* THE ARRIVAL IS THE SITE'S, not the scope's own (Max: "load the vectorscope and the photos in
+         smoother and consistent with the other loading animations"). The instrument, the photos
+         and the guide are three .reveal blocks — 18px up and a fade on the expo-out curve, 0.75s,
+         inside 0.1s of each other, the gesture the About panel and every page arrival already
+         make. The disc used to pop in from 0.84 on a spring with 10% overshoot, the graticule
+         bounced in piece by piece, and the photos flew out of the field; none of that was anyone
+         else's way of arriving. */
+    }
+    .scope:focus-visible { outline: 2px solid #0d0c0b; outline-offset: 4px; }
+    .scope canvas, .scope svg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: block;
+    }
+    /* the glow is the trace's own blurred copy, screened over it — a phosphor bloom, no canvas filter needed */
+    .scope-glow { filter: blur(7px); mix-blend-mode: screen; opacity: 0.55; }
+    .scope-grat { pointer-events: none; }
+    .sg-rim   { fill: none; stroke: rgba(255, 255, 255, 0.26); stroke-width: 2; }
+    .sg-ring  { fill: none; stroke: rgba(255, 255, 255, 0.07); stroke-width: 2; }
+    .sg-cross { fill: none; stroke: rgba(255, 255, 255, 0.12); stroke-width: 2; stroke-dasharray: 6 10; }
+    .sg-ticks { fill: none; stroke: rgba(255, 255, 255, 0.22); stroke-width: 2; }
+    .sg-skin  { stroke: rgba(255, 255, 255, 0.34); stroke-width: 2; stroke-dasharray: 1; stroke-dashoffset: 0; }  /* pathLength=1 */
+    .sg-box   { fill: none; stroke: rgba(255, 255, 255, 0.58); stroke-width: 2.5; }
+    .sg-label { font-family: var(--font-mono); font-size: 24px; font-weight: 500; letter-spacing: 0.04em; fill: rgba(255, 255, 255, 0.74); }
+    /* the graticule follows the disc in, from the centre out: rings and targets pop on the spring
+       curve, the skin line draws itself, the crosshair fades. Delays are set per element by the
+       script (rings in order, targets in a shuffled order — random reads more playful than a sweep). */
+    .sg-ring, .sg-rim, .sg-ticks, .sg-box, .sg-label, .sg-ripple, .sp-body {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .scope:not(.is-live) .sg { opacity: 0; }
+    .scope.is-live .sg-ring, .scope.is-live .sg-rim, .scope.is-live .sg-ticks, .scope.is-live .sg-box, .scope.is-live .sg-label {
+      animation: sg-pop 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .scope.is-live .sg-cross { animation: sg-fade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .scope.is-live .sg-skin  { animation: sg-draw 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    @keyframes sg-pop  { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }   /* settles; it used to spring from nothing and overshoot */
+    @keyframes sg-fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes sg-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+    /* ripples: a frame landing on the trace, or a pick landing on the disc */
+    .sg-ripple { fill: none; stroke-width: 3; animation: sg-ripple 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .sg-ripple.is-quick { animation-duration: 0.4s; }     /* a frame being read in: seventy-four of them, so each is brief */
+    @keyframes sg-ripple { from { transform: scale(0.3); opacity: 0.85; } to { transform: scale(1); opacity: 0; } }
+    /* the pick: a glass bubble that rides a spring behind the pointer (the script squashes it along its
+       travel) and boops when a pick lands — rubber band, UI-grade amplitudes, volume kept, one shot */
+    .scope-pick { opacity: 0; transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    .scope-pick.is-on { opacity: 1; }
+    .scope-pick.is-boop .sp-body { animation: sp-boop 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes sp-boop {
+      0%   { transform: scale(1, 1); }
+      25%  { transform: scale(1.2, 0.84); }
+      50%  { transform: scale(0.9, 1.1); }
+      72%  { transform: scale(1.06, 0.96); }
+      88%  { transform: scale(0.98, 1.02); }
+      100% { transform: scale(1, 1); }
+    }
+    .sp-ring  { fill: url(#spGlass); stroke: rgba(255, 255, 255, 0.9); stroke-width: 2.5; }
+    .sp-shine { fill: rgba(255, 255, 255, 0.55); }
+    .sp-cross { fill: none; stroke: rgba(255, 255, 255, 0.88); stroke-width: 2; }
+    /* held: the crosshair becomes a dot, the ring thickens, the disc offers a click to pick again */
+    .sp-pin { display: none; fill: rgba(255, 255, 255, 0.95); }
+    .scope-pick.is-locked .sp-pin { display: block; }
+    .scope-pick.is-locked .sp-cross { display: none; }
+    .scope-pick.is-locked .sp-ring { stroke-width: 3.5; }
+    .scope.is-locked { cursor: pointer; }
+
+    /* the readout under the disc: one line — the pick's numbers in the data voice on the left, the
+       colour itself (a swatch and its hex) on the right, in line with them (Max's call). At rest it
+       is a one-line hint in the body face. Hovering a frame does not touch it. */
+    .scope-readout {
+      margin: 20px 0 0;
+      min-height: 17px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: var(--tracking-caps);
+      text-transform: uppercase;
+      font-feature-settings: "case", "tnum";
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .scope-readout .sr-line { display: flex; align-items: baseline; gap: 16px; margin: 0; }
+    .scope-readout .sr-a:empty { display: none; }
+    .scope-readout .sr-b {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--label-muted);
+      white-space: normal;
+    }
+    .scope-readout .sr-b:empty { display: none; }
+    .scope-readout .sr-colour { display: none; margin-left: auto; align-items: center; gap: 8px; }
+    .scope-readout.is-data .sr-colour { display: inline-flex; }
+    .scope-readout .sr-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(26, 25, 23, 0.14); }
+
+    /* the sheet: a stage the height of the disc, and TWO things it can show. While the pointer
+       BROWSES the scope, the FIELD: every frame, floating, in one mosaic in which each keeps its
+       own ratio and every edge meets (cut fresh on each visit), with the four that carry the
+       colour most grown forward where they lie. Once the pointer STOPS, the FOUR: they come out
+       of the field, fit together and fill the stage, and the field is GONE behind them (Max:
+       "remove the background when the four main photos are displayed"). Every frame is one
+       object on its own spring; the script writes every transform and opacity, nothing here
+       transitions a piece. */
+    .scope-sheet { position: relative; height: var(--scope-size); }
+    .scope-float { position: absolute; inset: 0; }
+    .scope-cell {
+      position: absolute; left: 0; top: 0;     /* the script sets its size and floats it by transform */
+      display: block;
+      overflow: hidden;
+      background: #f4f3f0;
+      opacity: 0;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity;
+      box-shadow: 0 1px 2px rgba(26, 25, 23, 0.10);
+    }
+    /* out of the field: a tight contact shadow and a soft ink-tinted one, so it rides above the rest */
+    .scope-cell.is-out { box-shadow: 0 2px 4px rgba(26, 25, 23, 0.12), 0 20px 38px -18px rgba(26, 25, 23, 0.36); }
+    .scope-cell:not(.is-set) { pointer-events: none; }     /* only the four, fitted and at rest, answer the pointer */
+    .scope-cell img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;                            /* the box IS the photo's ratio, so nothing is cropped */
+      display: block;
+      filter: brightness(1.04) saturate(1.18);      /* the Frames tiles' treatment */
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      /* an <img> that has not loaded yet draws its DESCRIPTION in its box: scrolling in, "Girl on a yacht
+         with an American flag." stood where the photo was about to be. The description is for a screen
+         reader; on the page it is drawn in no colour at no size. (A piece is also kept out of sight
+         until its picture has loaded — the script.) */
+      color: transparent;
+      font-size: 0;
+    }
+    /* the 1400px variant, over the thumb, once it has landed */
+    .scope-cell .scope-big { opacity: 0; }
+    .scope-cell .scope-big.is-ready { opacity: 1; }
+    /* hovering a frame changes nothing on the photos (Max's call — no lift, no receding siblings);
+       only its palette rises over its lower half: the colours it is made of, each with its hex on
+       hover (a tap, on touch, where the palettes are always up). Cells too narrow for a row of
+       swatches (.is-small, set by the script) show neither row nor scrim. */
+    .scope-cell::after {
+      content: '';
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+      height: 52%;
+      background: linear-gradient(to top, rgba(9, 8, 7, 0.6), rgba(9, 8, 7, 0));
+      opacity: 0;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .scope-cell.is-set.is-hover:not(.is-small)::after,
+    .scope-sheet.is-coarse .scope-cell.is-set:not(.is-small)::after { opacity: 1; }
+    .scope-pal {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+      display: flex; align-items: flex-end; gap: 7px;
+      padding: 0 24px 16px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .scope-cell.is-set.is-hover:not(.is-small) .scope-pal,
+    .scope-sheet.is-coarse .scope-cell.is-set:not(.is-small) .scope-pal { opacity: 1; transform: none; pointer-events: auto; }
+    .scope-sw {
+      position: relative;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--c);
+      box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.6), 0 2px 6px rgba(0, 0, 0, 0.35);
+      transition: transform 0.3s cubic-bezier(0.625, 0.05, 0, 1);
+    }
+    .scope-sw::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; }   /* a wider hit area than the dot */
+    .scope-cell.is-compact .scope-pal { gap: 5px; padding: 0 12px 10px; }
+    .scope-cell.is-compact .scope-sw { width: 16px; height: 16px; }
+    .scope-sw:hover, .scope-sw.is-open { transform: scale(1.18); }
+    .scope-sw-hex {
+      position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translate(-50%, 4px);
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(13, 12, 11, 0.82);
+      color: #fff;
+      font: 500 11px/1 var(--font-mono);
+      font-style: normal;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+      pointer-events: none;
+    }
+    .scope-sw:hover .scope-sw-hex, .scope-sw.is-open .scope-sw-hex { opacity: 1; transform: translate(-50%, 0); }
+    /* UNDER A FINGER (.is-coarse, set by the script on `hover: none`). A 16px dot 21px from its
+       neighbour is a small thing to hit, and a miss used to open the gallery. So the whole strip
+       along the bottom of the photo answers — 44px tall, and a tap anywhere on it picks the swatch
+       NEAREST the finger (the script) — and only a tap on the rest of the photo opens the gallery.
+       The dots stay round: they used to be squeezed into ovals on a narrow photo, and now a photo
+       shows as many as fit (data-sw, set by the script), largest colours first. The hex has one
+       place, above the left end of the strip, because a label centred on the first or the last
+       dot ran off the edge of the photo and was cut by it. */
+    .scope-sheet.is-coarse .scope-pal { min-height: 44px; }
+    .scope-sheet.is-coarse .scope-cell.is-compact .scope-pal { gap: 5px; padding: 0 8px 8px; }
+    .scope-sheet.is-coarse .scope-sw { position: static; flex: none; }
+    .scope-sheet.is-coarse .scope-sw::before { content: none; }
+    .scope-sheet.is-coarse .scope-sw-hex { left: 24px; bottom: 46px; transform: translateY(4px); }
+    .scope-sheet.is-coarse .scope-cell.is-compact .scope-sw-hex { left: 8px; bottom: 32px; }
+    .scope-sheet.is-coarse .scope-sw.is-open .scope-sw-hex { transform: none; }
+    .scope-sheet.is-coarse .scope-cell[data-sw="3"] .scope-sw:nth-child(n+4),
+    .scope-sheet.is-coarse .scope-cell[data-sw="4"] .scope-sw:nth-child(n+5),
+    .scope-sheet.is-coarse .scope-cell[data-sw="5"] .scope-sw:nth-child(n+6),
+    .scope-sheet.is-coarse .scope-cell[data-sw="6"] .scope-sw:nth-child(n+7) { display: none; }
+    .scope-cell:focus-visible { outline: 2px solid #0d0c0b; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) {
+      .scope { transition: opacity 0.3s ease; transform: none !important; animation: none !important; }
+      .scope .sg, .scope .sg * { animation: none !important; opacity: 1; }
+      .scope-pick { transition: none; }
+      .scope-pick .sp-body { animation: none !important; }
+    }
+
+    /* THE GUIDE, under the panel: what a vectorscope does, and how to work this one — two sentences
+       and an instruction, IN PLAIN WORDS (Max: "in laymans terms"): no "hue", no "saturation". (It was four steps in four columns; Max: "too many words. maybe just
+       explain what a vectorscope does and say press click to start and stop".) The explanation
+       is quiet and the instruction is in ink, so the eye finds the one thing to DO. A mouse
+       clicks and a finger taps, so the instruction has both wordings and the pointer decides
+       which is shown. It does not animate: the panel's arrival is the event. */
+    .scope-guide { margin: 40px 80px 0; }
+    .scope-about, .scope-keys {
+      max-width: 62ch;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--label-muted);      /* 5.4:1 on white */
+      text-wrap: pretty;
+    }
+    /* the instruction has a line of its own: run on after the explanation it broke in the middle
+       ("Click to start, click / again to stop.") */
+    .scope-how { display: block; margin-top: 8px; font-weight: 500; color: var(--text); }
+    .scope-guide .for-touch { display: none; }
+    @media (hover: none) {
+      .scope-guide .for-mouse { display: none; }
+      .scope-guide .for-touch { display: block; }
+    }
+    /* the keys, for whoever arrives by keyboard: shown while the scope holds the focus ring. The line
+       keeps its place when it is not shown, so nothing below moves when it appears. */
+    .scope-keys {
+      margin: 8px 0 0;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.3s;
+    }
+    .scope-section:has(.scope:focus-visible) .scope-keys {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s;
+    }
+    @media (hover: none) { .scope-keys { display: none; } }
+
+    @media (max-width: 960px) {
+      .scope-stage {
+        --scope-size: min(100%, 480px);
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 32px;
+        padding: 0 24px;
+      }
+      .scope-sheet { width: 100%; height: min(66vw, 480px); }
+      .scope-guide { margin: 40px 24px 0; }
+    }
+    /* THE PHONE. The scope and the photos it brings up have to be on the screen TOGETHER — a tap on
+       the scope that changes photos you cannot see is a tap that did nothing. Full width, the disc
+       was 358px and the photos started 132px under it: with the panel at the top of an iPhone 13's
+       screen 42% of them were in sight. So the disc is 72vw, the stage is a square and the photos
+       start at its TOP (the script), right under the readout. */
+    @media (max-width: 560px) {
+      .scope-section { padding: 64px 0 40px; }
+      .scope-stage { --scope-size: min(100%, 72vw); gap: 16px; padding: 0 16px; }
+      .scope-guide { margin: 24px 16px 0; }
+      .scope-sheet { height: calc(100vw - 32px); }
+    }
+
     /* The place name used to sit here over a bottom gradient; both are gone (Max's call —
        the photo carries the tile). With no text inside, the whole tile is simply the link,
        and the photo's own alt text is its accessible name. */
@@ -1999,6 +2326,41 @@
   </section>
 
 
+  <!-- ── Vectorscope ────────────────────────── -->
+  <section class="scope-section" id="vectorscope">
+    <div class="work-header">
+      <span class="work-header-title">Vectorscope</span>
+      <!-- scope mark: a trace point riding the phase circle — turns only while the section is on screen -->
+      <svg class="scopemark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="10" class="sm-rim"/>
+        <path class="sm-ticks" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+        <g class="sm-orbit"><circle cx="12" cy="6" r="1.7" class="sm-dot"/></g>
+      </svg>
+    </div>
+    <div class="scope-stage">
+      <div class="scope-instrument reveal reveal-d1">
+        <div class="scope" id="scopeDisc" tabindex="0" role="img"
+             aria-label="Vectorscope of every photo in the galleries. Point at a colour, or use the arrow keys, to find the photos that carry it.">
+          <canvas class="scope-trace" aria-hidden="true"></canvas>
+          <canvas class="scope-glow" aria-hidden="true"></canvas>
+          <svg class="scope-grat" viewBox="0 0 1000 1000" aria-hidden="true" focusable="false"></svg>
+        </div>
+        <div class="scope-readout" id="scopeReadout" aria-live="polite">
+          <p class="sr-line"><span class="sr-a"></span><span class="sr-b">Reading the photos onto the scope.</span><span class="sr-colour"><span class="sr-dot" aria-hidden="true"></span><span class="sr-hex"></span></span></p>
+        </div>
+      </div>
+      <div class="scope-sheet reveal" id="scopeSheet">
+        <div class="scope-float" id="scopeFloat"></div>
+      </div>
+    </div>
+    <!-- the guide: what a vectorscope does, and how to work this one -->
+    <div class="scope-guide reveal reveal-d3" role="group" aria-label="About the vectorscope">
+      <p class="scope-about">A vectorscope shows which colours are in the photos and how strong they are. The stronger the colour, the further it sits from the middle. <span class="scope-how for-mouse">Click to start, click again to stop.</span><span class="scope-how for-touch">Tap or drag to pick a colour.</span></p>
+      <p class="scope-keys">Arrow keys move the ring, Enter holds it, Escape resets it.</p>
+    </div>
+  </section>
+
+
   <!-- ── Featured Work ─────────────────────── -->
   <section class="featured-section" id="work">
 
@@ -2358,7 +2720,7 @@
     const markObs = new IntersectionObserver((entries) => {
       entries.forEach(e => e.target.classList.toggle('in-view', e.isIntersecting));
     }, { threshold: 0 });
-    document.querySelectorAll('.frames-section, .featured-section').forEach(sec => markObs.observe(sec));
+    document.querySelectorAll('.frames-section, .scope-section, .featured-section').forEach(sec => markObs.observe(sec));
 
     // ── Mobile hamburger menu ─────────────────────────────────
     const hamburger  = document.getElementById('navHamburger');
@@ -2612,6 +2974,1182 @@
           // the lifted hero and the wordmark layer are the driver's: its own pageshow handler takes them back
         }
         enter();
+      });
+    })();
+  </script>
+
+  <script src="public/js/frames-data.js"></script>
+  <script>
+    // ── Vectorscope — every gallery frame's chroma on one scope ─────────────
+    // Every photo in the five Frames galleries (public/js/frames-data.js) is
+    // sampled from its 320px t/ thumbnail and plotted as a colourised trace on
+    // one Rec. 709 vectorscope: x is Cb, y is Cr, luma is discarded — so pure
+    // red sits at the top and the primaries run clockwise R, Mg, B, Cy, G, Yl,
+    // with the skin-tone line at 123° between red and yellow. The contact sheet
+    // beside it is the same frames with their chroma taken away. A pick on the
+    // scope is a small circle in chroma space; a frame lights in proportion to
+    // the share of its pixels inside that circle, and its trace comes up with
+    // it. Hovering a frame does the reverse and lights its own trace.
+    (function initVectorscope() {
+      const section = document.getElementById('vectorscope');
+      const disc    = document.getElementById('scopeDisc');
+      const sheet   = document.getElementById('scopeSheet');
+      const readout = document.getElementById('scopeReadout');
+      const FR      = window.FRAMES;
+      if (!section || !disc || !sheet || !readout || !FR) return;
+
+      // ── dials ──
+      const RMAX       = 0.36;   // chroma magnitude at the disc's edge — a 1.5× zoom on the 0.54 first cut (Max: "spread it out");
+                                 // real frames now reach ~85% of the radius, and the 75% targets sit on the rim as phase markers
+      const PICK_R     = 0.026;  // the pick circle's radius, in chroma units (~7% of the disc at the 0.36 rim; was 0.045 — Max: smaller)
+      const MIN_SHARE  = 0.002;  // a frame starts to light once this share of its pixels is inside the pick…
+      const FULL_SHARE = 0.015;  // …and is fully lit at this share (both scaled down with the smaller circle's area)
+      const HOLD       = 0.6;    // a frame already on the sheet stays until its share drops below HOLD × MIN_SHARE
+      const READ_ALL   = 280;    // ms to read EVERY frame into the scope, whatever the display. It was one frame per animation
+                                 // frame, so its length was the display's: 0.62s at 120Hz, 1.25s at 60, 2.4s at 30 (Max: "too long")
+      const DIM        = 0.22;   // trace weight of the frames outside the pick while one is active
+      const DIM_FRAME  = 0.10;   // …and while a single frame is hovered on the sheet, so its own trace stands alone
+      const GAIN       = 0.9;    // phosphor curve: brightness = 1 − e^(−GAIN·density). 0.42 at the 0.54 rim; the 0.36 rim
+                                 // spreads the same points over 2.25× the area, so the gain rises to keep the cloud luminous
+      const Y0         = 0.6;    // the luma every trace point is inked at (the scope has none)
+      const INK_BOOST  = 1.9;    // how far each point's chroma is pushed out for its ink — colour over brightness
+      const SAMPLE_W   = 80;     // a thumb is box-filtered to 80px wide before sampling (~4k points a frame)
+      const BUF_SCALE  = 1;      // trace buffer pixels per CSS pixel on Retina screens. 2 was measured (one point per
+                                 // device pixel, gain ×4): 4.3ms a redraw against 2.0, and the cloud went grainy and
+                                 // grey — the 1× buffer's bilinear upscale IS the phosphor look. Leave it.
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const coarse  = window.matchMedia('(hover: none)').matches;
+
+      // ── the frames, in the Frames mosaic's order ──
+      const ORDER = ['spain', 'italy', 'japan', 'morocco', 'vancouver'];
+      const frames = [];
+      ORDER.forEach(function (slug) {
+        const pl = FR.places[slug];
+        if (!pl) return;
+        pl.photos.forEach(function (p) {
+          // state: 0 waiting for its thumb · 1 sampled, waiting to be read · 2 on the scope · 3 failed
+          frames.push({ place: pl, photo: p, ar: (p.w || 16) / (p.h || 9), cell: null, img: null, cb: null, cr: null, y: null, col: null, pix: null, n: 0, state: 0, k: 0 });
+        });
+      });
+      const N = frames.length;
+      if (!N) return;
+      const REST = N + ' frames';   // the readout at rest
+
+      // Rec. 709: r,g,b 0..1 → [Cb, Cr]
+      function chroma(r, g, b) {
+        const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        return [(b - y) / 1.8556, (r - y) / 1.5748];
+      }
+
+      // ── graticule (SVG, so it stays crisp at any size) ──
+      const grat = disc.querySelector('.scope-grat');
+      const NS = 'http://www.w3.org/2000/svg';
+      function el(name, attrs) {
+        const n = document.createElementNS(NS, name);
+        for (const k in attrs) n.setAttribute(k, attrs[k]);
+        return n;
+      }
+      const S_UNITS = 490 / RMAX;   // svg units per chroma unit (RMAX lands 10 units inside the rim)
+      const defs = el('defs', {});
+      const glass = el('radialGradient', { id: 'spGlass', cx: '36%', cy: '32%', r: '72%' });
+      glass.appendChild(el('stop', { offset: '0', 'stop-color': '#fff', 'stop-opacity': '0.3' }));
+      glass.appendChild(el('stop', { offset: '1', 'stop-color': '#fff', 'stop-opacity': '0.04' }));
+      defs.appendChild(glass);
+      grat.appendChild(defs);
+      const g = el('g', { class: 'sg' });
+      // arrival delays, seconds: rings from the centre out, then the ticks, the targets in a shuffled
+      // order, the crosshair and the skin line last
+      [0.25, 0.5, 0.75].forEach(function (f, i) {
+        const ring = el('circle', { cx: 500, cy: 500, r: (490 * f).toFixed(1), class: 'sg-ring' });
+        ring.style.animationDelay = (0.02 + 0.025 * i) + 's';
+        g.appendChild(ring);
+      });
+      const rim = el('circle', { cx: 500, cy: 500, r: 490, class: 'sg-rim' });
+      rim.style.animationDelay = '0.09s';
+      g.appendChild(rim);
+      const cross = el('path', { d: 'M10 500H990M500 10V990', class: 'sg-cross' });
+      cross.style.animationDelay = '0.14s';
+      g.appendChild(cross);
+      let ticks = '';
+      for (let a = 0; a < 360; a += 10) {
+        const rad = a * Math.PI / 180, r1 = a % 30 === 0 ? 468 : 478;
+        ticks += 'M' + (500 + Math.cos(rad) * 490).toFixed(1) + ' ' + (500 - Math.sin(rad) * 490).toFixed(1) +
+                 'L' + (500 + Math.cos(rad) * r1).toFixed(1)  + ' ' + (500 - Math.sin(rad) * r1).toFixed(1);
+      }
+      const tickPath = el('path', { d: ticks, class: 'sg-ticks' });
+      tickPath.style.animationDelay = '0.11s';
+      g.appendChild(tickPath);
+      const skin = 123 * Math.PI / 180;   // the I axis — where skin tones fall, whoever the skin belongs to
+      const skinLine = el('line', { x1: 500, y1: 500, x2: (500 + Math.cos(skin) * 470).toFixed(1), y2: (500 - Math.sin(skin) * 470).toFixed(1), pathLength: 1, class: 'sg-skin' });
+      skinLine.style.animationDelay = '0.16s';
+      g.appendChild(skinLine);
+      const TARGET_DELAY = [0.08, 0.13, 0.1, 0.15, 0.115, 0.09];  // R Mg B Cy G Yl — shuffled, not a sweep
+      [['R', 1, 0, 0], ['Mg', 1, 0, 1], ['B', 0, 0, 1], ['Cy', 0, 1, 1], ['G', 0, 1, 0], ['Yl', 1, 1, 0]].forEach(function (t, i) {
+        const c = chroma(t[1] * 0.75, t[2] * 0.75, t[3] * 0.75);   // the 75% targets
+        const ang = Math.atan2(c[1], c[0]);
+        // beyond the rim at this zoom, a target sits ON the rim at its phase, its label turned inward
+        const rad = Math.min(Math.hypot(c[0], c[1]) * S_UNITS, 448), clamped = rad === 448;
+        const x = 500 + Math.cos(ang) * rad, y = 500 - Math.sin(ang) * rad;
+        const box = el('rect', { x: (x - 17).toFixed(1), y: (y - 17).toFixed(1), width: 34, height: 34, class: 'sg-box' });
+        box.style.animationDelay = TARGET_DELAY[i] + 's';
+        g.appendChild(box);
+        const lr = clamped ? -44 : 42;
+        const label = el('text', { x: (x + Math.cos(ang) * lr).toFixed(1), y: (y - Math.sin(ang) * lr).toFixed(1), 'text-anchor': 'middle', 'dominant-baseline': 'central', class: 'sg-label' });
+        label.textContent = t[0];
+        label.style.animationDelay = (TARGET_DELAY[i] + 0.015) + 's';
+        g.appendChild(label);
+      });
+      grat.appendChild(g);
+      const ripples = el('g', { class: 'sg-ripples' });
+      grat.appendChild(ripples);
+      // the pick: an outer group the script moves on its spring, a squash group it stretches along the
+      // travel, and a body that boops
+      const pickEl = el('g', { class: 'scope-pick' });
+      const pickSquash = el('g', { class: 'sp-squash' });
+      const pickBody = el('g', { class: 'sp-body' });
+      const pickR = PICK_R * S_UNITS;
+      pickBody.appendChild(el('circle', { cx: 0, cy: 0, r: pickR.toFixed(1), class: 'sp-ring' }));
+      pickBody.appendChild(el('ellipse', { cx: (-pickR * 0.36).toFixed(1), cy: (-pickR * 0.42).toFixed(1), rx: (pickR * 0.26).toFixed(1), ry: (pickR * 0.15).toFixed(1), transform: 'rotate(-32 ' + (-pickR * 0.36).toFixed(1) + ' ' + (-pickR * 0.42).toFixed(1) + ')', class: 'sp-shine' }));
+      pickBody.appendChild(el('path', { d: 'M-7 0H7M0 -7V7', class: 'sp-cross' }));
+      pickBody.appendChild(el('circle', { cx: 0, cy: 0, r: 5, class: 'sp-pin' }));
+      pickSquash.appendChild(pickBody);
+      pickEl.appendChild(pickSquash);
+      grat.appendChild(pickEl);
+      pickEl.addEventListener('animationend', function () { pickEl.classList.remove('is-boop'); });
+      // a ripple at a chroma position: `size` is its full radius in svg units
+      function ripple(cb, cr, color, size, quick) {
+        if (reduced) return;
+        const c = el('circle', { cx: (500 + cb * S_UNITS).toFixed(1), cy: (500 - cr * S_UNITS).toFixed(1), r: size, class: quick ? 'sg-ripple is-quick' : 'sg-ripple' });
+        c.style.stroke = color;
+        c.addEventListener('animationend', function () { c.remove(); });
+        ripples.appendChild(c);
+      }
+
+      // ── the contact sheet: one cell per frame, in place ──
+      const srA = readout.querySelector('.sr-a'), srB = readout.querySelector('.sr-b'), srDot = readout.querySelector('.sr-dot'), srHex = readout.querySelector('.sr-hex');
+      function setReadout(a, b, color, hex) {
+        srA.textContent = a;
+        srB.textContent = b;
+        srDot.style.background = color || '';
+        srHex.textContent = hex || '';
+        readout.classList.toggle('is-data', !!color);
+      }
+      setReadout(REST, '', null, '');
+      if (coarse) sheet.classList.add('is-coarse');
+
+      const floatEl = document.getElementById('scopeFloat');
+      // each frame has ONE image of its own, never put on the page: it is what gets sampled. A piece on
+      // the stage is a fresh <a><img> made when its frame joins the puzzle, and the browser's cache
+      // hands it the same file at once.
+      frames.forEach(function (f, i) {
+        f.k = i;
+        const img = new Image();
+        img.decoding = 'async';
+        img.addEventListener('load', function () {
+          if (f.state) return;
+          if (sample(f)) { f.state = 1; kick(); refreshPick(); } else fail(f);
+        });
+        img.addEventListener('error', function () {
+          if (img.getAttribute('src') === f.photo.thumb && f.photo.lite !== f.photo.thumb) {
+            console.warn('Vectorscope: no t/ thumb for ' + f.photo.src + ' — run scope-thumbs.py; using the m/ variant meanwhile');
+            img.src = f.photo.lite;
+          } else fail(f);
+        });
+        f.img = img;
+      });
+      function fail(f) {
+        console.warn('Vectorscope: could not read ' + f.photo.src);
+        f.state = 3;
+      }
+
+      // ── sampling: a thumb → its points' chroma, and the ink each point is drawn with ──
+      const sampler = document.createElement('canvas');
+      const sctx = sampler.getContext('2d', { willReadFrequently: true });
+      function sample(f) {
+        const img = f.img, iw = img.naturalWidth, ih = img.naturalHeight;
+        if (!iw || !ih) return false;
+        const w = SAMPLE_W, h = Math.max(1, Math.round(ih * SAMPLE_W / iw));
+        sampler.width = w; sampler.height = h;
+        sctx.drawImage(img, 0, 0, w, h);
+        let data;
+        try { data = sctx.getImageData(0, 0, w, h).data; }
+        catch (err) { console.warn('Vectorscope: cannot read pixels of ' + img.currentSrc, err); return false; }
+        const n = w * h;
+        const cb = new Float32Array(n), cr = new Float32Array(n), col = new Uint8Array(n * 3), lum = new Uint8Array(n);
+        let scb = 0, scr = 0, sr = 0, sg = 0, sb = 0;
+        for (let i = 0, j = 0; i < n; i++, j += 4) {
+          const r = data[j] / 255, g = data[j + 1] / 255, b = data[j + 2] / 255;
+          const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          const pb = (b - y) / 1.8556, pr = (r - y) / 1.5748;
+          cb[i] = pb; cr[i] = pr; lum[i] = y * 255;
+          // its ink: the point's own chroma pushed out INK_BOOST× at one luma, so hue differences read,
+          // and weighted by saturation so the neutral core is faint and cannot swamp the colours
+          // (Max: "make it apparent there are multiple colours rather than the middle being so bright")
+          const sat = Math.sqrt(pb * pb + pr * pr);
+          const k = (0.2 + 0.8 * Math.min(1, sat / 0.2)) * 255;
+          const R = Y0 + 1.5748 * pr * INK_BOOST, B = Y0 + 1.8556 * pb * INK_BOOST, G = (Y0 - 0.2126 * R - 0.0722 * B) / 0.7152;
+          col[i * 3]     = Math.max(0, Math.min(255, R * k));
+          col[i * 3 + 1] = Math.max(0, Math.min(255, G * k));
+          col[i * 3 + 2] = Math.max(0, Math.min(255, B * k));
+          scb += pb; scr += pr; sr += col[i * 3]; sg += col[i * 3 + 1]; sb += col[i * 3 + 2];
+        }
+        f.cb = cb; f.cr = cr; f.y = lum; f.col = col; f.n = n; f.pix = null;
+        // where the frame sits on the scope as a whole, and the ink of its ripple when it lands
+        f.mcb = scb / n; f.mcr = scr / n;
+        f.ink = 'rgb(' + Math.round(sr / n) + ',' + Math.round(sg / n) + ',' + Math.round(sb / n) + ')';
+        return true;
+      }
+
+      // ── the palette: the colours a frame is made of, over its lower half while it is hovered ──
+      // k-means over the frame's ~4k sampled points (seeds: the fullest cells of a 4×4×4 RGB grid,
+      // eight passes), clusters under 2.5% dropped, near-twins merged, the rest ordered by size.
+      // Built on first hover and kept.
+      function paletteOf(f) {
+        if (f.pal) return f.pal;
+        const n = f.n, cb = f.cb, cr = f.cr, lum = f.y;
+        const rgb = new Float32Array(n * 3);
+        for (let i = 0, j = 0; i < n; i++, j += 3) {
+          const Y = lum[i] / 255, R = Y + 1.5748 * cr[i], B = Y + 1.8556 * cb[i], G = (Y - 0.2126 * R - 0.0722 * B) / 0.7152;
+          rgb[j] = Math.max(0, Math.min(255, R * 255)); rgb[j + 1] = Math.max(0, Math.min(255, G * 255)); rgb[j + 2] = Math.max(0, Math.min(255, B * 255));
+        }
+        const bins = new Map();
+        for (let i = 0, j = 0; i < n; i++, j += 3) {
+          const key = ((rgb[j] >> 6) << 4) | ((rgb[j + 1] >> 6) << 2) | (rgb[j + 2] >> 6);
+          let b = bins.get(key);
+          if (!b) { b = [0, 0, 0, 0]; bins.set(key, b); }
+          b[0]++; b[1] += rgb[j]; b[2] += rgb[j + 1]; b[3] += rgb[j + 2];
+        }
+        const K = Math.min(7, bins.size);
+        const cent = Array.from(bins.values()).sort(function (a, b) { return b[0] - a[0]; }).slice(0, K).map(function (b) { return [b[1] / b[0], b[2] / b[0], b[3] / b[0]]; });
+        const cnt = new Float64Array(K), sum = new Float64Array(K * 3);
+        for (let it = 0; it < 8; it++) {
+          cnt.fill(0); sum.fill(0);
+          for (let i = 0, j = 0; i < n; i++, j += 3) {
+            let best = 0, bd = Infinity;
+            for (let k = 0; k < K; k++) {
+              const dr = rgb[j] - cent[k][0], dg = rgb[j + 1] - cent[k][1], db = rgb[j + 2] - cent[k][2];
+              const d = dr * dr + dg * dg + db * db;
+              if (d < bd) { bd = d; best = k; }
+            }
+            cnt[best]++; sum[best * 3] += rgb[j]; sum[best * 3 + 1] += rgb[j + 1]; sum[best * 3 + 2] += rgb[j + 2];
+          }
+          for (let k = 0; k < K; k++) if (cnt[k]) cent[k] = [sum[k * 3] / cnt[k], sum[k * 3 + 1] / cnt[k], sum[k * 3 + 2] / cnt[k]];
+        }
+        const cl = [];
+        for (let k = 0; k < K; k++) if (cnt[k] / n >= 0.025) cl.push({ c: cent[k], w: cnt[k] });
+        cl.sort(function (a, b) { return b.w - a.w; });
+        const out = [];
+        cl.forEach(function (c) {
+          const twin = out.find(function (o) { const dr = o.c[0] - c.c[0], dg = o.c[1] - c.c[1], db = o.c[2] - c.c[2]; return dr * dr + dg * dg + db * db < 22 * 22; });
+          if (twin) twin.w += c.w; else out.push(c);
+        });
+        f.pal = out.map(function (c) {
+          const v = c.c.map(function (x) { return Math.round(x); });
+          return { rgb: 'rgb(' + v.join(',') + ')', hex: '#' + v.map(function (x) { return x.toString(16).toUpperCase().padStart(2, '0'); }).join(''), share: c.w / n };
+        });
+        return f.pal;
+      }
+      function buildPalette(cell, f) {
+        if (cell.querySelector('.scope-pal') || !f.cb) return;
+        const row = document.createElement('span');
+        row.className = 'scope-pal';
+        row.setAttribute('aria-hidden', 'true');
+        paletteOf(f).forEach(function (p) {
+          const sw = document.createElement('span');
+          sw.className = 'scope-sw';
+          sw.style.setProperty('--c', p.rgb);
+          const hx = document.createElement('i');
+          hx.className = 'scope-sw-hex';
+          hx.textContent = p.hex;
+          sw.appendChild(hx);
+          row.appendChild(sw);
+        });
+        // under a finger the whole strip answers: a tap picks the swatch nearest to it, and shows its hex
+        // instead of following the link. (Each dot used to answer for itself, 16px of it.)
+        if (coarse) row.addEventListener('click', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          let best = null, bd = Infinity;
+          row.querySelectorAll('.scope-sw').forEach(function (sw) {
+            const b = sw.getBoundingClientRect();
+            if (!b.width) return;                          // one that did not fit
+            const d = Math.abs(e.clientX - (b.left + b.width / 2));
+            if (d < bd) { bd = d; best = sw; }
+          });
+          if (!best) return;
+          const open = best.classList.contains('is-open');
+          row.querySelectorAll('.scope-sw.is-open').forEach(function (o) { o.classList.remove('is-open'); });
+          if (!open) best.classList.add('is-open');
+        });
+        cell.appendChild(row);
+      }
+      function enterCell(cell, f) {
+        buildPalette(cell, f);
+        cell.classList.add('is-hover');
+      }
+      function leaveCell(cell) {
+        cell.classList.remove('is-hover');
+      }
+
+      // ── the trace: an accumulation buffer at 1× CSS pixels, tone-mapped through a phosphor curve ──
+      const trace = disc.querySelector('.scope-trace'), glow = disc.querySelector('.scope-glow');
+      const tctx = trace.getContext('2d'), gctx = glow.getContext('2d');
+      const off = document.createElement('canvas'), octx = off.getContext('2d');
+      let W = 0, H = 0, CX = 0, CY = 0, RPX = 0, idata = null, acc = null;
+      const LUT = new Uint8Array(4096);
+      let bufScale = 1;
+      function buildLUT() {
+        // a point covers bufScale² fewer of the buffer's pixels, so the gain rises to match
+        const gain = GAIN * bufScale * bufScale;
+        for (let i = 0; i < 4096; i++) LUT[i] = Math.round(205 * (1 - Math.exp(-gain * i / 64)));   // capped short of white: the core stays grey
+      }
+
+      function layout() {
+        const size = disc.clientWidth;
+        if (!size) return false;
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        bufScale = dpr >= 2 ? BUF_SCALE : 1;
+        buildLUT();
+        W = H = Math.round(size * bufScale); CX = CY = W / 2; RPX = W * 0.49;
+        off.width = W; off.height = H;
+        idata = octx.createImageData(W, H);
+        acc = new Float32Array(W * H * 3);
+        [trace, glow].forEach(function (c) { c.width = Math.round(size * dpr); c.height = Math.round(size * dpr); });
+        frames.forEach(function (f) { f.pix = null; });
+        return true;
+      }
+      function project(f) {
+        const n = f.n, pix = new Int32Array(n), cb = f.cb, cr = f.cr, s = RPX / RMAX;
+        let h = 2166136261;   // a fixed dither per point (FNV-style hash of its index): the thumbs are 8-bit, and at
+                              // this zoom their quantisation lattice showed through the dense core as a grid; half a
+                              // pixel of deterministic jitter breaks it up without moving anything or shimmering
+        for (let i = 0; i < n; i++) {
+          let x = cb[i], y = cr[i];
+          const m = Math.sqrt(x * x + y * y);
+          if (m > RMAX) { x *= RMAX / m; y *= RMAX / m; }   // over-range chroma clamps to the rim, as on a real scope
+          h = Math.imul(h ^ i, 16777619) >>> 0;
+          const jx = ((h & 255) / 255 - 0.5) * 1.2, jy = (((h >>> 8) & 255) / 255 - 0.5) * 1.2;
+          let px = Math.round(CX + x * s + jx), py = Math.round(CY - y * s + jy);
+          if (px < 0) px = 0; else if (px >= W) px = W - 1;
+          if (py < 0) py = 0; else if (py >= H) py = H - 1;
+          pix[i] = py * W + px;
+        }
+        f.pix = pix;
+      }
+      // weights: null → every read frame at full; else a per-frame weight (0 skips the frame)
+      function render(weights) {
+        if (!acc && !layout()) return;
+        acc.fill(0);
+        for (let k = 0; k < N; k++) {
+          const f = frames[k];
+          if (f.state !== 2) continue;
+          const w = weights ? weights[k] : 1;
+          if (w <= 0) continue;
+          if (!f.pix) project(f);
+          const pix = f.pix, col = f.col, n = f.n;
+          for (let i = 0, c = 0; i < n; i++, c += 3) {
+            const p = pix[i] * 3;
+            acc[p] += w * col[c]; acc[p + 1] += w * col[c + 1]; acc[p + 2] += w * col[c + 2];
+          }
+        }
+        const d = idata.data, len = W * H, K = 64 / 255;
+        for (let i = 0, j = 0, q = 0; i < len; i++, j += 4, q += 3) {
+          d[j]     = 13 + LUT[Math.min(4095, (acc[q]     * K) | 0)];
+          d[j + 1] = 12 + LUT[Math.min(4095, (acc[q + 1] * K) | 0)];
+          d[j + 2] = 11 + LUT[Math.min(4095, (acc[q + 2] * K) | 0)];
+          d[j + 3] = 255;
+        }
+        octx.putImageData(idata, 0, 0);
+        [tctx, gctx].forEach(function (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          ctx.drawImage(off, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        });
+      }
+
+      // ── the trace eases between states instead of switching: every frame's weight moves a
+      //    fifth of the way to its target each frame, and a frame just read starts from nothing ──
+      const wCur = new Float32Array(N), wTgt = new Float32Array(N);
+      let easing = false;
+      function setTargets(weights) {
+        for (let k = 0; k < N; k++) wTgt[k] = weights ? weights[k] : (frames[k].state === 2 ? 1 : 0);
+        if (reduced) { wCur.set(wTgt); render(wCur); return; }
+        if (!easing) { easing = true; requestAnimationFrame(easeTrace); }
+      }
+      function easeTrace() {
+        let maxD = 0;
+        for (let k = 0; k < N; k++) {
+          const d = wTgt[k] - wCur[k];
+          if (Math.abs(d) > maxD) maxD = Math.abs(d);
+          wCur[k] += d * 0.2;
+        }
+        if (maxD < 0.004) { wCur.set(wTgt); easing = false; }
+        render(wCur);
+        if (easing) requestAnimationFrame(easeTrace);
+      }
+
+      // ── the pick ──
+      const PICK_R2 = PICK_R * PICK_R;
+      const STICKY = 1.35;    // the frame at the front ranks as if it had this much more of the colour
+      const weights = new Float32Array(N), share = new Float32Array(N), nearR2 = new Float32Array(N);
+      const NEAR_K = 16, nearBuf = new Float32Array(NEAR_K);   // the K nearest distances² of a frame's points to the pick
+      let pick = null;        // { cb, cr, hex, rgb, label, count, shown } of the active pick
+      let locked = false;     // pinned: the pick ignores the pointer until the disc is tapped again
+      let hoverFrame = -1;    // the sheet frame under the pointer, or -1
+
+      // The ring follows the pointer on a spring (stiffness 260, damping 22: a short settle with a
+      // hint of overshoot) and squashes along its travel — the faster it moves, the longer it gets,
+      // with its area kept. The loop runs only while it is moving.
+      const ring = { x: 500, y: 500, vx: 0, vy: 0, tx: 500, ty: 500, t: 0, on: false };
+      function moveCursor(cb, cr) {
+        ring.tx = 500 + cb * S_UNITS;
+        ring.ty = 500 - cr * S_UNITS;
+        pickEl.classList.add('is-on');
+        if (reduced) { ring.x = ring.tx; ring.y = ring.ty; pickEl.setAttribute('transform', 'translate(' + ring.x.toFixed(1) + ' ' + ring.y.toFixed(1) + ')'); return; }
+        if (!ring.on) { ring.on = true; ring.t = performance.now(); requestAnimationFrame(springRing); }
+      }
+      function springRing(now) {
+        const dt = Math.min(0.032, (now - ring.t) / 1000);
+        ring.t = now;
+        ring.vx += (260 * (ring.tx - ring.x) - 22 * ring.vx) * dt;
+        ring.vy += (260 * (ring.ty - ring.y) - 22 * ring.vy) * dt;
+        ring.x += ring.vx * dt;
+        ring.y += ring.vy * dt;
+        const speed = Math.hypot(ring.vx, ring.vy);
+        const sx = 1 + Math.min(0.3, speed / 9000), ang = Math.atan2(ring.vy, ring.vx) * 180 / Math.PI;
+        const settled = Math.abs(ring.tx - ring.x) < 0.05 && Math.abs(ring.ty - ring.y) < 0.05 && speed < 2;
+        if (settled) { ring.x = ring.tx; ring.y = ring.ty; ring.vx = ring.vy = 0; }
+        pickEl.setAttribute('transform', 'translate(' + ring.x.toFixed(2) + ' ' + ring.y.toFixed(2) + ')');
+        pickSquash.setAttribute('transform', settled ? '' : 'rotate(' + ang.toFixed(1) + ') scale(' + sx.toFixed(3) + ' ' + (1 / sx).toFixed(3) + ')');
+        if (settled) ring.on = false; else requestAnimationFrame(springRing);
+      }
+      // a pick has landed (a pin, a fast move come to rest, a key): the bubble boops and sends a ripple
+      function land() {
+        if (reduced || !pick) return;
+        pickEl.classList.add('is-boop');
+        ripple(pick.cb, pick.cr, 'rgba(255,255,255,0.75)', pickR * 1.9);
+      }
+      function setLocked(v) {
+        locked = v;
+        pickEl.classList.toggle('is-locked', v);
+        disc.classList.toggle('is-locked', v);
+        judge();                                       // a stopped ring brings the four out; a ring handed back waits for the pointer to move
+      }
+
+      // ── the stage: every frame afloat, and four of them out in front ──
+      // Every frame is ONE piece, made once. It has a place in the FIELD (the mosaic of all of them),
+      // and a role: 0 in the field, 1 grown forward where it lies (a match, while the pointer moves),
+      // 2 out in the puzzle (a match, once the pointer has stopped). One rAF pass springs every
+      // piece toward what its role asks and sleeps when nothing is moving.
+      const MAX_SHOWN = 4;             // the frames that come forward
+      const GAP = 8;                   // px between the four when they are fitted
+      const INSET = 0;                 // the puzzle takes the whole stage. It used to leave 6% clear for the field to show round it;
+                                       //    there is no field behind the four any more, so the margin was only smaller photos
+      const POP = 2.5;                 // a match grows this much where it lies while the pointer moves
+      const POP_MAX = 0.4;             //    and never past this share of the stage, either way
+      const LOOSE = 0.93;              // the field's pieces, a little apart while they float
+      const BOB = 3;                   // px a floating piece bobs
+      const BOB_ROT = 0.6;             // degrees it rocks
+      const REST_MS = 90;              // ms without a move: the pointer has STOPPED, and the four come out. It was 180, and read as a pause
+                                       //    (SETTLE, the wait on a quick move's pick, is kept equal to it)
+      const REST_SLOP = 10;            // px it must travel from there to count as moving again — a resting hand still trembles, and a
+                                       //    finger lifting off a trackpad drags the pointer a few pixels with it
+      const FIELD_MOVING = 0.8;        // the field's opacity while the pointer browses: every frame in plain sight
+      const FIELD_STOPPED = 0;         //    and once the four are out it is GONE (it was 0.3; Max: "remove the background")
+      const FIELD_IN = 0.2, FIELD_OUT = 0.1;      // s, time constants: it comes up gently and leaves promptly
+      const DWELL = 140;               // ms: the four change no more often than this
+      const SHARPEN_MS = 140;          // ms a match must stand before it fetches its 1400px variant
+      // THE FOUR ON THEIR WAY OUT SHARE ONE SPRING. Each piece's own spring is a little soft and a
+      // little different from its neighbour's — right for things afloat, wrong for a puzzle: the
+      // sizes overshot by a few pixels and came back, and the four landed at four moments. Damping
+      // ratio 0.9, not 1: at 1 the last two pixels take a third of the journey (stiffness 190 at 1.0
+      // measured 590ms to land against 434 before — the shorter wait bought nothing); at 0.9 the
+      // overshoot is 0.15% of the travel, half a pixel, and it is home a quarter sooner.
+      const K_OUT = 300, C_OUT = 2 * 0.9 * Math.sqrt(K_OUT);
+      // A spring chasing a target that JUMPS sets off at full push: a piece at rest moved 6.3px in its
+      // first frame (modelled over a 300px journey at 120Hz), and that first frame is the jolt. So the
+      // target itself is led in over LEAD and the spring chases THAT: the first frame moves 1.5px, the
+      // peak speed falls from 17.5 to 15.1px a frame, and the journey is 35ms longer to 95%.
+      const LEAD = 0.03;
+      const lean = !!(navigator.connection && navigator.connection.saveData);
+      const FIELD_SEED = (Math.random() * 0x7fffffff) | 0;     // a different mosaic on every visit
+      const pieces = [];               // by frame index
+      let current = [], setKey = '', room = null, fieldOn = false, awake = false, tickT = 0, loose = 0, stageSeen = true;
+      let up = true, rested = true, onDisc = false, restT = 0, restX = 0, restY = 0;
+      let lastChange = -1e9, pendingR = null, dwellT = 0, sharpenT = 0;
+
+      function keyOf(list) { return list.map(function (f) { return f.k; }).sort(function (a, b) { return a - b; }).join('.'); }
+      // a small seeded generator
+      function seeded(seed) {
+        let a = seed >>> 0;
+        return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+      }
+      // A cut is a tree: two groups side by side ('h') or stacked ('v'). A group's width is a straight
+      // line in its height — w = A·h + B, B being its gaps — so side by side adds the lines and
+      // stacked adds their inverses, and any cut has exactly one size at which every photo keeps its
+      // own ratio and every edge meets.
+      function join(dir, l, r, gap) {
+        if (dir === 'h') return { dir: dir, l: l, r: r, A: l.A + r.A, B: l.B + r.B + gap };
+        const A = 1 / (1 / l.A + 1 / r.A);
+        return { dir: dir, l: l, r: r, A: A, B: A * (l.B / l.A + r.B / r.A - gap) };
+      }
+      function lay(node, x, y, w, h, gap, boxes) {
+        if (node.leaf !== undefined) { boxes[node.leaf] = { x: x, y: y, w: w, h: h }; return; }
+        if (node.dir === 'h') {
+          const lw = node.l.A * h + node.l.B;
+          lay(node.l, x, y, lw, h, gap, boxes);
+          lay(node.r, x + lw + gap, y, w - lw - gap, h, gap, boxes);
+        } else {
+          const lh = (w - node.l.B) / node.l.A;
+          lay(node.l, x, y, w, lh, gap, boxes);
+          lay(node.r, x, y + lh + gap, w, h - lh - gap, gap, boxes);
+        }
+      }
+      function fit(root, W, H, gap, top) {
+        const h = Math.min(H, (W - root.B) / root.A);
+        if (!(h > 0)) return null;
+        const w = root.A * h + root.B, boxes = [];
+        lay(root, (W - w) / 2, top ? 0 : (H - h) / 2, w, h, gap, boxes);
+        return { boxes: boxes, area: w * h };
+      }
+      // THE FIELD: every frame in one cut. Seventy-odd frames have far too many cuts to try, so a
+      // cut is GROWN from the top: the frames are shuffled, a group is split somewhere about its
+      // middle (uneven halves are what make big tiles and small ones), and it goes side by side if
+      // its region is wider than its photos would fill, stacked if taller. A hundred and twenty are
+      // grown and the one that covers the stage best without slivers is kept.
+      function solveField(list, W, H, gap) {
+        const n = list.length;
+        if (!n) return [];
+        const rand = seeded(FIELD_SEED), floor = Math.max(24, Math.min(W, H) * 0.055);
+        function grow(seq, T) {
+          const m = seq.length;
+          if (m === 1) return { leaf: seq[0], A: list[seq[0]].ar, B: 0 };
+          const cut = Math.max(1, Math.min(m - 1, Math.round(m * (0.36 + 0.28 * rand()))));
+          let mean = 0;
+          for (let i = 0; i < m; i++) mean += list[seq[i]].ar;
+          mean /= m;
+          const dir = T / mean > 0.8 + 0.4 * rand() ? 'h' : 'v', share = cut / m;
+          return join(dir, grow(seq.slice(0, cut), dir === 'h' ? T * share : T / share), grow(seq.slice(cut), dir === 'h' ? T * (1 - share) : T / (1 - share)), gap);
+        }
+        let best = null;
+        for (let go = 0; go < 120; go++) {
+          const seq = list.map(function (f, i) { return i; });
+          for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)), t = seq[i]; seq[i] = seq[j]; seq[j] = t; }
+          const got = fit(grow(seq, W / H), W, H, gap);
+          if (!got) continue;
+          let thin = 0, big = 0;
+          const mean = got.area / n;
+          for (let i = 0; i < n; i++) { const b = got.boxes[i]; if (Math.min(b.w, b.h) < floor) thin++; if (b.w * b.h > mean * 5) big++; }
+          const score = got.area / (W * H) - 0.9 * thin / n - 0.5 * big / n;
+          if (!best || score > best.score) best = { score: score, boxes: got.boxes };
+        }
+        return best ? best.boxes : [];
+      }
+      // THE PUZZLE: the four, in every cut there is — every order, every pairing, side by side or
+      // stacked (960 for four). Scored: area covered, the best match large, pieces travelling little
+      // from where they are, and a seeded scatter so the winner differs from set to set. Cuts that
+      // leave a sliver are thrown out.
+      function solvePuzzle(list, W, H, ox, oy) {
+        const n = list.length, rand = seeded(list.reduce(function (t, f) { return (t * 131 + f.k + 7) >>> 0; }, 2166136261));
+        function build(seq) {
+          if (seq.length === 1) return [{ leaf: seq[0], A: list[seq[0]].ar, B: 0 }];
+          const out = [];
+          for (let i = 1; i < seq.length; i++) {
+            const L = build(seq.slice(0, i)), Rr = build(seq.slice(i));
+            for (let a = 0; a < L.length; a++) for (let b = 0; b < Rr.length; b++) { out.push(join('h', L[a], Rr[b], GAP)); out.push(join('v', L[a], Rr[b], GAP)); }
+          }
+          return out;
+        }
+        const orders = [];
+        (function perm(rest, acc) { if (!rest.length) { orders.push(acc); return; } for (let i = 0; i < rest.length; i++) perm(rest.slice(0, i).concat(rest.slice(i + 1)), acc.concat(rest[i])); })(list.map(function (f, i) { return i; }), []);
+        // no piece is a sliver, and none is narrower than the 150px a row of swatches needs — on a phone
+        // that alone decides the cut: two columns
+        const diag = Math.hypot(W, H), minW = Math.max(W * 0.17, Math.min(W * 0.45, 150)), minH = Math.max(H * 0.15, Math.min(H * 0.22, 92));
+        let best = null, cover = null;
+        orders.forEach(function (seq) {
+          build(seq).forEach(function (root) {
+            const got = fit(root, W, H, GAP, room.top);
+            if (!got) return;
+            if (!cover || got.area > cover.area) cover = got;
+            let area = 0, moved = 0;
+            for (let i = 0; i < n; i++) {
+              const b = got.boxes[i];
+              if (!(b.w >= minW && b.h >= minH)) return;
+              area += b.w * b.h;
+              const p = pieces[list[i].k];
+              moved += Math.hypot(b.x + ox + b.w / 2 - p.x, b.y + oy + b.h / 2 - p.y) / diag;
+            }
+            const score = area / (W * H) + 0.16 * (got.boxes[0].w * got.boxes[0].h) / area - 0.22 * moved / n + 0.07 * rand();
+            if (!best || score > best.score) best = { score: score, boxes: got.boxes };
+          });
+        });
+        const boxes = best ? best.boxes : (cover ? cover.boxes : []);     // very unlike ratios: the cut that simply covers most
+        return boxes.map(function (b) { return { x: b.x + ox, y: b.y + oy, w: b.w, h: b.h }; });
+      }
+      function puzzleBoxes(list) {
+        const ix = Math.round(room.w * INSET), iy = Math.round(room.h * INSET);
+        return solvePuzzle(list, room.w - 2 * ix, room.h - 2 * iy, ix, iy);
+      }
+      // the four, grown where they lie in the field; nudged apart where two would cover each other,
+      // and kept on the stage
+      function popBoxes(list) {
+        const W = room.w, H = room.h;
+        const out = list.map(function (f) {
+          const fb = pieces[f.k].field;
+          const w = Math.max(fb.w, Math.min(fb.w * POP, W * POP_MAX, H * POP_MAX * f.ar)), h = w / f.ar;
+          return { x: fb.x + fb.w / 2 - w / 2, y: fb.y + fb.h / 2 - h / 2, w: w, h: h };
+        });
+        function keep(b) { b.x = Math.max(0, Math.min(W - b.w, b.x)); b.y = Math.max(0, Math.min(H - b.h, b.y)); }
+        out.forEach(keep);
+        for (let it = 0; it < 24; it++) {
+          let moved = false;
+          for (let i = 0; i < out.length; i++) for (let j = i + 1; j < out.length; j++) {
+            const a = out[i], b = out[j];
+            const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x) + GAP, oy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y) + GAP;
+            if (ox <= 0 || oy <= 0) continue;
+            moved = true;
+            if (ox < oy) { const d = (a.x + a.w / 2 <= b.x + b.w / 2 ? 1 : -1) * ox / 2; a.x -= d; b.x += d; }
+            else { const d = (a.y + a.h / 2 <= b.y + b.h / 2 ? 1 : -1) * oy / 2; a.y -= d; b.y += d; }
+            keep(a); keep(b);
+          }
+          if (!moved) break;
+        }
+        return out;
+      }
+      function makePiece(f) {
+        const a = document.createElement('a');
+        a.className = 'scope-cell';
+        a.href = 'destination.html?place=' + encodeURIComponent(f.place.slug);
+        a.tabIndex = -1;                                   // only the four that are out are links to stop on
+        a.setAttribute('aria-hidden', 'true');
+        const img = document.createElement('img');
+        img.alt = f.photo.alt || f.place.title;   // the link's name (the tiles' convention)
+        img.decoding = 'async';
+        img.draggable = false;
+        a.appendChild(img);
+        const r = seeded(f.k * 2654435761 + 97), k = 210 + 70 * r();
+        // every piece is its own object: its own spring, its own bob — so they never move as one
+        const p = { f: f, el: a, img: img, big: null, ready: false, placed: false, role: 0, back: false, shrink: false, field: null,
+                    x: 0, y: 0, w: 1, r: 0, o: 0, vx: 0, vy: 0, vw: 0, vr: 0, tx: 0, ty: 0, tw: 1, th: 1, sx: 0, sy: 0, sw: 1, to: 0, ew: 0, eh: 0,
+                    k: k, c: 2 * (0.9 + 0.1 * r()) * Math.sqrt(k), phase: r() * 6.283, period: 3.2 + 2 * r() };
+        const set = function () { return a.classList.contains('is-set'); };
+        // the piece shows its frame's own file, taken from the cache once the sampler's copy has landed
+        f.img.addEventListener('load', function () { if (!img.getAttribute('src')) img.src = f.img.getAttribute('src'); });
+        img.addEventListener('load', function () { p.ready = true; p.to = shown(p); wake(); });
+        a.addEventListener('click', function (e) {
+          if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+          e.preventDefault();
+          if (set()) pageLeave(a.href);
+        });
+        if (!coarse) {
+          const over = function () { if (set() && !a.classList.contains('is-hover')) { showFrame(f.k); enterCell(a, f); } };
+          a.addEventListener('pointerenter', over);
+          a.addEventListener('pointermove', over);
+          a.addEventListener('pointerleave', function () { leaveCell(a); if (hoverFrame === f.k) showFrame(-1); });
+        }
+        a.addEventListener('focus', function () { if (set()) showFrame(f.k); });
+        a.addEventListener('blur',  function () { if (hoverFrame === f.k) showFrame(-1); });
+        floatEl.appendChild(a);
+        return p;
+      }
+      frames.forEach(function (f) { pieces[f.k] = makePiece(f); });
+      // nothing is shown before its picture has loaded — not the four either: an empty box with a description in it is not a photo
+      function shown(p) { return !p.ready ? 0 : p.role ? 1 : (p.field ? (up ? FIELD_STOPPED : FIELD_MOVING) : 0); }
+      // AT THE OPENING NOTHING TRAVELS. The four are simply in their places, and the block they are in
+      // rises and fades like every other block on the site. They used to fly out of the field, which
+      // was an arrival of their own on top of the panel's. Until `placeUntil`, a piece is PUT where it
+      // belongs; after it, it travels there.
+      let placeUntil = 0;
+      function put(p) {
+        if (p.shrink) size(p, p.tw, p.th);
+        p.x = p.sx = p.tx; p.y = p.sy = p.ty; p.w = p.sw = p.tw; p.r = 0;
+        p.vx = p.vy = p.vw = p.vr = 0;
+        if (p.back) { p.back = false; p.el.style.zIndex = '1'; p.el.classList.remove('is-out'); }
+        p.o = p.to = shown(p);
+      }
+      function size(p, w, h) {
+        p.ew = w; p.eh = h; p.shrink = false;
+        p.el.style.width = w.toFixed(1) + 'px'; p.el.style.height = h.toFixed(1) + 'px';
+        p.el.classList.toggle('is-small', w < (coarse ? 110 : 150));   // too narrow for any row of swatches
+        p.el.classList.toggle('is-compact', w < 230);     // room for a row of smaller ones
+        // under a finger the dots keep their size and a narrow photo shows as many as fit: 16px dots, 5px apart, 8px in
+        if (coarse) p.el.dataset.sw = String(w < 230 ? Math.max(3, Math.min(7, Math.floor((w - 16 + 5) / 21))) : 7);
+      }
+      // A piece GROWING takes its new box at once and is scaled down to the size it has, so it is
+      // drawn sharp all the way up. A piece SHRINKING keeps its box until it has landed — an 80px
+      // tile scaled six times over is a blur.
+      function setBox(p, b) {
+        p.tx = b.x + b.w / 2; p.ty = b.y + b.h / 2; p.tw = b.w; p.th = b.h;
+        if (b.w > p.ew + 0.5) size(p, b.w, b.h);
+        else p.shrink = b.w < p.ew - 0.5;
+      }
+      function measureStage() {
+        const w = sheet.clientWidth, h = sheet.clientHeight;
+        if (!w || !h) return false;
+        // on a phone the four start at the TOP of the stage, right under the readout: centred, a short
+        // puzzle left a band of white above it as well as below, and pushed the photos down the screen
+        room = { w: w, h: h, top: window.matchMedia('(max-width: 560px)').matches };
+        const list = frames.filter(function (f) { return f.state !== 3; });
+        const boxes = solveField(list, w, h, w < 480 ? 4 : 5);
+        if (boxes.length !== list.length) return false;
+        list.forEach(function (f, i) {
+          const p = pieces[f.k], b = boxes[i];
+          p.field = b;
+          if (!p.placed) { p.placed = true; p.x = p.sx = b.x + b.w / 2; p.y = p.sy = b.y + b.h / 2; p.w = p.sw = b.w; size(p, b.w, b.h); }
+        });
+        fieldOn = true;
+        return true;
+      }
+      // what every piece should be doing now
+      function arrange() {
+        if (!room || !fieldOn) return;
+        const four = current, boxes = four.length ? (up ? puzzleBoxes(four) : popBoxes(four)) : [], placing = performance.now() < placeUntil;
+        for (let k = 0; k < pieces.length; k++) {
+          const p = pieces[k], i = four.indexOf(p.f), b = i >= 0 ? boxes[i] : null;
+          if (b) {
+            p.role = up ? 2 : 1; p.back = false;
+            setBox(p, b);
+            p.el.style.zIndex = String(20 + four.length - i);      // the best match rides on top while they cross
+            p.el.classList.add('is-out');
+          } else {
+            if (p.role) {
+              p.role = 0; p.back = true;
+              p.el.style.zIndex = '5';                              // on its way home: under the four, over the field
+              p.el.classList.remove('is-set'); leaveCell(p.el);
+              if (hoverFrame === p.f.k) showFrame(-1);
+            }
+            if (p.field) setBox(p, p.field);
+          }
+          if (p.role === 2) { p.el.removeAttribute('tabindex'); p.el.removeAttribute('aria-hidden'); }
+          else { p.el.tabIndex = -1; p.el.setAttribute('aria-hidden', 'true'); }
+          p.to = shown(p);
+          if (placing) put(p);
+        }
+        if (four.length) sheet.classList.add('is-active');
+        clearTimeout(sharpenT);
+        // stopped, the four are certain and ask at once; moving, a match must stand a moment first
+        if (up) current.forEach(function (f) { sharpen(pieces[f.k]); });
+        else sharpenT = setTimeout(function () { current.forEach(function (f) { sharpen(pieces[f.k]); }); }, SHARPEN_MS);
+        wake();
+      }
+      // A match gets its frame's 1400px variant, laid OVER the thumb and fading in. It is asked for while
+      // the match is still grown in the field, so that by the time the pointer stops the piece comes out
+      // SHARP — asked for only at the stop, it arrived blurred and cleared a beat after it had landed.
+      // It is DECODED before it goes on the page: a 1400px JPEG decoded in the middle of the travel is
+      // a dropped frame (58ms measured). A small piece is already as sharp as its thumb can make it
+      // and does not ask; a phone and a data-saver ask only once the piece is out.
+      function sharpen(p) {
+        if (p.big || !p.role) return;
+        if (p.role === 1 && (coarse || lean)) return;
+        if (coarse && lean) return;                       // a phone on a data-saver keeps its thumbs
+        // a phone's screen is 3x: a 175px photo is 525 device pixels and its 320px thumb is SOFT on it. The
+        // cap was 2 everywhere, which is why a phone never asked. (A desktop's cap stays 2.)
+        const dpr = Math.min(coarse ? 3 : 2, window.devicePixelRatio || 1);
+        if (p.img.naturalWidth && p.tw * dpr <= p.img.naturalWidth * 1.15) return;
+        const big = new Image();
+        p.big = big;
+        big.className = 'scope-big';
+        big.alt = '';
+        big.decoding = 'async';
+        big.draggable = false;
+        const show = function () {
+          if (p.big !== big) return;                      // the piece went home while it was on its way
+          p.el.insertBefore(big, p.img.nextSibling);
+          requestAnimationFrame(function () { requestAnimationFrame(function () { big.classList.add('is-ready'); }); });
+        };
+        const lost = function () { console.warn('Vectorscope: could not load ' + p.f.photo.lite); if (p.big === big) p.big = null; };
+        big.src = p.f.photo.lite;
+        if (big.decode) big.decode().then(show, lost);
+        else { big.addEventListener('load', show); big.addEventListener('error', lost); }
+      }
+      // every sampled frame in the order it carries the colour: the ones inside the pick by share, then
+      // the rest by how far the circle would have to grow to reach them — so there are always four.
+      // The ones already out rank a little higher and keep their order, so nothing is recut over nothing.
+      function rankAll() {
+        const out = current, hit = [], near = [];
+        for (let k = 0; k < N; k++) {
+          const f = frames[k];
+          if (!f.cb || f.state === 3) continue;
+          const on = out.indexOf(f) >= 0;
+          if (share[k] >= MIN_SHARE * (on ? HOLD : 1)) hit.push({ f: f, v: share[k] * (on ? STICKY : 1) });
+          else near.push({ f: f, v: nearR2[k] * (on ? 1 / STICKY : 1) });
+        }
+        hit.sort(function (a, b) { return b.v - a.v; });
+        near.sort(function (a, b) { return a.v - b.v; });
+        return hit.concat(near).slice(0, MAX_SHOWN).map(function (c) { return c.f; });
+      }
+      // a pick asks for four; they change at most once every DWELL, the latest ask winning
+      function requestSet(list) {
+        if (!list.length) return;
+        if (keyOf(list) === setKey) { pendingR = null; return; }
+        const wait = lastChange + DWELL - performance.now();
+        if (wait > 0) {
+          pendingR = list;
+          if (!dwellT) dwellT = setTimeout(function () { dwellT = 0; const p = pendingR; pendingR = null; if (p) requestSet(p); }, wait);
+          return;
+        }
+        lastChange = performance.now();
+        current = list; setKey = keyOf(list);
+        arrange();
+      }
+      // STOPPED or BROWSING. The four are out in the puzzle whenever the ring is stopped, the pointer
+      // is off the scope, or it has come to rest on it; they fall back to the field, grown where
+      // they lie, only while it is BROWSING — moving about at a pace that picks colours.
+      function judge() {
+        const v = locked || !onDisc || rested;
+        if (v === up) return;
+        up = v;
+        if (up) {
+          // A stop settles whatever was still waiting — the pick of a quick move, a set held back by
+          // DWELL — so the four go out ONCE and they are the four for where the pointer stopped.
+          // fastQ is only ever the LATEST event's (queuePick clears it on a slow one). It was not
+          // cleared, and this flush then made a pick of the first event of the movement: the pointer
+          // stopped, and 140ms later ring, readout and photos jumped back to where it had set off.
+          if (fastQ) { clearTimeout(settleT); const q = fastQ; fastQ = null; setPick(q[0], q[1]); }
+          if (pendingR) { clearTimeout(dwellT); dwellT = 0; current = pendingR; setKey = keyOf(current); pendingR = null; lastChange = performance.now(); }
+        }
+        arrange();
+      }
+      // Is this move a resting hand's TREMOR? Then nothing follows it and nothing is picked from it. It
+      // used to be picked, so a hand that had stopped went on changing the four a few pixels at a time.
+      function tremor(e) { return rested && e.type !== 'pointerdown' && Math.hypot(e.clientX - restX, e.clientY - restY) <= REST_SLOP; }
+      function restAt(x, y) { rested = true; restX = x; restY = y; }
+      // A move on the scope, SLOW (it picks) or quick (it is travel).
+      function moved(e, slow) {
+        const x = e.clientX, y = e.clientY;
+        onDisc = true;
+        if (e.type === 'pointerdown') {                 // a press is a rest: handing the ring over changes nothing until the pointer travels
+          clearTimeout(restT);
+          restAt(x, y);
+        } else if (slow || !rested) {
+          // browsing — or a quick stretch in the middle of a browse, which the rest will follow
+          rested = false;
+          clearTimeout(restT);
+          restT = setTimeout(function () { restAt(x, y); judge(); }, REST_MS);
+        }
+        // else: a DASH from rest. The stage stays exactly as it is: the dash off the scope to the
+        // photos used to count as moving, so the four fell back into the field and came out again
+        // as the pointer left. A dash that lands on the scope is picked SETTLE later, where it lands.
+        judge();
+      }
+      function wake() {
+        if (awake || !room) return;
+        awake = true; tickT = performance.now();
+        requestAnimationFrame(tick);
+      }
+      function tick(now) {
+        if (!stageSeen) { awake = false; return; }
+        const dt = Math.min(0.034, Math.max(0.001, (now - tickT) / 1000));
+        tickT = now;
+        const want = (!reduced && !up) ? 1 : 0;
+        loose += (want - loose) * (1 - Math.exp(-dt / 0.3));      // the field settles a little after the four set off, so the eye follows the four
+        if (Math.abs(want - loose) < 0.002) loose = want;
+        const t = now / 1000, lead = reduced ? 1 : 1 - Math.exp(-dt / LEAD);
+        let moving = loose > 0;
+        for (let k = 0; k < pieces.length; k++) {
+          const p = pieces[k];
+          if (!p.field) continue;
+          const a = p.role === 2 ? 0 : loose, w = 6.283 * t / p.period + p.phase;
+          const bx = a * BOB * Math.sin(w), by = a * BOB * Math.cos(w * 0.77 + p.phase), bs = p.role ? 1 : 1 - (1 - LOOSE) * loose;
+          // where it is GOING (rx…) and where the spring is being led just now (gx…)
+          const rx = p.tx + bx, ry = p.ty + by, rw = p.tw * bs, gr = a * BOB_ROT * Math.sin(w * 0.6 + 1.3);
+          p.sx += (p.tx - p.sx) * lead; p.sy += (p.ty - p.sy) * lead; p.sw += (p.tw - p.sw) * lead;
+          const gx = p.sx + bx, gy = p.sy + by, gw = p.sw * bs;
+          if (reduced) { p.x = rx; p.y = ry; p.w = rw; p.r = 0; p.vx = p.vy = p.vw = p.vr = 0; }
+          else {
+            const sk = p.role === 2 ? K_OUT : p.k, sc = p.role === 2 ? C_OUT : p.c;
+            p.vx += (sk * (gx - p.x) - sc * p.vx) * dt; p.x += p.vx * dt;
+            p.vy += (sk * (gy - p.y) - sc * p.vy) * dt; p.y += p.vy * dt;
+            p.vw += (sk * (gw - p.w) - sc * p.vw) * dt; p.w += p.vw * dt;
+            p.vr += (sk * (gr - p.r) - sc * p.vr) * dt; p.r += p.vr * dt;
+          }
+          // home, or near enough: a piece that was shrinking takes its small box, and one back from the front rejoins the field
+          if ((p.shrink || p.back) && Math.abs(p.w - rw) < 1.5 && Math.abs(p.vw) < 12 && Math.abs(p.x - rx) < 3 && Math.abs(p.y - ry) < 3) {
+            if (p.shrink) size(p, p.tw, p.th);
+            if (p.back) {
+              p.back = false;
+              p.el.style.zIndex = '1';
+              p.el.classList.remove('is-out');
+              if (p.big) { p.big.remove(); p.big = null; }     // the big file is let go: only what is out keeps one
+            }
+          }
+          // at rest on a quiet stage a piece LANDS: scale 1, no turn, on its box — never left at 0.9992
+          const still = Math.abs(p.x - rx) < 0.15 && Math.abs(p.y - ry) < 0.15 && Math.abs(p.w - rw) < 0.15 && Math.abs(p.r - gr) < 0.02 && Math.abs(p.vx) + Math.abs(p.vy) + Math.abs(p.vw) < 0.6;
+          if (still && loose === 0) { p.x = p.sx = rx; p.y = p.sy = ry; p.w = rw; p.sw = p.tw; p.r = gr; p.vx = p.vy = p.vw = p.vr = 0; }
+          p.o += (p.to - p.o) * (1 - Math.exp(-dt / (p.role ? 0.07 : (p.to > p.o ? FIELD_IN : FIELD_OUT))));
+          if (Math.abs(p.to - p.o) < 0.01) p.o = p.to;
+          const st = p.el.style;
+          st.transform = 'translate(' + (p.x - p.ew / 2).toFixed(2) + 'px,' + (p.y - p.eh / 2).toFixed(2) + 'px) rotate(' + p.r.toFixed(3) + 'deg) scale(' + (p.w / p.ew).toFixed(4) + ')';
+          st.opacity = p.o.toFixed(3);
+          const set = p.role === 2 && up && Math.abs(p.x - rx) < 8 && Math.abs(p.y - ry) < 8 && Math.abs(p.w - rw) < 12;
+          if (set !== p.el.classList.contains('is-set')) {
+            p.el.classList.toggle('is-set', set);
+            if (set && coarse) buildPalette(p.el, p.f);      // no hover to raise it: the palette is up once the piece is
+            if (!set && p.el.classList.contains('is-hover')) { leaveCell(p.el); if (hoverFrame === p.f.k) showFrame(-1); }
+          }
+          if (!still || p.o !== p.to || p.shrink || p.back) moving = true;
+        }
+        if (moving) requestAnimationFrame(tick); else awake = false;
+      }
+      // nothing floats while the stage is off the screen
+      new IntersectionObserver(function (entries) {
+        stageSeen = entries.some(function (en) { return en.isIntersecting; });
+        if (stageSeen) wake();
+      }, { rootMargin: '200px 0px' }).observe(sheet);
+
+      function setPick(cb, cr) {
+        let hitsAll = 0, ySum = 0;
+        for (let k = 0; k < N; k++) {
+          const f = frames[k];
+          if (!f.cb) { share[k] = 0; weights[k] = 0; continue; }   // sampled is enough: the pick does not wait for the read-in
+          const pcb = f.cb, pcr = f.cr, py = f.y, n = f.n;
+          // how far the circle would have to grow to catch this frame: the distance of its kk-th nearest
+          // point, kk being the same share of its points the match asks for — one stray pixel cannot
+          // make a frame "near"
+          const kk = Math.min(NEAR_K, Math.max(1, Math.ceil(MIN_SHARE * n)));
+          nearBuf.fill(Infinity);
+          let hits = 0, ys = 0;
+          for (let i = 0; i < n; i++) {
+            const dx = pcb[i] - cb, dy = pcr[i] - cr, d2 = dx * dx + dy * dy;
+            if (d2 <= PICK_R2) { hits++; ys += py[i]; }
+            if (d2 < nearBuf[NEAR_K - 1]) {
+              let j = NEAR_K - 1;
+              while (j > 0 && nearBuf[j - 1] > d2) { nearBuf[j] = nearBuf[j - 1]; j--; }
+              nearBuf[j] = d2;
+            }
+          }
+          nearR2[k] = nearBuf[kk - 1];
+          share[k] = hits / n;
+          hitsAll += hits; ySum += ys;
+          const v = Math.max(0, Math.min(1, (share[k] - MIN_SHARE) / (FULL_SHARE - MIN_SHARE)));
+          weights[k] = DIM + (1 - DIM) * v;
+        }
+        // the colour: this chroma at the luma the matching pixels actually have (the scope itself has none)
+        const Y = hitsAll ? ySum / hitsAll / 255 : Y0;
+        const R = Y + 1.5748 * cr, B = Y + 1.8556 * cb, G = (Y - 0.2126 * R - 0.0722 * B) / 0.7152;
+        const rgb = [R, G, B].map(function (v) { return Math.max(0, Math.min(255, Math.round(v * 255))); });
+        const hex = '#' + rgb.map(function (v) { return v.toString(16).toUpperCase().padStart(2, '0'); }).join('');
+        const hue = Math.round(((Math.atan2(cr, cb) * 180 / Math.PI) + 360) % 360) % 360;
+        const sat = Math.min(100, Math.round(Math.sqrt(cb * cb + cr * cr) / RMAX * 100));
+        pick = { cb: cb, cr: cr, hex: hex, rgb: 'rgb(' + rgb.join(',') + ')', label: 'Hue ' + hue + '°\u2002Sat ' + sat + '%' };
+        const ranked = rankAll();
+        ranked.forEach(function (f) { if (weights[f.k] < 0.7) weights[f.k] = 0.7; });   // a frame in the puzzle always shows its trace
+        requestSet(ranked);
+        setTargets(weights);
+        moveCursor(cb, cr);
+        setReadout(pick.label, '', pick.rgb, pick.hex);   // the colour under the numbers; no count (Max's call)
+      }
+      // hovering a frame on the sheet: only its trace at full
+      function showFrame(i) {
+        hoverFrame = i;
+        if (i < 0) { setTargets(pick ? weights : null); return; }   // back to the pick's own weights; the drum is not asked again
+        const f = frames[i];
+        if (!f.cb) return;
+        const w = new Float32Array(N).fill(DIM_FRAME);
+        w[i] = 1;
+        setTargets(w);                                     // the readout stays on the pick (Max's call)
+      }
+      function redrawCurrent() {
+        if (hoverFrame >= 0) showFrame(hoverFrame);
+        else setTargets(pick ? weights : null);
+      }
+
+      function chromaAt(e) {
+        const r = disc.getBoundingClientRect();
+        const s = RMAX / (r.width * 0.49);
+        let cb = (e.clientX - r.left - r.width / 2) * s, cr = -(e.clientY - r.top - r.height / 2) * s;
+        const m = Math.sqrt(cb * cb + cr * cr);
+        if (m > RMAX) { cb *= RMAX / m; cr *= RMAX / m; }
+        return [cb, cr];
+      }
+      // A pick is where the pointer RESTS or moves slowly. A quick movement is travel — most often the
+      // way off the disc towards a frame it revealed, which crosses colours that would empty the
+      // sheet before the frame could be reached. So the ring follows the pointer at once, but the
+      // pick itself commits only when the pointer is moving slowly, or SETTLE ms after a fast move
+      // ends while still on the disc; leaving the disc drops a pending one.
+      const FAST = 0.6;      // px/ms: quicker than this is travel, not a pick
+      const SETTLE = 90;     // ms of rest after a fast move before it counts as a pick (it was 160; kept equal to REST_MS)
+      const OPEN_LAG = 120;  // ms the frames are up before the instrument starts its arrival (it was 350)
+      let raf = 0, slowQ = null, fastQ = null, settleT = 0, lastX = 0, lastY = 0, lastT = -1e9;
+      function queuePick(e) {
+        if (tremor(e)) return;                         // a resting hand: the ring does not follow it and nothing is picked
+        started = true;
+        const t = e.timeStamp || performance.now();
+        const dist = Math.hypot(e.clientX - lastX, e.clientY - lastY), dt = t - lastT;
+        lastX = e.clientX; lastY = e.clientY; lastT = t;
+        const q = chromaAt(e);
+        moveCursor(q[0], q[1]);
+        clearTimeout(settleT);
+        // A press, or a move that is measurably slow, picks on the next frame — its OWN position, not
+        // whatever faster ones follow it in the same frame. The first event after a pause has no
+        // speed yet, so it only picks if the pointer then rests.
+        const slow = e.type === 'pointerdown' || (dt > 0 && dt <= 250 && dist / dt < FAST);
+        moved(e, slow);                                // browsing, travelling, or come to rest: the stage follows
+        if (slow) {
+          fastQ = null;                                // what was waiting on a quick move is overtaken: this pick is later, and it is made
+          slowQ = q;
+          if (!raf) raf = requestAnimationFrame(function () {
+            raf = 0;
+            if (slowQ) { const p = slowQ; slowQ = null; setPick(p[0], p[1]); }
+          });
+        } else {
+          const x = e.clientX, y = e.clientY;
+          fastQ = q;
+          settleT = setTimeout(function () {
+            if (!fastQ) return;
+            clearTimeout(restT);
+            restAt(x, y);
+            if (up) { const p = fastQ; fastQ = null; setPick(p[0], p[1]); }   // a dash that has landed: the four change where they stand
+            else judge();                                                      // a quick stretch of a browse, come to rest: the stop makes the pick
+          }, SETTLE);
+        }
+      }
+      // Holding. A click on a held pick hands the ring to the pointer — it follows until the NEXT click,
+      // which stops it where it is (Max's call: "click to initiate movement, click again to stop";
+      // an earlier cut stopped it by itself when the pointer rested, which he had removed). Leaving
+      // the disc stops nothing: the ring simply waits where the pick last was. On touch every tap
+      // and every lifted finger holds; there is no hover to hand back.
+      let pressing = false, released = false, started = false;
+      function hold(quiet) {
+        clearTimeout(settleT); fastQ = null;
+        if (locked || !pick) return;
+        setLocked(true);
+        if (!quiet) land();
+      }
+      disc.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        try { disc.setPointerCapture(e.pointerId); } catch (_) {}
+        pressing = true;
+        released = locked && e.pointerType === 'mouse';   // a mouse press on a held pick only hands the ring back
+        if (locked) setLocked(false);
+        queuePick(e);
+      });
+      disc.addEventListener('pointermove', function (e) { if (!locked) queuePick(e); });
+      function endPress(e, cancelled) {
+        if (!pressing) return;
+        pressing = false;
+        if (cancelled || released) { released = false; return; }
+        clearTimeout(settleT); fastQ = null; slowQ = null;
+        const q = chromaAt(e);
+        setPick(q[0], q[1]);
+        hold(false);
+      }
+      disc.addEventListener('pointerup', function (e) { endPress(e, false); });
+      disc.addEventListener('pointercancel', function (e) { endPress(e, true); });
+      disc.addEventListener('pointerleave', function () {
+        // leaving the disc drops a pending fast-move pick and puts the ring back on the pick; a slow
+        // move's pick is already on its way in the next frame and lands. The ring stays live: it picks
+        // up the pointer again when it comes back.
+        clearTimeout(settleT); fastQ = null;
+        onDisc = false; rested = false; clearTimeout(restT);
+        judge();                                       // off the scope the four come out at once: they are there to be reached
+        if (locked || raf) return;
+        if (pick) moveCursor(pick.cb, pick.cr); else pickEl.classList.remove('is-on');
+      });
+      // the panel opens holding the middle of the scope, four frames up — never blank (Max's call)
+      function centrePick(quiet) {
+        started = true;
+        clearTimeout(settleT); fastQ = null; slowQ = null;
+        setPick(0, 0);
+        moveCursor(0, 0);
+        hold(quiet);
+      }
+      // a frame sampled after the pick was made joins it (one recompute per animation frame)
+      let refreshT = 0;
+      function refreshPick() {
+        if (!pick || refreshT) return;
+        refreshT = requestAnimationFrame(function () { refreshT = 0; if (pick && hoverFrame < 0) setPick(pick.cb, pick.cr); });
+      }
+      const stage = section.querySelector('.scope-stage');
+      // keyboard: arrows walk the phase and the saturation from wherever the pick is; Enter or Space
+      // holds or hands back; Escape returns to the middle
+      disc.addEventListener('keydown', function (e) {
+        let hue = 103, sat = 45;   // start on the red target's phase, mid-way out
+        if (pick) { hue = (Math.atan2(pick.cr, pick.cb) * 180 / Math.PI + 360) % 360; sat = Math.sqrt(pick.cb * pick.cb + pick.cr * pick.cr) / RMAX * 100; }
+        switch (e.key) {
+          case 'Escape':     centrePick(false); return;
+          case 'Enter': case ' ': if (pick) { if (locked) setLocked(false); else hold(false); } e.preventDefault(); return;
+          case 'ArrowLeft':  hue = (hue + 10) % 360; break;    // counter-clockwise: phase increases
+          case 'ArrowRight': hue = (hue + 350) % 360; break;
+          case 'ArrowUp':    sat = Math.min(100, sat + 5); break;
+          case 'ArrowDown':  sat = Math.max(4, sat - 5); break;
+          default: return;
+        }
+        e.preventDefault();
+        started = true;
+        const m = sat / 100 * RMAX, a = hue * Math.PI / 180;
+        setPick(Math.cos(a) * m, Math.sin(a) * m);
+        land();
+      });
+
+      // ── reading the frames in, ON THE CLOCK: all of them inside READ_ALL once the disc is on screen ──
+      // Each animation frame reads as many as are due by then, so a 60Hz display reads four or five
+      // at a time and a 120Hz one two or three, and both finish together. A frame sampled late is
+      // long overdue and is read the moment it arrives.
+      let reading = false, loopOn = false, readStart = 0, readDone = 0;
+      function tryRead() {
+        for (let k = 0; k < N; k++) {
+          const f = frames[k];
+          if (f.state !== 1) continue;
+          f.state = 2;
+          // it joins the trace from nothing and eases up to its weight: the cloud BLOOMS. Each frame used to
+          // land at 2.4x brightness with a ripple of its own — seventy-four flashes in a third of a second
+          return true;
+        }
+        return false;
+      }
+      function loop(ts) {
+        if (!reading) { loopOn = false; return; }
+        if (!readStart) readStart = ts;
+        const due = reduced ? N : Math.max(1, Math.ceil((ts - readStart) / READ_ALL * N));
+        let got = false;
+        while (readDone < due && tryRead()) { readDone++; got = true; }
+        if (got) redrawCurrent();                        // once for the batch
+        if (frames.some(function (f) { return f.state === 1; })) requestAnimationFrame(loop);
+        else loopOn = false;
+      }
+      function kick() {
+        if (!reading || loopOn) return;
+        loopOn = true;
+        requestAnimationFrame(loop);
+      }
+
+      // thumbs load once the section is within reach; the read-in waits for the disc itself to be seen
+      const loadObs = new IntersectionObserver(function (entries) {
+        if (!entries.some(function (en) { return en.isIntersecting; })) return;
+        loadObs.disconnect();
+        frames.forEach(function (f) { if (f.img) f.img.src = f.photo.thumb; });
+      }, { rootMargin: '1800px 0px' });   // ~two screens ahead: the panel should open with every frame already sampled
+      loadObs.observe(section);
+      // THE PANEL OPENS WHEN THE SITE'S OWN REVEAL DOES: the section crossing ~78% of the way down the
+      // screen, the very observer settings the About panel's reveal uses, so the blocks rise and the
+      // instrument builds in the same moment. It used to wait for the disc to be 35% on screen, by
+      // which time the blocks had been standing there, revealed and empty.
+      const readObs = new IntersectionObserver(function (entries) {
+        if (!entries.some(function (en) { return en.isIntersecting; })) return;
+        readObs.disconnect();
+        layout();
+        measureStage();
+        // the middle's four, from whatever is sampled by now — a late thumb joins through refreshPick() —
+        // held quietly and PUT in their places; the graticule and the trace follow OPEN_LAG later
+        placeUntil = performance.now() + 600;
+        centrePick(true);
+        setTimeout(function () {
+          disc.classList.add('is-live');
+          reading = true;
+          kick();
+        }, OPEN_LAG);
+      }, { threshold: 0.01, rootMargin: '0px 0px -22% 0px' });
+      readObs.observe(section);
+      readObs.observe(disc);
+
+      let resizeT = 0;
+      window.addEventListener('resize', function () {
+        clearTimeout(resizeT);
+        resizeT = setTimeout(function () {
+          if (layout()) render(wCur);
+          if (measureStage()) arrange();
+        }, 150);
       });
     })();
   </script>
