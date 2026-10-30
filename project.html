@@ -292,14 +292,26 @@
       transition-delay: 0.4s;
       margin-bottom: 36px;
     }
+    /* Optional backer badge over the title, set the way voiceos.com sets it:
+       small, centred, 16px above the headline. The PNG is 2× (396×58), so its
+       Y mark lands at the site's 18px. Rises a beat before the title. */
+    .proj-page-badge {
+      display: block;
+      height: 29px;
+      width: auto;
+      margin: 0 auto 16px;
+      transition-delay: 0.32s;
+    }
     /* Subtitle: same voice as the destination captions — black held back
        to 78% so it reads as body copy under the 700-weight title. Enters
        one beat after the title in the load choreography. */
+    /* Every project's body copy — caption, note and story — is one style: 16px/1.6,
+       desktop and phone alike, so no two project pages read at different sizes. */
     .proj-page-caption {
       font-family: var(--font-sans);
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 400;
-      line-height: 1.7;
+      line-height: 1.6;
       color: rgba(0, 0, 0, 0.78);
       text-align: center;
       text-wrap: pretty;
@@ -309,15 +321,24 @@
     }
     .proj-page-caption p + p { margin-top: 14px; }
     .proj-page-note { margin: 40px auto 0; transition-delay: 0.7s; }
-    /* a paragraph given as { heading } — the title's voice, one tier smaller */
+    /* a paragraph given as { heading } — one style on every project, in a note or a story:
+       a quiet centred line in the body's own size, the weight and full ink setting it apart */
     .proj-copy-heading {
-      font-weight: 700;
-      font-size: clamp(22px, 2.6vw, 32px);
-      line-height: 1.15;
-      letter-spacing: -0.015em;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: 0;
       color: #000;
+      text-align: center;
       text-wrap: balance;
     }
+    /* a long note broken into sections: air above each heading, the copy close under it */
+    .proj-page-caption > * + .proj-copy-heading { margin-top: 40px; }
+    .proj-page-caption .proj-copy-heading + * { margin-top: 16px; }
+    /* { list } — no markers: each item is a line, like a film's credits */
+    .proj-copy-list { list-style: none; margin: 0; padding: 0; }
+    .proj-copy-list li + li { margin-top: 4px; }
+    .proj-page-caption em { font-style: italic; }
     .proj-page-caption a {
       color: #000;
       text-decoration: underline;
@@ -374,7 +395,7 @@
         overflow-wrap: break-word;
       }
       /* Copy: 16px on phones, on the 8/16/24/40 scale — title 24 dek 40 media 40 note 40 frames */
-      .proj-page-caption { font-size: 16px; line-height: 1.65; margin: 0 auto 40px; }
+      .proj-page-caption { margin: 0 auto 40px; }
       /* the long-form slot under the media reads as body copy: ragged-right, not a
          centred block of nine-line paragraphs */
       .proj-page-note { margin: 40px auto 0; text-align: left; }
@@ -382,7 +403,37 @@
 
     #projFrames { margin-top: 48px; }
     /* frames rise in as you scroll — one-shot, staggered per row */
-    .proj-page .m-item {
+    /* ── Story: a note set in sections between the frame rows (after henrysroom.com) —
+       one 640px reading column, left-aligned; each section's heading is a quiet
+       centred line in the body's own size, the weight alone setting it apart.
+       The frames between sections run the full width, so text and pictures alternate. ── */
+    #projFrames.is-story { margin-top: 80px; }
+    .proj-story {
+      max-width: 640px;
+      margin: 88px auto;
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      color: rgba(0, 0, 0, 0.78);
+      text-wrap: pretty;
+    }
+    .proj-story:first-child { margin-top: 0; }
+    .proj-story:last-child { margin-bottom: 0; }
+    .proj-story p + p { margin-top: 16px; }
+    .proj-story * + .proj-copy-heading { margin-top: 64px; }
+    .proj-story .proj-copy-heading + * { margin-top: 16px; }
+    /* the role list is centred under its centred heading as ONE block, its lines
+       left-aligned inside it — so the bullets stand in a single column instead of
+       landing wherever each centred line happens to start */
+    .proj-story .proj-copy-list {
+      width: fit-content;
+      margin-inline: auto;
+      padding-left: 24px;
+      list-style: disc;
+    }
+    .proj-story .proj-copy-list li + li { margin-top: 4px; }
+    .proj-story em { font-style: italic; }
+    .proj-page .m-item, .proj-page .proj-story {
       opacity: 0;
       transform: translateY(-28px); /* scrolling down: frames settle downward into place */
       transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
@@ -390,8 +441,8 @@
     }
     /* re-armed after leaving through the top → it will re-enter while scrolling UP,
        so it settles upward: motion always follows the scroll direction */
-    .proj-page .m-item.from-top { transform: translateY(28px); }
-    .proj-page .m-item.in { opacity: 1; transform: none; }
+    .proj-page .m-item.from-top, .proj-page .proj-story.from-top { transform: translateY(28px); }
+    .proj-page .m-item.in, .proj-page .proj-story.in { opacity: 1; transform: none; }
     /* ── Frame rows — matched pairs share a row (walk1+walk2, …);
        flex-grow = each frame's aspect ratio, so everything in a row
        renders at exactly the same height. Unmatched singles sit in
@@ -586,6 +637,10 @@
          heights, just with a tighter gutter */
       .pf-row { gap: 8px; margin-top: 8px; }
       .pf-row--break { margin-top: 40px; }
+      /* story: the 8/16/24/40/64 scale one step down — 64 around the pictures, 40 between sections */
+      #projFrames.is-story { margin-top: 64px; }
+      .proj-story { margin: 64px auto; }
+      .proj-story * + .proj-copy-heading { margin-top: 40px; }
       .pf-row--solo .m-item { width: 100%; }
       .pf-cap { margin-top: 8px; }
       #projFrames { margin-top: 40px; }
@@ -737,7 +792,8 @@
        becomes a short opacity fade — nothing slides, nothing is left hidden. */
     @media (prefers-reduced-motion: reduce) and (max-width: 960px), (prefers-reduced-motion: reduce) and (pointer: coarse) {
       .fade-up, .proj-media,
-      .proj-page .m-item, .proj-page .m-item.from-top {
+      .proj-page .m-item, .proj-page .m-item.from-top,
+      .proj-page .proj-story, .proj-page .proj-story.from-top {
         transform: none;
         transition-property: opacity; transition-duration: 0.25s; transition-timing-function: ease-out;
       }
@@ -977,6 +1033,7 @@
 
   <!-- ── Destination content ──────────────────────────────────── -->
   <main class="proj-page">
+    <img id="projPageBadge" class="proj-page-badge fade-up" alt="" hidden>
     <h1 id="projPageTitle" class="dest-page-title fade-up"></h1>
     <div id="projPageCaption" class="proj-page-caption fade-up"></div>
     <div class="proj-media">
@@ -1014,7 +1071,7 @@
     const CALIFORNIA_YOUTUBE_URL = 'https://www.youtube.com/watch?v=JbRsOZo8NM4';
 
     const PROJECTS = {
-      california: { title: 'Youtube Project', video: 'public/videos/california.mp4',
+      california: { title: 'Worst Day in California (Travel Film)', video: 'public/videos/california.mp4',
         poster: 'public/posters/california-poster.jpg', ratio: [1920, 1080],
         caption: [
           'This was a personal video project I made while visiting a friend in California. I shot and edited everything myself, documenting the trip as it happened. This was my first time making a YouTube video: No plan, just some friends enjoying the first week of summer break.',
@@ -1028,7 +1085,42 @@
         ],
         // `note` renders beneath the film, before the frames
         note: [
+          { heading: 'My Role' },
           'As Product & Growth Lead, I worked on WIP for two months, producing and editing an advertising campaign while leading on-campus growth efforts at New York University. My role combined creative production, product marketing, and student outreach to help introduce WIP to the NYU community.',
+        ] },
+      // what it is under the title; under the film, the note is a story — its sections
+      // alternate with the frame rows, laid out after henrysroom.com's project pages
+      voiceos:    { title: 'VoiceOS (YC P25)', video: 'public/videos/voiceos.mp4',
+        poster: 'public/posters/voiceos-poster.jpg', ratio: [1920, 1080],
+        // `badge` renders centred above the title, as on voiceos.com
+        badge: { src: 'public/projects/voiceos/yc.png', alt: 'Backed by Y Combinator' },
+        caption: [
+          // DRAFT — written from the film; confirm or replace
+          'VoiceOS is a voice assistant for your computer. Say what you need and it works across your apps, from Slack and Gmail to Google Calendar, so you don’t have to.',
+        ],
+        note: [
+          { heading: 'The Vision' },
+          'I wanted to create something that felt less like a traditional software demo and more like a cinematic product launch.',
+          'The concept started with a familiar feeling: being overwhelmed by notifications, deadlines, and endless tasks. I wanted to capture that chaos visually, then contrast it with how effortlessly VoiceOS could handle everything.',
+          [ 'Rather than simply demonstrating features, I wanted to tell a story that made people ', { text: 'feel', em: true }, ' the value of the product.' ],
+          { frames: 2 },   // the calm, then the chaos
+          { heading: 'Bringing It to Life' },
+          'I took on the entire production myself, from creative direction and storyboarding to filming, editing, color grading, motion graphics, and sound design.',
+          'One of the biggest challenges was making the transition from live-action footage into animated product demonstrations feel seamless, while maintaining the cinematic energy throughout the film.',
+          { frames: 2 },   // live action handing over to the product
+          { heading: 'Experimenting With AI' },
+          'One of my favorite parts was experimenting with Claude Opus 5.5 to build the motion graphics entirely through code.',
+          'With little traditional animation experience, I spent countless iterations learning how to prompt effectively, watching things break, and refining the animations until they matched my storyboards.',
+          'It made me even more excited about the future of product + video, and how emerging tools are opening up new possibilities for independent creators.',
+          { frames: 2 },   // the code-built UI over the footage
+          { heading: 'My Role' },
+          { list: [
+            'Product positioning & launch messaging',
+            'Product storytelling & use-case prioritization',
+            'Creative direction & concept development',
+            'Code-driven motion graphics',
+            'Video editing & color grading',
+          ] },
         ] },
       // Assets pending: add `video` (mp4) or `image` (still) when ready;
       // until then the page shows title + copy and skips the media block.
@@ -1056,6 +1148,14 @@
     const proj = PROJECTS[params.get('p')] || PROJECTS.california;
     document.title = proj.title + ' — Max Shen';
     document.getElementById('projPageTitle').textContent = proj.title;
+    const badgeEl = document.getElementById('projPageBadge');
+    if (proj.badge) {
+      badgeEl.src = proj.badge.src;
+      badgeEl.alt = proj.badge.alt;
+      badgeEl.hidden = false;
+    } else {
+      badgeEl.remove();
+    }
     // Copy slots: `caption` sits under the title, `note` under the film.
     // One <p> per paragraph; a paragraph may be a list of segments where a
     // segment with an href becomes a link (only once a real URL is set).
@@ -1063,6 +1163,9 @@
     function renderCopy(id, paras) {
       const el = document.getElementById(id);
       if (!paras || !paras.length) { el.remove(); return; }
+      fillCopy(el, paras);
+    }
+    function fillCopy(el, paras) {
       paras.forEach(function (para) {
         const p = document.createElement('p');
         if (para && para.heading) {           // { heading: '…' } → bold display line
@@ -1071,8 +1174,26 @@
           el.appendChild(p);
           return;
         }
+        if (para && para.list) {              // { list: [ … ] } → one line per item, credits-style
+          const ul = document.createElement('ul');
+          ul.className = 'proj-copy-list';
+          ul.setAttribute('role', 'list');    // Safari drops list semantics once the markers are off
+          para.list.forEach(function (item) {
+            const li = document.createElement('li');
+            li.textContent = item;
+            ul.appendChild(li);
+          });
+          el.appendChild(ul);
+          return;
+        }
         (Array.isArray(para) ? para : [para]).forEach(function (seg) {
           if (typeof seg === 'string') { p.appendChild(document.createTextNode(seg)); return; }
+          if (seg.em) {                       // { text, em: true } → real italic (the face is loaded)
+            const em = document.createElement('em');
+            em.textContent = seg.text;
+            p.appendChild(em);
+            return;
+          }
           if (seg.href) {
             const a = document.createElement('a');
             a.href = seg.href; a.target = '_blank'; a.rel = 'noopener';
@@ -1086,7 +1207,12 @@
       });
     }
     renderCopy('projPageCaption', proj.caption);
-    renderCopy('projPageNote', proj.note);
+    // A note holding { frames: n } markers is a STORY: its sections are set between
+    // the frame rows (n rows after each marker) instead of in one block above them.
+    // That happens with the frames below; the note's own slot is not used.
+    const STORY = (proj.note || []).some(function (p) { return p && p.frames; });
+    if (STORY) document.getElementById('projPageNote').remove();
+    else renderCopy('projPageNote', proj.note);
 
     // ── Lighter media on small screens ─────────────────────────
     // The frames are 3–4 MB 4K stills (California: 52 MB a visit). At ≤960px every image under
@@ -1161,6 +1287,19 @@
         items: [ ['noti.jpg', 1080, 1920], ['wip.jpg', 1080, 1920], ['sad.png', 1044, 1882] ] },
       { cls: 'pf-row--solo', items: [ ['meetup-crop.png', 1160, 980] ] },
     ];
+    // VoiceOS — the film in order, two frames a row: the overload, the
+    // apps, each request handled, and the logo card held alone at the end.
+    // The note's { frames: 2 } markers set two rows after each section.
+    const VOICEOS_ROWS = [
+      { items: [ ['voice1.jpg', 1920, 1080], ['voice2.jpg', 1920, 1080] ] },
+      { items: [ ['voice3.jpg', 1920, 1080], ['voice4.jpg', 1920, 1080] ] },
+      { items: [ ['voice5.jpg', 1920, 1080], ['voice6.jpg', 1920, 1080] ] },
+      { items: [ ['voice7.jpg', 1920, 1080], ['voice8.jpg', 1920, 1080] ] },
+      { items: [ ['voice9.jpg', 1920, 1080], ['voice10.jpg', 1920, 1080] ] },
+      { items: [ ['voice11.jpg', 1920, 1080], ['voice12.jpg', 1920, 1080] ] },
+      { items: [ ['voice13.jpg', 1920, 1080], ['voice14.jpg', 1920, 1080] ] },
+      { cls: 'pf-row--break pf-row--full', items: [ ['voice15.jpg', 1920, 1080] ] },
+    ];
     // California — the trip told in order: Rodeo Drive, the drive, the
     // people, the water, the sunset, the canyon, the game on the sand.
     // Row shapes carry the pacing — pairs for the beats you linger on,
@@ -1216,6 +1355,7 @@
     const PROJECT_FRAMES = {
       robin:      { base: 'public/projects/robin/',      rows: ROBIN_ROWS },
       wip:        { base: 'public/projects/wip/',        rows: WIP_ROWS },
+      voiceos:    { base: 'public/projects/voiceos/',    rows: VOICEOS_ROWS },
       california: { base: 'public/projects/california/', rows: CALIFORNIA_ROWS },
       lucky7:     { base: 'public/projects/lucky7/',     rows: LUCKY7_ROWS },
     };
@@ -1343,10 +1483,32 @@
     const frameSet = PROJECT_FRAMES[params.get('p')] || { base: '', rows: [] };
     const frameRows = frameSet.rows;
     const framesWrap = document.getElementById('projFrames');
-    if (!frameRows.length) {
+    if (!frameRows.length && !STORY) {
       framesWrap.remove();
+    } else if (STORY) {
+      // text section → its rows → next section …; any rows left over close the page
+      framesWrap.classList.add('is-story');
+      let next = 0, block = null;
+      proj.note.forEach(function (para) {
+        if (para && para.frames) {
+          block = null;
+          frameRows.slice(next, next + para.frames).forEach(function (row) { framesWrap.appendChild(buildRow(row)); });
+          next += para.frames;
+          return;
+        }
+        if (!block) {
+          block = document.createElement('div');
+          block.className = 'proj-story';
+          framesWrap.appendChild(block);
+          frameRevealObs.observe(block); frameResetObs.observe(block);
+        }
+        fillCopy(block, [para]);
+      });
+      frameRows.slice(next).forEach(function (row) { framesWrap.appendChild(buildRow(row)); });
     } else {
-      frameRows.forEach(function (row) {
+      frameRows.forEach(function (row) { framesWrap.appendChild(buildRow(row)); });
+    }
+    function buildRow(row) {
         const rowEl = document.createElement('div');
         rowEl.className = 'pf-row' + (row.cls ? ' ' + row.cls : '');
         const rowCaps = [];
@@ -1426,8 +1588,7 @@
           rowEl.appendChild(p);
           frameRevealObs.observe(p); frameResetObs.observe(p);
         });
-        framesWrap.appendChild(rowEl);
-      });
+        return rowEl;
     }
 
     // On touch / small screens the entrance never depends on an animation frame alone: WebKit can
